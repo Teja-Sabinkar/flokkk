@@ -525,7 +525,8 @@
 
 @media (max-width: 480px) {
     .modalContent {
-        top: 65px;
+        margin-top: 65px;
+        padding-bottom: 50px;
         max-height: 90vh;
     }
 
