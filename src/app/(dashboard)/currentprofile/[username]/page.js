@@ -15,6 +15,7 @@ export default function CurrentProfilePage() {
   const { username = 'username' } = params || {};
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [imageKey, setImageKey] = useState(0); // Add this to force image refresh
   
   // Create a default profile data state for initial rendering
   const initialProfileData = {
@@ -59,11 +60,11 @@ export default function CurrentProfilePage() {
         formData.append('profileData', JSON.stringify(profileDataToSend));
         
         // Add files if they exist
-        if (updatedData.profilePicture) {
+        if (updatedData.profilePicture && updatedData.profilePicture instanceof File) {
           formData.append('profilePicture', updatedData.profilePicture);
         }
         
-        if (updatedData.profileBanner) {
+        if (updatedData.profileBanner && updatedData.profileBanner instanceof File) {
           formData.append('profileBanner', updatedData.profileBanner);
         }
         
@@ -84,8 +85,15 @@ export default function CurrentProfilePage() {
         // Get updated profile data
         const updatedProfileData = await response.json();
         
-        // Update state with new data
-        setProfileData(updatedProfileData);
+        // Update state with new data, including timestamp to force cache refresh
+        setProfileData({
+          ...updatedProfileData,
+          profilePicture: updatedProfileData.profilePicture ? `${updatedProfileData.profilePicture}?t=${Date.now()}` : '/profile-placeholder.jpg',
+          profileBanner: updatedProfileData.profileBanner ? `${updatedProfileData.profileBanner}?t=${Date.now()}` : ''
+        });
+        
+        // Force image component to re-render
+        setImageKey(prev => prev + 1);
         
       } else {
         // No file uploads, send regular JSON request
@@ -114,6 +122,12 @@ export default function CurrentProfilePage() {
         // Update state with new data
         setProfileData(updatedProfileData);
       }
+      
+      // Update user state as well if needed
+      setUser(prev => ({
+        ...prev,
+        ...profileData
+      }));
       
       return { success: true };
     } catch (error) {
@@ -251,6 +265,7 @@ export default function CurrentProfilePage() {
             
             <div className={styles.profileContainer}>
               <CurrentProfileHeader 
+                key={imageKey} // Add key to force re-render
                 isCurrentUser={isCurrentUser}
                 profileData={profileData}
                 saveToDatabase={saveToDatabase}

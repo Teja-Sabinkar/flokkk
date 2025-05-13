@@ -165,6 +165,9 @@ const CurrentProfileHeader = ({
               width={100}
               height={100}
               className={`${styles.profilePicture} ${isLoading ? styles.loadingImage : ''}`}
+              priority
+              unoptimized
+              key={profileData.profilePicture} // Force re-render when URL changes
             />
           ) : (
             <div
