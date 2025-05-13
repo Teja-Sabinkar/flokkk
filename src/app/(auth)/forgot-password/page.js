@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import './forgotPassword.css';
 import '../messages.css';
 
-export default function ForgotPassword() {
+function ForgotPasswordContent() {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -46,7 +46,7 @@ export default function ForgotPassword() {
         {!isSubmitted ? (
           <>
             <p className="forgot-password-description">
-              Enter your email address, and we'll send you instructions to reset your password.
+              Enter your email address, and we&apos;ll send you instructions to reset your password.
             </p>
             
             {error && (
@@ -83,7 +83,7 @@ export default function ForgotPassword() {
               Reset link sent! Check your email.
             </div>
             <p className="check-spam-note">
-              If you don't see the email in your inbox, please check your spam folder.
+              If you don&apos;t see the email in your inbox, please check your spam folder.
             </p>
           </div>
         )}
@@ -93,5 +93,13 @@ export default function ForgotPassword() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ForgotPassword() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ForgotPasswordContent />
+    </Suspense>
   );
 }

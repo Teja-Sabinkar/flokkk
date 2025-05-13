@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import './signup.css';
 import '../messages.css';
 
-export default function Signup() {
+function SignupContent() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     username: '',
@@ -89,7 +89,7 @@ export default function Signup() {
           <div className="success-message">
             <h1>Check Your Email</h1>
             <p>
-              We've sent a verification link to <strong>{emailSent}</strong>
+              We&apos;ve sent a verification link to <strong>{emailSent}</strong>
             </p>
           </div>
           
@@ -97,7 +97,7 @@ export default function Signup() {
             <h2>Next Steps:</h2>
             <ol>
               <li>Open the email from flock</li>
-              <li>Click the "Verify My Email" button</li>
+              <li>Click the &quot;Verify My Email&quot; button</li>
               <li>Return to login once verified</li>
             </ol>
           </div>
@@ -202,5 +202,13 @@ export default function Signup() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Signup() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignupContent />
+    </Suspense>
   );
 }
