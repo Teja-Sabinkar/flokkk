@@ -677,8 +677,14 @@
     width: 300px;
   }
 
-  .searchInput{
+  .searchInput {
     font-size: 12px;
   }
-  
+
+  .searchDropdown {
+    width: 300px;
+    left: 30px;
+    top: 60px;
+  }
+
 }

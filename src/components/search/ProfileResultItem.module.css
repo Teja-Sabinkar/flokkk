@@ -170,14 +170,17 @@
   padding: 0 20px 20px 20px;
   display: flex;
   justify-content: center;
-  gap: 10px; /* Add gap between buttons */
-  flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+  gap: 10px;
+  /* Add gap between buttons */
+  flex-wrap: wrap;
+  /* Allow buttons to wrap on smaller screens */
 }
 
 .card.listView .actionContainer {
   padding: 0;
   margin-left: 16px;
-  flex-wrap: nowrap; /* Keep buttons in a row in list view */
+  flex-wrap: nowrap;
+  /* Keep buttons in a row in list view */
 }
 
 .followButton,
@@ -192,15 +195,18 @@
   cursor: pointer;
   transition: all 0.2s;
   gap: 8px;
-  min-width: 100px; /* Ensure consistent width */
-  flex: 1; /* Allow buttons to share space equally */
+  min-width: 100px;
+  /* Ensure consistent width */
+  flex: 1;
+  /* Allow buttons to share space equally */
 }
 
 .card.listView .followButton,
 .card.listView .editButton {
   padding: 8px 16px;
   min-width: auto;
-  flex: 0 1 auto; /* Don't grow in list view */
+  flex: 0 1 auto;
+  /* Don't grow in list view */
 }
 
 .followButton {
@@ -255,8 +261,10 @@
   color: #e0e0e0;
   text-decoration: none;
   gap: 8px;
-  min-width: 100px; /* Ensure consistent width */
-  flex: 1; /* Allow buttons to share space equally */
+  min-width: 100px;
+  /* Ensure consistent width */
+  flex: 1;
+  /* Allow buttons to share space equally */
 }
 
 .viewButton:hover {
@@ -266,7 +274,8 @@
 .card.listView .viewButton {
   padding: 8px 16px;
   min-width: auto;
-  flex: 0 1 auto; /* Don't grow in list view */
+  flex: 0 1 auto;
+  /* Don't grow in list view */
 }
 
 /* Responsive Behavior */
@@ -303,17 +312,41 @@
   .card.listView .actionContainer {
     margin-left: 0;
     width: 100%;
-    gap: 8px; /* Smaller gap in mobile view */
+    gap: 8px;
+    /* Smaller gap in mobile view */
   }
-  
-  /* Make buttons stack in very small screens */
-  @media (max-width: 400px) {
-    .actionContainer {
-      flex-direction: column;
-    }
-    
-    .card.listView .actionContainer {
-      flex-direction: column;
-    }
+
+}
+
+
+/* Make buttons stack in very small screens */
+@media (max-width: 480px) {
+
+  .profileName {
+    font-size: 14px;
   }
+
+  .profileUsername {
+    font-size: 10px;
+  }
+
+  .statValue {
+    font-size: 12px;
+  }
+
+  .statLabel {
+    font-size: 10px;
+  }
+
+  .avatar {
+    width: 64px;
+    height: 64px;
+  }
+
+  .profileInitial {
+    width: 64px;
+    height: 64px;
+    font-size: 20px;
+  }
+
 }

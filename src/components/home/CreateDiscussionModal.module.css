@@ -525,7 +525,24 @@
 
 @media (max-width: 480px) {
     .modalContent {
-        margin-top: 100px;
+        top: 65px;
+        max-height: 90vh;
+    }
+
+    .modalHeader {
+        padding: 8px 10px;
+    }
+
+    .form {
+        padding: 10px;
+    }
+
+    .divider {
+        margin: 5px 0;
+    }
+
+    .formGroup {
+        margin-bottom: 10px;
     }
 
 }

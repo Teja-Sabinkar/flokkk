@@ -5,7 +5,8 @@
   flex-direction: column;
   padding: 0 10px;
   /* Make sure this component can handle width changes */
-  min-width: 0; /* Critical for flex items to prevent overflow issues */
+  min-width: 0;
+  /* Critical for flex items to prevent overflow issues */
 }
 
 .topSection {
@@ -27,5 +28,9 @@
 @media (max-width: 480px) {
   .centerBarContainer {
     padding: 0px;
+  }
+
+  .bottomSection {
+    margin-top: 30px;
   }
 }

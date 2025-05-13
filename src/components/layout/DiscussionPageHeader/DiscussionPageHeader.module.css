@@ -114,6 +114,7 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -369,6 +370,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -545,6 +547,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -613,5 +616,13 @@
 
   .actionsContainer {
     gap: 8px;
+  }
+
+  .notificationDropdown {
+    right: -30px;
+  }
+
+  .searchButton {
+    display: none;
   }
 }
