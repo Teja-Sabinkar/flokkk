@@ -6,13 +6,13 @@ import styles from './DiscussionPageRightBar.module.css';
 import RecommendationItems from './RecommendationItems';
 
 export default function DiscussionPageRightBar(props) {
-  // Extract postData safely
+  // Extract postData safely with better fallback handling
   const postData = props.postData || null;
   const { user } = useUser();
   
   // Refs for elements
   const containerRef = useRef(null);
-  const textareaRef = useRef(null); // New ref for textarea
+  const textareaRef = useRef(null);
   
   // State for resize functionality
   const [isResizing, setIsResizing] = useState(false);
@@ -25,6 +25,9 @@ export default function DiscussionPageRightBar(props) {
   const [textareaHeight, setTextareaHeight] = useState('auto');
   const [inputRows, setInputRows] = useState(1);
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Enhanced postData for recommendations
+  const [enhancedPostData, setEnhancedPostData] = useState(null);
   
   // Function to get time-based greeting
   const getTimeBasedGreeting = () => {
@@ -83,6 +86,79 @@ export default function DiscussionPageRightBar(props) {
       window.removeEventListener('resize', checkMobileView);
     };
   }, []);
+
+  // New effect to enhance postData for recommendations by combining data sources
+  useEffect(() => {
+    if (!postData) {
+      setEnhancedPostData(null);
+      return;
+    }
+    
+    // Search for DiscussionPageCenterTop post data from parent elements
+    const centerTopPostData = findCenterTopPostData();
+    
+    // Merge any found data with our existing postData
+    const mergedData = {
+      ...postData,
+      // Allow centerTopData to override if available
+      ...(centerTopPostData || {})
+    };
+    
+    // Normalize property names for consistency (different components use different names)
+    const normalizedData = {
+      ...mergedData,
+      id: mergedData.id || mergedData._id,
+      title: mergedData.title || '',
+      content: mergedData.content || '',
+      // Map hashtags and tags to each other (some components use one or the other)
+      hashtags: mergedData.hashtags || mergedData.tags || [],
+      tags: mergedData.tags || mergedData.hashtags || [],
+      // Map username and author to each other
+      username: mergedData.username || mergedData.author || '',
+      author: mergedData.author || mergedData.username || ''
+    };
+    
+    setEnhancedPostData(normalizedData);
+  }, [postData]);
+
+  // Helper function to find post data from DiscussionPageCenterTop
+  const findCenterTopPostData = () => {
+    try {
+      // Look for an element that might contain the current post title
+      const titleElement = document.querySelector('h1.postTitle') || document.querySelector('.postTitle');
+      
+      if (!titleElement) return null;
+      
+      const title = titleElement.textContent || '';
+      
+      // Find author element nearby
+      const authorElement = document.querySelector('.authorLink') || document.querySelector('.creatorInfo span');
+      const author = authorElement ? (authorElement.textContent || '').trim() : '';
+      
+      // Find tags if available
+      const tagElements = document.querySelectorAll('.tag');
+      const tags = Array.from(tagElements).map(el => (el.textContent || '').trim());
+      
+      // Find content
+      const contentElement = document.querySelector('.postContent p');
+      const content = contentElement ? (contentElement.textContent || '').trim() : '';
+      
+      // Only return data if we found at least a title
+      if (title) {
+        return {
+          title,
+          author,
+          tags,
+          content
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.warn('Error finding center top post data:', error);
+      return null;
+    }
+  };
 
   // Improved resize start function - Only works if not in mobile view
   const startResizing = (e) => {
@@ -300,9 +376,9 @@ export default function DiscussionPageRightBar(props) {
     });
 
     // For the current post, always get detailed info
-    // Check for both id and _id
-    if (postData) {
-      const postId = postData.id || postData._id;
+    // Use the enhanced post data that combines sources
+    if (enhancedPostData) {
+      const postId = enhancedPostData.id || enhancedPostData._id;
       if (postId) {
         commands.push({
           type: 'get_post',
@@ -361,18 +437,26 @@ export default function DiscussionPageRightBar(props) {
   };
 
   const sendMessageToAI = async (message, showMoreDb = false, showMoreAi = false) => {
-    // Prepare context from the current post data
+    // Enhanced context preparation using both passed postData and enhanced data
     let context = '';
-    if (postData) {
-      context = `The current discussion is titled "${postData.title || 'Untitled'}". `;
-      if (postData.content) {
-        context += `The post content is: "${postData.content}". `;
+    const contextData = enhancedPostData || postData;
+    
+    if (contextData) {
+      context = `The current discussion is titled "${contextData.title || 'Untitled'}". `;
+      if (contextData.content) {
+        context += `The post content is: "${contextData.content}". `;
       }
-      if (postData.hashtags && postData.hashtags.length > 0) {
-        context += `The discussion has these hashtags: ${postData.hashtags.join(', ')}. `;
+      
+      // Use either hashtags or tags, depending on what's available
+      const tags = contextData.hashtags || contextData.tags;
+      if (tags && tags.length > 0) {
+        context += `The discussion has these hashtags: ${tags.join(', ')}. `;
       }
-      if (postData.username) {
-        context += `The post was created by user: ${postData.username}. `;
+      
+      // Use either username or author, depending on what's available
+      const creator = contextData.username || contextData.author;
+      if (creator) {
+        context += `The post was created by user: ${creator}. `;
       }
     }
 
@@ -431,16 +515,25 @@ export default function DiscussionPageRightBar(props) {
 
   // Command suggestions based on available data
   const getCommandSuggestions = () => {
-    if (!postData) return [];
+    // Use the enhanced post data that includes info from DiscussionPageCenterTop
+    const contextData = enhancedPostData || postData;
+    if (!contextData) return [];
+
+    // Get the first hashtag/tag, whichever is available
+    const tags = contextData.hashtags || contextData.tags;
+    const firstTag = tags && tags.length > 0 ? tags[0] : 'this topic';
+    
+    // Get creator username, either from username or author property
+    const creator = contextData.username || contextData.author;
 
     const commands = [
       `What's this discussion about?`,
-      `Search for posts about ${postData.hashtags ? postData.hashtags[0] : 'this topic'}`,
+      `Search for posts about ${firstTag}`,
       `Find related discussions`
     ];
 
-    if (postData.username) {
-      commands.push(`Tell me about user @${postData.username}`);
+    if (creator) {
+      commands.push(`Tell me about user @${creator}`);
     }
 
     commands.push("What's trending on the platform?");
@@ -463,10 +556,15 @@ export default function DiscussionPageRightBar(props) {
 
   // Suggest questions based on post content
   const getSuggestedQuestions = () => {
-    if (!postData) return [];
+    const contextData = enhancedPostData || postData;
+    if (!contextData) return [];
+
+    const titleFragment = contextData.title ? 
+      `"${contextData.title?.substring(0, 30)}${contextData.title?.length > 30 ? '...' : ''}"` : 
+      "this discussion";
 
     const suggestions = [
-      `Can you summarize this discussion about "${postData.title?.substring(0, 30)}..."?`,
+      `Can you summarize ${titleFragment}?`,
       "What are the key points in this discussion?",
       "Can you help me understand this topic better?",
       "What similar topics might I be interested in?"
@@ -551,8 +649,8 @@ export default function DiscussionPageRightBar(props) {
       )}
       
       <div className={styles.chatMessages}>
-        {/* Pass postData to RecommendationItems */}
-        <RecommendationItems postData={postData} />
+        {/* Pass enhancedPostData to RecommendationItems for better recommendations */}
+        <RecommendationItems postData={enhancedPostData || postData} />
         
         {messages.map((message) => (
           <div

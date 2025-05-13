@@ -185,3 +185,33 @@
     color: #ef4444;
     padding: 4px 0;
 }
+
+.recommendationError {
+    padding: 12px;
+    text-align: center;
+    color: #888;
+    border-radius: 8px;
+    background-color: #1e1e1e;
+    margin: 8px 0;
+}
+
+.recommendationError p {
+    margin: 0 0 8px 0;
+}
+
+.retryButton {
+    background-color: transparent;
+    border: 1px solid #444;
+    color: #bbb;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.retryButton:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
