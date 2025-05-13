@@ -427,6 +427,7 @@ const CommunityPost = ({ post, onHide }) => {
               src={post.image}
               alt={post.title || "Post image"}
               className={styles.postImage}
+              key={`community-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
             />
           </div>
         )}

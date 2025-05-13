@@ -347,6 +347,9 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
               width={viewMode === 'list' ? 200 : 600}
               height={viewMode === 'list' ? 100 : 300}
               className={styles.postImage}
+              unoptimized
+              priority
+              key={`recently-viewed-image-${itemId}-${thumbnail}`} // Force re-render when image changes
             />
           </div>
         </div>

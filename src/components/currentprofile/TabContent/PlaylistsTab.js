@@ -13,7 +13,7 @@ import { getPlaylists, subscribeToPlaylists } from '@/lib/playlists';
 const PlaylistCard = ({ playlist, onClick, onEdit, onDelete }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
-  
+
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -25,7 +25,7 @@ const PlaylistCard = ({ playlist, onClick, onEdit, onDelete }) => {
     if (isMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -56,7 +56,7 @@ const PlaylistCard = ({ playlist, onClick, onEdit, onDelete }) => {
         <div className={styles.playlistTitle}>
           <h3>{playlist.title}</h3>
         </div>
-        
+
         <div className={styles.menuContainer} ref={menuRef}>
           <button
             className={styles.postMenu}
@@ -69,10 +69,10 @@ const PlaylistCard = ({ playlist, onClick, onEdit, onDelete }) => {
               <circle cx="12" cy="19" r="1"></circle>
             </svg>
           </button>
-          
+
           {isMenuOpen && (
             <div className={styles.dropdown}>
-              <button 
+              <button
                 className={styles.dropdownItem}
                 onClick={handleEdit}
               >
@@ -82,7 +82,7 @@ const PlaylistCard = ({ playlist, onClick, onEdit, onDelete }) => {
                 </svg>
                 <span>Edit</span>
               </button>
-              <button 
+              <button
                 className={styles.dropdownItem}
                 onClick={handleDelete}
               >
@@ -96,26 +96,29 @@ const PlaylistCard = ({ playlist, onClick, onEdit, onDelete }) => {
           )}
         </div>
       </div>
-      
+
       <div className={styles.postImageContainer}>
         <div className={styles.postImageWrapper}>
-          <Image 
+          <Image
             src={playlist.imageSrc}
             alt={playlist.title}
             width={600}
             height={300}
             className={styles.postImage}
+            unoptimized
+            priority
+            key={`playlist-image-${playlist.id}-${playlist.imageSrc}`} // Force re-render when image changes
           />
           <div className={styles.forumCount}>{playlist.videoCount}</div>
         </div>
       </div>
-      
+
       <div className={styles.postEngagement}>
         <div className={styles.playlistUpdate}>
           Updated {playlist.updatedAt}
         </div>
-        
-        
+
+
       </div>
     </div>
   );
@@ -132,7 +135,7 @@ const PlaylistsTab = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // New state for delete modal
   const [playlistToEdit, setPlaylistToEdit] = useState(null);
   const [playlistToDelete, setPlaylistToDelete] = useState(null); // New state for playlist to delete
-  
+
   // Fetch playlists from API
   const fetchPlaylists = async () => {
     try {
@@ -147,19 +150,19 @@ const PlaylistsTab = () => {
       setLoading(false);
     }
   };
-  
+
   // Initial data load
   useEffect(() => {
     fetchPlaylists();
-    
+
     // Listen for playlist updates
     const handlePlaylistUpdate = () => {
       fetchPlaylists();
     };
-    
+
     // Subscribe to playlist changes
     window.addEventListener('playlist-updated', handlePlaylistUpdate);
-    
+
     return () => {
       window.removeEventListener('playlist-updated', handlePlaylistUpdate);
     };
@@ -192,17 +195,17 @@ const PlaylistsTab = () => {
   // Handle save in edit modal
   const handleSaveEdit = (updatedPlaylist) => {
     // Update playlists list with the updated playlist
-    setPlaylists(prevPlaylists => 
-      prevPlaylists.map(p => 
+    setPlaylists(prevPlaylists =>
+      prevPlaylists.map(p =>
         p.id === updatedPlaylist.id ? updatedPlaylist : p
       )
     );
-    
+
     // If the edited playlist is currently selected, update it as well
     if (selectedPlaylist && selectedPlaylist.id === updatedPlaylist.id) {
       setSelectedPlaylist(updatedPlaylist);
     }
-    
+
     // Close the modal
     setIsEditModalOpen(false);
     setPlaylistToEdit(null);
@@ -211,20 +214,20 @@ const PlaylistsTab = () => {
   // Handle delete in delete modal
   const handleDeleteConfirm = (playlistId) => {
     // Remove the deleted playlist from the playlists array
-    setPlaylists(prevPlaylists => 
+    setPlaylists(prevPlaylists =>
       prevPlaylists.filter(p => p.id !== playlistId)
     );
-    
+
     // If the deleted playlist is currently selected, go back to playlists view
     if (selectedPlaylist && selectedPlaylist.id === playlistId) {
       setSelectedPlaylist(null);
     }
-    
+
     // Dispatch an event for playlist update
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('playlist-updated'));
     }
-    
+
     // Close the modal
     setIsDeleteModalOpen(false);
     setPlaylistToDelete(null);
@@ -257,9 +260,9 @@ const PlaylistsTab = () => {
     <div className={styles.playlistsTabContainer}>
       {playlists.length > 0 ? (
         playlists.map(playlist => (
-          <PlaylistCard 
-            key={playlist.id} 
-            playlist={playlist} 
+          <PlaylistCard
+            key={playlist.id}
+            playlist={playlist}
             onClick={handlePlaylistClick}
             onEdit={handleEditClick}
             onDelete={handleDeleteClick}
@@ -273,7 +276,7 @@ const PlaylistsTab = () => {
       )}
 
       {/* Playlist Edit Modal */}
-      <PlaylistEditModal 
+      <PlaylistEditModal
         isOpen={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);

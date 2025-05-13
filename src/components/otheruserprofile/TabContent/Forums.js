@@ -13,7 +13,7 @@ const ForumCard = ({ forum, onClick }) => {
   const [reportSuccess, setReportSuccess] = useState(false); // Add state for report success
   const [saveStatus, setSaveStatus] = useState({ loading: false, success: false, error: null }); // Add save status
   const menuRef = useRef(null);
-  
+
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -25,7 +25,7 @@ const ForumCard = ({ forum, onClick }) => {
     if (isMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -41,12 +41,12 @@ const ForumCard = ({ forum, onClick }) => {
   const saveForumAsPlaylist = async (forum) => {
     try {
       setSaveStatus({ loading: true, success: false, error: null });
-      
+
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('Authentication required');
       }
-      
+
       // Make API request to save the forum as a playlist
       const response = await fetch('/api/playlists', {
         method: 'POST',
@@ -61,28 +61,28 @@ const ForumCard = ({ forum, onClick }) => {
           visibility: 'private'
         })
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to save forum as playlist');
       }
-      
+
       // Get the created playlist
       const newPlaylist = await response.json();
-      
+
       // Now save the forum posts to the playlist
       const postsResponse = await fetch(`/api/forums/${forum.id}/posts`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       if (!postsResponse.ok) {
         throw new Error('Failed to get forum posts');
       }
-      
+
       const postsData = await postsResponse.json();
-      
+
       // If there are posts, add them to the playlist
       if (postsData.posts && postsData.posts.length > 0) {
         // Add each post to the playlist
@@ -97,18 +97,18 @@ const ForumCard = ({ forum, onClick }) => {
           });
         }
       }
-      
+
       setSaveStatus({ loading: false, success: true, error: null });
-      
+
       // Clear success status after 3 seconds
       setTimeout(() => {
         setSaveStatus({ loading: false, success: false, error: null });
       }, 3000);
-      
+
     } catch (error) {
       console.error('Error saving forum as playlist:', error);
       setSaveStatus({ loading: false, success: false, error: error.message });
-      
+
       // Clear error after 3 seconds
       setTimeout(() => {
         setSaveStatus({ loading: false, success: false, error: null });
@@ -161,19 +161,19 @@ const ForumCard = ({ forum, onClick }) => {
   return (
     <div className={styles.postCard} onClick={handleCardClick}>
       {/* Success/Error messages */}
-      
+
       {saveStatus.error && (
         <div className={styles.errorMessage}>
           Error: {saveStatus.error}
         </div>
       )}
-    
-      
+
+
       <div className={styles.postHeader}>
         <div className={styles.playlistTitle}>
           <h3>{forum.title}</h3>
         </div>
-        
+
         <div className={styles.menuContainer} ref={menuRef}>
           <button
             className={styles.postMenu}
@@ -186,10 +186,10 @@ const ForumCard = ({ forum, onClick }) => {
               <circle cx="12" cy="19" r="1"></circle>
             </svg>
           </button>
-          
+
           {isMenuOpen && (
             <div className={styles.dropdown}>
-              <button 
+              <button
                 className={styles.dropdownItem}
                 onClick={handleSave}
                 disabled={saveStatus.loading}
@@ -201,7 +201,7 @@ const ForumCard = ({ forum, onClick }) => {
                 </svg>
                 <span>{saveStatus.loading ? 'Saving...' : 'Save'}</span>
               </button>
-              <button 
+              <button
                 className={styles.dropdownItem}
                 onClick={handleReport}
               >
@@ -216,38 +216,41 @@ const ForumCard = ({ forum, onClick }) => {
           )}
         </div>
       </div>
-      
+
       <div className={styles.postImageContainer}>
         <div className={styles.postImageWrapper}>
-          <Image 
+          <Image
             src={forum.imageSrc || '/api/placeholder/400/200'}
             alt={forum.title}
             width={600}
             height={300}
             className={styles.postImage}
+            unoptimized
+            priority
+            key={`forum-image-${forum.id}-${forum.imageSrc}`} // Force re-render when image changes
           />
           <div className={styles.forumCount}>{forum.postCount} posts</div>
         </div>
       </div>
-      
+
       <div className={styles.postEngagement}>
         <div className={styles.playlistUpdate}>
           Updated {forum.updatedAt || 'recently'}
         </div>
       </div>
-      
+
       {/* Add the ReportModal component */}
       {isReportModalOpen && (
-        <div 
-          className={styles.modalWrapper} 
+        <div
+          className={styles.modalWrapper}
           onClick={(e) => e.stopPropagation()}
-          style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0, 
-            zIndex: 1000 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1000
           }}
         >
           <ReportModal
@@ -276,22 +279,22 @@ const Forums = ({ username }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedForum, setSelectedForum] = useState(null);
-  
+
   // Fetch forums from API
   useEffect(() => {
     const fetchForums = async () => {
       try {
         setLoading(true);
-        
+
         // Check for null/undefined username
         if (!username) {
           setError('No username provided');
           setLoading(false);
           return;
         }
-        
+
         console.log(`Attempting to fetch forums for username: ${username}`);
-        
+
         // Get token from localStorage
         const token = localStorage.getItem('token');
         if (!token) {
@@ -301,20 +304,20 @@ const Forums = ({ username }) => {
         // Get any URL parameters from the page
         const urlParams = new URLSearchParams(window.location.search);
         const urlUserId = urlParams.get('id');
-        
+
         // Try to find the user by both name and username since there's inconsistency
         let apiUrl = `/api/forums?user=${encodeURIComponent(username)}`;
         if (urlUserId) {
           apiUrl += `&id=${urlUserId}`;
         }
-        
+
         console.log('Fetching forums with URL:', apiUrl);
         const response = await fetch(apiUrl, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        
+
         if (!response.ok) {
           // If response is not OK, try with the 'name' parameter as fallback
           const nameResponse = await fetch(`/api/forums?name=${encodeURIComponent(username)}`, {
@@ -322,7 +325,7 @@ const Forums = ({ username }) => {
               'Authorization': `Bearer ${token}`
             }
           });
-          
+
           if (nameResponse.ok) {
             const data = await nameResponse.json();
             console.log('Forums fetched successfully using name parameter:', data);
@@ -346,7 +349,7 @@ const Forums = ({ username }) => {
         setLoading(false);
       }
     };
-    
+
     fetchForums();
   }, [username]);
 
@@ -388,21 +391,21 @@ const Forums = ({ username }) => {
 
   return (
     <div className={styles.forumsTabContainer}>
-    {forums.length > 0 ? (
-      forums.map(forum => (
-        <ForumCard 
-          key={forum.id} 
-          forum={forum} 
-          onClick={handleForumClick}
-        />
-      ))
-    ) : (
-      <div className={styles.emptyState}>
-        <p>No forums found.</p>
-        <p>Forums this user creates or participates in will appear here.</p>
-      </div>
-    )}
-  </div>
+      {forums.length > 0 ? (
+        forums.map(forum => (
+          <ForumCard
+            key={forum.id}
+            forum={forum}
+            onClick={handleForumClick}
+          />
+        ))
+      ) : (
+        <div className={styles.emptyState}>
+          <p>No forums found.</p>
+          <p>Forums this user creates or participates in will appear here.</p>
+        </div>
+      )}
+    </div>
   );
 };
 

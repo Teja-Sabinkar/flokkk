@@ -40,7 +40,7 @@ const ForumCard = ({ forum, onClick, onDelete, onEdit }) => {
     e.stopPropagation();
     console.log(`Editing forum: ${forum.title}`);
     setIsMenuOpen(false);
-    
+
     if (onEdit) {
       onEdit(forum);
     }
@@ -113,6 +113,9 @@ const ForumCard = ({ forum, onClick, onDelete, onEdit }) => {
             width={600}
             height={300}
             className={styles.postImage}
+            unoptimized
+            priority
+            key={`forum-image-${forum.id}-${forum.imageSrc}`} // Force re-render when image changes
           />
           <div className={styles.forumCount}>{forum.postCount} posts</div>
         </div>
@@ -231,31 +234,31 @@ const Forums = ({ username }) => {
       if (!token) {
         throw new Error('Authentication required');
       }
-      
+
       const response = await fetch(`/api/forums/${updatedForum.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           title: updatedForum.title
         })
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to update forum');
       }
-      
+
       const data = await response.json();
-      
+
       // Update forums state
-      setForums(prevForums => 
-        prevForums.map(forum => 
-          forum.id === updatedForum.id ? {...forum, title: updatedForum.title} : forum
+      setForums(prevForums =>
+        prevForums.map(forum =>
+          forum.id === updatedForum.id ? { ...forum, title: updatedForum.title } : forum
         )
       );
-      
+
       // Close the modal
       setIsEditModalOpen(false);
       setForumToEdit(null);
@@ -278,23 +281,23 @@ const Forums = ({ username }) => {
       if (!token) {
         throw new Error('Authentication required');
       }
-      
+
       const response = await fetch(`/api/forums/${forumId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to delete forum');
       }
-      
+
       // Remove forum from state
-      setForums(prevForums => 
+      setForums(prevForums =>
         prevForums.filter(f => f.id !== forumId)
       );
-      
+
       // Close modal
       setIsDeleteModalOpen(false);
       setForumToDelete(null);
@@ -380,8 +383,8 @@ const Forums = ({ username }) => {
           <div className={styles.modalContainer}>
             <div className={styles.modalHeader}>
               <h2>Delete Forum</h2>
-              <button 
-                className={styles.closeButton} 
+              <button
+                className={styles.closeButton}
                 onClick={() => {
                   setIsDeleteModalOpen(false);
                   setForumToDelete(null);
@@ -392,7 +395,7 @@ const Forums = ({ username }) => {
                 </svg>
               </button>
             </div>
-            
+
             <div className={styles.modalContent}>
               <p className={styles.confirmationText}>
                 Are you sure you want to delete <span className={styles.forumTitle}>"{forumToDelete.title}"</span>?
@@ -401,9 +404,9 @@ const Forums = ({ username }) => {
                 This action cannot be undone. All posts in this forum will be removed from the collection.
               </p>
             </div>
-            
+
             <div className={styles.modalFooter}>
-              <button 
+              <button
                 className={styles.cancelButton}
                 onClick={() => {
                   setIsDeleteModalOpen(false);
@@ -412,7 +415,7 @@ const Forums = ({ username }) => {
               >
                 Cancel
               </button>
-              <button 
+              <button
                 className={styles.deleteButton}
                 onClick={() => handleDeleteConfirm(forumToDelete.id)}
               >

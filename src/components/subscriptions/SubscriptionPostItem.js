@@ -365,6 +365,9 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
                 width={viewMode === 'list' ? 200 : 600}
                 height={viewMode === 'list' ? 100 : 300}
                 className={styles.postImage}
+                unoptimized
+                priority
+                key={`subscription-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
               />
             </div>
           </div>

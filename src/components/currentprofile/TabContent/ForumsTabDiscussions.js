@@ -277,6 +277,9 @@ const DiscussionPost = ({ post, onHidePost, onRemovePost }) => {
               width={600}
               height={300}
               className={styles.postImage}
+              unoptimized
+              priority
+              key={`forum-discussion-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
             />
           </div>
         </div>

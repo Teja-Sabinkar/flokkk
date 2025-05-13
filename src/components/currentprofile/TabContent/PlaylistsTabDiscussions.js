@@ -265,6 +265,9 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
               width={600}
               height={300}
               className={styles.postImage}
+              unoptimized
+              priority
+              key={`playlist-discussion-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
             />
           </div>
         </div>
@@ -337,7 +340,7 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
     ));
   };
 
-  
+
 
   // Handle removing a post from the playlist
   const handleRemoveFromPlaylist = async (postId) => {
@@ -382,17 +385,17 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
     }
   };
 
-  
+
   const fetchUserProfiles = async (postsArray) => {
     const token = localStorage.getItem('token');
     if (!token) return;
-    
+
     // Get unique usernames from posts
     const usernames = [...new Set(postsArray.map(post => post.username))];
-    
+
     // Fetch profile data for each unique user
     const profileData = {};
-    
+
     await Promise.all(usernames.map(async (username) => {
       try {
         const userData = await fetchUserProfile(username, token);
@@ -403,9 +406,9 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
         console.error(`Error fetching profile for ${username}:`, error);
       }
     }));
-    
+
     setUserProfiles(profileData);
-    
+
     // Update posts with latest profile pictures
     return postsArray.map(post => {
       const userProfile = profileData[post.username];
@@ -415,7 +418,7 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
       };
     });
   };
-  
+
 
   // Fetch playlist details with posts
   useEffect(() => {
@@ -450,7 +453,7 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
                     const postId = post.id || post._id;
                     return !hiddenIds.includes(postId);
                   });
-                  
+
                   // Fetch latest user profiles and update posts with current profile pictures
                   const updatedPosts = await fetchUserProfiles(filteredPosts);
                   setPosts(updatedPosts);
@@ -504,7 +507,7 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
     <div className={styles.container}>
       <div className={styles.header}>
 
-      <p className={styles.tabdescription}>posts in here are not accessable or visible to other users.</p>
+        <p className={styles.tabdescription}>posts in here are not accessable or visible to other users.</p>
 
         <button className={styles.backButton} onClick={onBack}>
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

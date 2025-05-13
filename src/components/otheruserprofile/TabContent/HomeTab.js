@@ -248,6 +248,9 @@ const Post = ({ post, onHidePost }) => {
               width={600}
               height={300}
               className={styles.postImage}
+              unoptimized
+              priority
+              key={`home-tab-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
             />
           </div>
         </div>

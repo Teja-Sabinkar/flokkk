@@ -227,7 +227,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
                 key={profilePicture} // Force re-render when URL changes
               />
             ) : (
-              <div 
+              <div
                 className={styles.avatarPlaceholder}
                 style={{
                   backgroundColor: generateColorFromUsername(username)
@@ -319,6 +319,9 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
             width={600}
             height={300}
             className={styles.itemImage}
+            unoptimized
+            priority
+            key={`explore-image-${id}-${imageUrl}`} // Force re-render when image changes
           />
         </div>
       </div>

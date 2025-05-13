@@ -194,19 +194,19 @@ const CommunityPost = ({ post, onVote }) => {
         {post.title && (
           <h3 className={styles.postTitle}>{post.title}</h3>
         )}
-        
+
         {/* Modified post text with truncation */}
-        <p 
+        <p
           ref={textRef}
           className={isExpanded ? styles.postText : styles.postTextTruncated}
         >
           {post.content}
         </p>
-        
+
         {/* Show more/less toggle button */}
         {post.content && post.content.length > 100 && (
-          <button 
-            className={styles.toggleButton} 
+          <button
+            className={styles.toggleButton}
             onClick={toggleExpanded}
           >
             {isExpanded ? 'Show less' : 'Show more'}
@@ -220,6 +220,7 @@ const CommunityPost = ({ post, onVote }) => {
               src={post.image}
               alt={post.title || "Post image"}
               className={styles.postImage}
+              key={`community-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
             />
           </div>
         )}
@@ -265,13 +266,13 @@ const CommunityTab = ({ username }) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return postsArray;
-      
+
       // Get unique usernames from posts
       const usernames = [...new Set(postsArray.map(post => post.username))];
-      
+
       // Fetch profile data for each unique user
       const profileData = {};
-      
+
       await Promise.all(usernames.map(async (username) => {
         try {
           const userData = await fetchUserProfile(username, token);
@@ -282,9 +283,9 @@ const CommunityTab = ({ username }) => {
           console.error(`Error fetching profile for ${username}:`, error);
         }
       }));
-      
+
       setUserProfiles(profileData);
-      
+
       // Update posts with latest profile pictures
       return postsArray.map(post => {
         const userProfile = profileData[post.username];
@@ -379,9 +380,9 @@ const CommunityTab = ({ username }) => {
       console.log('Profile updated event received, refreshing community posts');
       loadPosts(true);
     };
-    
+
     window.addEventListener('profile-updated', handleProfileUpdate);
-    
+
     return () => {
       window.removeEventListener('profile-updated', handleProfileUpdate);
     };
@@ -420,7 +421,7 @@ const CommunityTab = ({ username }) => {
       if (result && result.post) {
         // Fetch latest user profile for the new post author
         const updatedPost = await fetchUserProfiles([result.post]);
-        
+
         // Add the new post to the beginning of the posts array
         setPosts(prevPosts => [updatedPost[0] || result.post, ...prevPosts]);
 

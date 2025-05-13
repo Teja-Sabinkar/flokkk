@@ -32,22 +32,22 @@ const generateColorFromUsername = (username) => {
 const UserAvatar = ({ username }) => {
   const [profilePic, setProfilePic] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
         const token = localStorage.getItem('token');
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        
+
         const response = await fetch(`/api/users/${encodeURIComponent(username)}`, {
           headers
         });
-        
+
         if (response.ok) {
           const userData = await response.json();
-          if (userData.profilePicture && 
-              userData.profilePicture !== '/profile-placeholder.jpg') {
+          if (userData.profilePicture &&
+            userData.profilePicture !== '/profile-placeholder.jpg') {
             setProfilePic(userData.profilePicture);
           }
         }
@@ -57,12 +57,12 @@ const UserAvatar = ({ username }) => {
         setLoading(false);
       }
     };
-    
+
     if (username) {
       fetchUserProfile();
     }
   }, [username]);
-  
+
   if (loading) {
     return (
       <div
@@ -75,7 +75,7 @@ const UserAvatar = ({ username }) => {
       </div>
     );
   }
-  
+
   if (profilePic) {
     return (
       <Image
@@ -90,7 +90,7 @@ const UserAvatar = ({ username }) => {
       />
     );
   }
-  
+
   return (
     <div
       className={styles.avatarPlaceholder}
@@ -287,6 +287,9 @@ const DiscussionPost = ({ post, onHidePost }) => {
               width={600}
               height={300}
               className={styles.postImage}
+              unoptimized
+              priority
+              key={`forum-discussion-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
             />
           </div>
         </div>
@@ -363,29 +366,29 @@ const ForumsTabDiscussions = ({ forum, onBack }) => {
       try {
         setLoading(true);
         console.log('Fetching posts for forum with ID:', forum.id);
-        
+
         // Get token from localStorage
         const token = localStorage.getItem('token');
         if (!token) {
           throw new Error('Authentication required');
         }
-        
+
         // Fetch posts from the API using the real endpoint
         const response = await fetch(`/api/forums/${forum.id}/posts`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           console.error(`Error fetching forum posts: Status ${response.status}, Response: ${errorText}`);
           throw new Error(`Failed to load forum posts: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log('Fetched forum posts:', data);
-        
+
         // Process the posts
         if (data.posts && Array.isArray(data.posts)) {
           // Fetch hidden posts to filter out any hidden posts
@@ -407,7 +410,7 @@ const ForumsTabDiscussions = ({ forum, onBack }) => {
                 const postId = post.id || post._id;
                 return !hiddenIds.includes(postId);
               });
-              
+
               setPosts(filteredPosts);
             } else {
               // If can't fetch hidden posts, still show all posts
@@ -421,7 +424,7 @@ const ForumsTabDiscussions = ({ forum, onBack }) => {
         } else {
           setPosts([]);
         }
-        
+
         setError(null);
       } catch (err) {
         console.error('Error fetching forum details:', err);

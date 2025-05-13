@@ -1026,6 +1026,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className={styles.videoIframe}
+              key={`video-iframe-${videoId}`} // Force re-render when video changes
             ></iframe>
           ) : (
             // YouTube thumbnail with play button overlay
@@ -1036,6 +1037,9 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
                 fill
                 style={{ objectFit: 'cover' }}
                 className={styles.thumbnailImage}
+                unoptimized
+                priority
+                key={`video-thumb-${videoId}`} // Force re-render when video changes
               />
               <div className={styles.playButtonOverlay}>
                 <svg
@@ -1063,6 +1067,9 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
             fill
             style={{ objectFit: 'cover' }}
             className={styles.postImage}
+            unoptimized
+            priority
+            key={`post-image-${postData.id || postData._id}-${postData.image}`} // Force re-render when image changes
           />
         ) : (
           // Fallback placeholder
