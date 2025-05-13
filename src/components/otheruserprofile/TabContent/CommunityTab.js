@@ -8,22 +8,22 @@ import { ReportModal, submitReport } from '@/components/report'; // Import Repor
 const UserAvatar = ({ username }) => {
   const [profilePic, setProfilePic] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
         const token = localStorage.getItem('token');
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        
+
         const response = await fetch(`/api/users/${encodeURIComponent(username)}`, {
           headers
         });
-        
+
         if (response.ok) {
           const userData = await response.json();
-          if (userData.profilePicture && 
-              userData.profilePicture !== '/profile-placeholder.jpg') {
+          if (userData.profilePicture &&
+            userData.profilePicture !== '/profile-placeholder.jpg') {
             setProfilePic(userData.profilePicture);
           }
         }
@@ -33,12 +33,12 @@ const UserAvatar = ({ username }) => {
         setLoading(false);
       }
     };
-    
+
     if (username) {
       fetchUserProfile();
     }
   }, [username]);
-  
+
   if (loading) {
     return (
       <div
@@ -51,7 +51,7 @@ const UserAvatar = ({ username }) => {
       </div>
     );
   }
-  
+
   if (profilePic) {
     return (
       <Image
@@ -60,10 +60,13 @@ const UserAvatar = ({ username }) => {
         width={32}
         height={32}
         className={styles.avatar}
+        priority
+        unoptimized
+        key={profilePic} // Force re-render when URL changes
       />
     );
   }
-  
+
   return (
     <div
       className={styles.avatarPlaceholder}
@@ -126,7 +129,7 @@ const CommunityPost = ({ post, onHide }) => {
       // Element line height * 2 lines = max height for 2 lines
       const lineHeight = parseInt(getComputedStyle(element).lineHeight);
       const maxHeight = lineHeight * 2;
-      
+
       // If scrollHeight is greater than the height for 2 lines, content needs expand button
       if (element.scrollHeight > maxHeight) {
         setNeedsExpand(true);
@@ -247,12 +250,12 @@ const CommunityPost = ({ post, onHide }) => {
     try {
       setHideStatus({ loading: true, success: false, error: null });
       setIsMenuOpen(false);
-      
+
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('Authentication required');
       }
-      
+
       // Call the hide API
       const response = await fetch('/api/posts/hide', {
         method: 'POST',
@@ -262,15 +265,15 @@ const CommunityPost = ({ post, onHide }) => {
         },
         body: JSON.stringify({ postId: post.id })
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to hide post');
       }
-      
+
       // Set success state
       setHideStatus({ loading: false, success: true, error: null });
-      
+
       // Call the parent handler to remove this post from the UI
       if (onHide) {
         // Show success message briefly before removing from UI
@@ -278,11 +281,11 @@ const CommunityPost = ({ post, onHide }) => {
           onHide(post.id);
         }, 1000);
       }
-      
+
     } catch (error) {
       console.error('Error hiding post:', error);
       setHideStatus({ loading: false, success: false, error: error.message });
-      
+
       // Clear error after 3 seconds
       setTimeout(() => {
         setHideStatus({ loading: false, success: false, error: null });
@@ -315,7 +318,6 @@ const CommunityPost = ({ post, onHide }) => {
 
   return (
     <div className={styles.postCard}>
-      
       <div className={styles.postHeader}>
         <div className={styles.userInfo}>
           <div className={styles.avatarContainer}>
@@ -329,6 +331,9 @@ const CommunityPost = ({ post, onHide }) => {
                     width={32}
                     height={32}
                     className={styles.avatar}
+                    priority
+                    unoptimized
+                    key={post.avatarSrc} // Force re-render when URL changes
                   />
                 ) : (
                   <UserAvatar username={post.username} />
@@ -398,17 +403,17 @@ const CommunityPost = ({ post, onHide }) => {
         )}
 
         {/* Post text with expand/collapse functionality */}
-        <p 
+        <p
           ref={textRef}
           className={`${styles.postText} ${isExpanded ? styles.postTextExpanded : ''}`}
         >
           {post.content}
         </p>
-        
+
         {/* Show more/less button - only displayed if content exceeds 2 lines */}
         {needsExpand && (
-          <button 
-            className={styles.toggleButton} 
+          <button
+            className={styles.toggleButton}
             onClick={toggleExpand}
           >
             {isExpanded ? 'Show less' : 'Show more'}
@@ -464,16 +469,16 @@ const CommunityPost = ({ post, onHide }) => {
 
       {/* Report Modal component */}
       {isReportModalOpen && (
-        <div 
-          className={styles.modalWrapper} 
+        <div
+          className={styles.modalWrapper}
           onClick={(e) => e.stopPropagation()}
-          style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0, 
-            zIndex: 1000 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1000
           }}
         >
           <ReportModal
@@ -506,7 +511,7 @@ const CommunityTab = ({ username }) => {
   const handleHidePost = (postId) => {
     // Add to hidden posts list
     setHiddenPostIds(prev => [...prev, postId]);
-    
+
     // Remove post from the displayed list
     setPosts(prev => prev.filter(post => post.id !== postId));
   };
@@ -525,7 +530,7 @@ const CommunityTab = ({ username }) => {
         if (token) {
           try {
             const hiddenResponse = await fetch('/api/posts/hidden', { headers });
-            
+
             if (hiddenResponse.ok) {
               const hiddenData = await hiddenResponse.json();
               hiddenIds = hiddenData.hiddenPosts.map(hp => hp.postId);
@@ -574,10 +579,10 @@ const CommunityTab = ({ username }) => {
             setPosts([]);
           } else {
             // Filter out hidden posts
-            const filteredPosts = (data.communityPosts || []).filter(post => 
+            const filteredPosts = (data.communityPosts || []).filter(post =>
               !hiddenIds.includes(post.id)
             );
-            
+
             console.log(`Displaying ${filteredPosts.length} posts after filtering out ${hiddenIds.length} hidden posts`);
             setPosts(filteredPosts);
           }
@@ -622,9 +627,9 @@ const CommunityTab = ({ username }) => {
     <div className={styles.communityTabContainer}>
       <div className={styles.postsContainer}>
         {posts.map(post => (
-          <CommunityPost 
-            key={post.id} 
-            post={post} 
+          <CommunityPost
+            key={post.id}
+            post={post}
             onHide={handleHidePost}
           />
         ))}

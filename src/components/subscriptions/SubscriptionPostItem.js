@@ -269,6 +269,9 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
                 width={36}
                 height={36}
                 className={styles.profileImage}
+                priority
+                unoptimized
+                key={post.profilePicture} // Force re-render when URL changes
               />
             ) : (
               <div

@@ -32,7 +32,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     if (isMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -72,14 +72,14 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
 
       // Set as hidden locally
       setIsHidden(true);
-      
+
       // If parent component provided an onHide callback, call it
       if (typeof onHide === 'function') {
         onHide(id);
       }
-      
+
       console.log(`Hidden: ${title} (ID: ${id})`);
-      
+
       // You could show a toast notification here
     } catch (error) {
       console.error('Error hiding post:', error);
@@ -93,25 +93,25 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     setIsMenuOpen(false); // Close dropdown menu first
     setIsReportModalOpen(true); // Open report modal
   };
-  
+
   // Handler for modal close
   const handleReportModalClose = () => {
     setIsReportModalOpen(false);
     setReportError(null);
   };
-  
+
   // Handler for report submission
   const handleReportSubmit = async (reportData) => {
     try {
       setIsReporting(true);
       setReportError(null);
-      
+
       // Submit the report using the service
       await submitReport(reportData);
-      
+
       // Close the modal after successful submission
       setIsReportModalOpen(false);
-      
+
       // You could show a success toast notification here
       console.log(`Report submitted for post "${title}"`);
     } catch (error) {
@@ -121,17 +121,17 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
       setIsReporting(false);
     }
   };
-  
+
   // Handler for share button click
   const handleShareClick = () => {
     setIsShareModalOpen(true);
   };
-  
+
   // Handler for share modal close
   const handleShareModalClose = () => {
     setIsShareModalOpen(false);
   };
-  
+
   // Handler for discussions button click
   const handleDiscussionsClick = () => {
     // Navigate to the discussion page using Next.js router
@@ -179,7 +179,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     image: imageUrl,
     username: username
   };
-  
+
   // Prepare content details for the report modal
   const contentDetails = {
     postId: id,
@@ -191,7 +191,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     hashtags: [], // We might not have this info
     reportedAt: new Date().toISOString()
   };
-  
+
   // Prepare data for the share modal
   const sharePostData = {
     id: id,
@@ -201,8 +201,8 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
   };
 
   // Check if profilePicture is available and not the default placeholder
-  const hasProfilePicture = profilePicture && 
-                          profilePicture !== '/profile-placeholder.jpg';
+  const hasProfilePicture = profilePicture &&
+    profilePicture !== '/profile-placeholder.jpg';
 
   // Check if item is hidden, if so return null (don't render)
   if (isHidden) {
@@ -216,12 +216,15 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
         <div className={styles.userInfo}>
           <div className={styles.avatarContainer}>
             {hasProfilePicture ? (
-              <Image 
+              <Image
                 src={profilePicture}
                 alt={`${username}'s profile`}
                 width={32}
                 height={32}
                 className={styles.avatarImage}
+                priority
+                unoptimized
+                key={profilePicture} // Force re-render when URL changes
               />
             ) : (
               <div 
@@ -241,10 +244,10 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
             <span className={styles.timeAgo}>{timeAgo} ago</span>
           </div>
         </div>
-        
+
         <div className={styles.menuContainer} ref={menuRef}>
-          <button 
-            className={styles.menuButton} 
+          <button
+            className={styles.menuButton}
             aria-label="Item menu"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
@@ -254,10 +257,10 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
               <circle cx="12" cy="19" r="1"></circle>
             </svg>
           </button>
-          
+
           {isMenuOpen && (
             <div className={styles.dropdown}>
-              <button 
+              <button
                 className={styles.dropdownItem}
                 onClick={handleSave}
               >
@@ -268,7 +271,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
                 </svg>
                 <span>Save</span>
               </button>
-              <button 
+              <button
                 className={styles.dropdownItem}
                 onClick={handleHide}
                 disabled={isHiding}
@@ -288,7 +291,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
                   </>
                 )}
               </button>
-              <button 
+              <button
                 className={styles.dropdownItem}
                 onClick={handleReport}
               >
@@ -303,14 +306,14 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
           )}
         </div>
       </div>
-      
+
       {/* Rest of component remains unchanged */}
       <h3 className={styles.itemTitle}>{title}</h3>
       <p className={styles.itemDescription}>{description}</p>
-      
+
       <div className={styles.imageContainer}>
         <div className={styles.imageWrapper}>
-          <Image 
+          <Image
             src={imageUrl || "/api/placeholder/600/300"}
             alt={title}
             width={600}
@@ -319,7 +322,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
           />
         </div>
       </div>
-      
+
       <div className={styles.itemFooter}>
         <button className={styles.discussionsBtn} onClick={handleDiscussionsClick}>
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -327,7 +330,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
           </svg>
           <span>{discussionCount} Discussions</span>
         </button>
-        
+
         <button className={styles.shareBtn} onClick={handleShareClick}>
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="18" cy="5" r="3"></circle>
@@ -341,13 +344,13 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
       </div>
 
       {/* Add the PostSaveModal component */}
-      <PostSaveModal 
+      <PostSaveModal
         isOpen={isSaveModalOpen}
         onClose={handleSaveModalClose}
         post={postData}
         onSave={handleSaveSuccess}
       />
-      
+
       {/* Add the ReportModal component */}
       <ReportModal
         isOpen={isReportModalOpen}
@@ -355,7 +358,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
         onSubmit={handleReportSubmit}
         contentDetails={contentDetails}
       />
-      
+
       {/* Add the ShareModal component */}
       <ShareModal
         isOpen={isShareModalOpen}

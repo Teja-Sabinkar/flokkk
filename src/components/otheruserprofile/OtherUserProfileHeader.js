@@ -209,7 +209,9 @@ const OtherUserProfileHeader = ({
               width={100}
               height={100}
               className={styles.profilePicture}
-              priority={true}
+              priority
+              unoptimized
+              key={profileData.profilePicture} // Force re-render when URL changes
             />
           ) : (
             <div

@@ -244,6 +244,9 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
                 width={40}
                 height={40}
                 className={styles.avatarImage}
+                priority
+                unoptimized
+                key={author?.profilePicture || authorAvatar} // Force re-render when URL changes
               />
             ) : (
               <div

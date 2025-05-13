@@ -153,6 +153,9 @@ export default function RecentlyViewed({ initialItemCount = 3 }) {
                       width={32}
                       height={32}
                       className={styles.avatarImage}
+                      priority
+                      unoptimized
+                      key={author.profilePicture} // Force re-render when URL changes
                     />
                   </div>
                 ) : (

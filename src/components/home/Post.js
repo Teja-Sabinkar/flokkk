@@ -307,6 +307,9 @@ export default function Post({ post, onHidePost }) {
                 width={40}
                 height={40}
                 className={styles.avatarImage}
+                priority
+                unoptimized
+                key={post.userImage} // Force re-render when URL changes
               />
             ) : post.userId?.profilePicture && post.userId.profilePicture !== '/profile-placeholder.jpg' ? (
               // If post has userId object with non-default profilePicture, use that
@@ -316,6 +319,9 @@ export default function Post({ post, onHidePost }) {
                 width={40}
                 height={40}
                 className={styles.avatarImage}
+                priority
+                unoptimized
+                key={post.userId.profilePicture} // Force re-render when URL changes
               />
             ) : (
               // Fallback to placeholder with initial

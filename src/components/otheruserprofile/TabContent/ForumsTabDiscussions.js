@@ -84,6 +84,9 @@ const UserAvatar = ({ username }) => {
         width={40}
         height={40}
         className={styles.avatarImage}
+        priority
+        unoptimized
+        key={profilePic} // Force re-render when URL changes
       />
     );
   }
@@ -214,6 +217,9 @@ const DiscussionPost = ({ post, onHidePost }) => {
                 width={40}
                 height={40}
                 className={styles.avatarImage}
+                priority
+                unoptimized
+                key={post.profilePicture} // Force re-render when URL changes
               />
             ) : (
               <UserAvatar username={post.username} />

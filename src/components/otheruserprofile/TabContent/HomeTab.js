@@ -154,6 +154,9 @@ const Post = ({ post, onHidePost }) => {
                 width={32}
                 height={32}
                 className={styles.avatar}
+                priority
+                unoptimized
+                key={post.profilePicture} // Force re-render when URL changes
               />
             ) : (
               <div

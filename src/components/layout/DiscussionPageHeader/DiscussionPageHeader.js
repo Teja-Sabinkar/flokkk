@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import styles from './DiscussionPageHeader.module.css';
 
-export default function Header({ user, onMenuToggle, isMobileMenuOpen }) {
+export default function DiscussionPageHeader({ user, onMenuToggle, isMobileMenuOpen }) {
   const router = useRouter();
 
   // Unified user state for consistent navigation
@@ -602,24 +602,24 @@ export default function Header({ user, onMenuToggle, isMobileMenuOpen }) {
 
   const generateColorFromUsername = (username) => {
     if (!username) return '#3b5fe2'; // Default blue color
-  
+
     // Simple hash function for consistent color generation
     let hash = 0;
     for (let i = 0; i < username.length; i++) {
       hash = username.charCodeAt(i) + ((hash << 5) - hash);
     }
-  
+
     // Convert hash to a hex color
     let color = '#';
     for (let i = 0; i < 3; i++) {
       const value = (hash >> (i * 8)) & 0xFF;
       color += ('00' + value.toString(16)).substr(-2);
     }
-  
+
     return color;
   };
 
-  
+
 
   return (
     <header className={styles.header}>
@@ -887,6 +887,9 @@ export default function Header({ user, onMenuToggle, isMobileMenuOpen }) {
                     width={32}
                     height={32}
                     className={styles.avatar}
+                    priority
+                    unoptimized
+                    key={userProfile.avatar || userState.avatar} // Force re-render when URL changes
                   />
                 ) : (
                   <div

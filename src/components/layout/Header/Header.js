@@ -757,6 +757,9 @@ export default function Header({ user, onMenuToggle, isMobileMenuOpen }) {
                     width={32}
                     height={32}
                     className={styles.avatar}
+                    priority
+                    unoptimized
+                    key={userProfile.avatar} // Force re-render when URL changes
                   />
                 ) : (
                   <div
