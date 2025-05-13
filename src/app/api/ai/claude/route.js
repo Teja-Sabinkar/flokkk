@@ -335,7 +335,7 @@ export async function POST(request) {
           aiInfo = `<div style="font-size: 15px; font-weight: bold; color: #FFFFFF; padding: 10px 0 5px 5px; display: flex; align-items: center;">
             <span style="color: #FFFFFF; margin-right: 5px;">•</span> EXPANDED ADDITIONAL INFORMATION
           </div>
-          <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white; text-align: justify;">
+          <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white;">
             ${aiResponse}
           </div>`;
 
@@ -344,7 +344,7 @@ export async function POST(request) {
           aiInfo = `<div style="font-size: 15px; font-weight: bold; color: #FFFFFF; padding: 10px 0 5px 5px; display: flex; align-items: center;">
             <span style="color: #FFFFFF; margin-right: 5px;">•</span> ADDITIONAL INFORMATION
           </div>
-          <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white; text-align: justify;">
+          <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white;">
             I apologize, but I encountered an error while trying to generate a more detailed response. Please try again.
           </div>`;
         }
@@ -419,7 +419,7 @@ export async function POST(request) {
           aiInfo = `<div style="font-size: 15px; font-weight: bold; color: #FFFFFF; padding: 10px 0 5px 5px; display: flex; align-items: center;">
             <span style="color: #FFFFFF; margin-right: 5px;">•</span> ADDITIONAL INFORMATION
           </div>
-          <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white; text-align: justify;">
+          <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white;">
             ${aiResponse}
           </div>
           <div style="color: #4ca0ff; font-size: 13px; padding: 5px 0 10px 5px; cursor: pointer;" class="show-more-results show-more-ai" data-query="${encodeURIComponent(message)}" data-type="ai">Show more</div>`;
@@ -428,7 +428,7 @@ export async function POST(request) {
           aiInfo = `<div style="font-size: 15px; font-weight: bold; color: #FFFFFF; padding: 10px 0 5px 5px; display: flex; align-items: center;">
             <span style="color: #FFFFFF; margin-right: 5px;">•</span> ADDITIONAL INFORMATION
           </div>
-          <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white; text-align: justify;">
+          <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white;">
             I apologize, but I encountered an error while trying to generate a response. Please try again.
           </div>`;
         }
