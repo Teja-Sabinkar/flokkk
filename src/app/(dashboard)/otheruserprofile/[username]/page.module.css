@@ -1,0 +1,375 @@
+/* Main container for the entire page */
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0f0f0f;
+  color: #fff;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Add a background element to cover any gaps */
+.pageContainer::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0f0f0f;
+  z-index: -1;
+}
+
+/* Header container */
+.headerContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 60px;
+  /* Should match the header height */
+  background-color: #0f0f0f;
+}
+
+/* Main content area */
+.mainContent {
+  display: flex;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0f0f0f;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Left sidebar container */
+.sidebarContainer {
+  width: 330px;
+  /* Match sidebar width */
+  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background-color: #121212;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  z-index: 100;
+  /* Ensure sidebar is above overlay */
+}
+
+.sidebarScrollable {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  /* Enable independent scrolling */
+  background-color: #121212;
+  /* Ensure bottom is covered */
+  padding-bottom: 20px;
+}
+
+/* Content container */
+.contentContainer {
+  flex: 1;
+  position: absolute;
+  top: 0;
+  left: 330px;
+  /* Match sidebar width */
+  right: 0;
+  bottom: 0;
+  margin: 0 20px;
+  background-color: #0f0f0f;
+  overflow: hidden;
+  transition: left 0.3s ease;
+}
+
+.contentScrollable {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  /* Enable independent scrolling */
+  background-color: #0f0f0f;
+  /* Ensure bottom is covered */
+  padding-bottom: 40px;
+  scrollbar-width: none;
+}
+
+/* Profile container */
+.profileContainer {
+  width: 100%;
+}
+
+/* Loading state */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  color: #aaa;
+  font-size: 16px;
+}
+
+/* Error state */
+.errorContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  color: #f44336;
+  font-size: 16px;
+  text-align: center;
+  padding: 0 20px;
+}
+
+/* Private profile message */
+.privateProfileMessage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  margin: 20px;
+  padding: 20px;
+  text-align: center;
+  color: #aaa;
+}
+
+/* Mobile overlay for sidebar toggle */
+.mobileOverlay {
+  display: none;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 90;
+  backdrop-filter: blur(4px);
+  /* Lower than sidebar */
+}
+
+/* Add these styles to page.module.css */
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  margin: 20px;
+  padding: 30px;
+  text-align: center;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  color: #e0e0e0;
+}
+
+.errorIcon {
+  color: #f44336;
+  margin-bottom: 16px;
+}
+
+.errorTitle {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #fff;
+}
+
+.errorMessage {
+  background-color: rgba(255, 59, 48, 0.9);
+  color: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin: 20px;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.errorHelp {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 24px;
+  max-width: 500px;
+}
+
+.backButton {
+  background-color: #4169e1;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.backButton:hover {
+  background-color: #3555c2;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #333;
+  border-radius: 50%;
+  border-top-color: #4169e1;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+
+.errorHelpList {
+  list-style-type: disc;
+  text-align: left;
+  color: #aaa;
+  margin: 16px 0;
+  padding-left: 20px;
+}
+
+.errorActions {
+  display: flex;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.searchButton {
+  background-color: transparent;
+  color: white;
+  border: 1px solid #4169e1;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.searchButton:hover {
+  background-color: rgba(65, 105, 225, 0.1);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1300px) {
+  /* Hide left sidebar by default, will be shown with toggle */
+  .sidebarContainer {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  /* Show sidebar when open class is applied */
+  .sidebarContainer.open {
+    transform: translateX(0);
+  }
+
+  /* Adjust content container to take full width */
+  .contentContainer {
+    left: 0;
+  }
+
+  /* Show overlay when sidebar is open */
+  .mobileOverlay {
+    display: none;
+    /* Hidden by default */
+  }
+
+  /* When sidebar is open, show the overlay but only to the right of the sidebar */
+  .open~.mobileOverlay,
+  .open+.mobileOverlay,
+  .open~* .mobileOverlay {
+    display: block;
+    left: 0px;
+    /* Width of the sidebar on mobile */
+  }
+}
+
+@media (max-width: 992px) {
+  .mainContent {
+    flex-direction: column;
+  }
+
+  .sidebarContainer {
+    width: 240px;
+    /* Slightly narrower for mobile */
+  }
+
+  /* Update overlay left position to match sidebar width */
+  .open~.mobileOverlay,
+  .open+.mobileOverlay,
+  .open~* .mobileOverlay {
+    left: 0px;
+  }
+}
+
+@media (max-width: 768px) {
+  .contentScrollable {
+    padding: 0;
+    /* Remove padding for profile page to allow banner to span full width */
+  }
+
+  .sidebarContainer {
+    width: 220px;
+  }
+
+  .sidebarScrollable {
+    width: 80px;
+  }
+
+  .sidebarContainer {
+    width: 72px;
+  }
+
+  /* Update overlay left position to match sidebar width */
+  .open~.mobileOverlay,
+  .open+.mobileOverlay,
+  .open~* .mobileOverlay {
+    left: 0px;
+  }
+}
+
+
+@media (max-width: 480px) {
+
+  .contentContainer {
+    margin: 0px;
+
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

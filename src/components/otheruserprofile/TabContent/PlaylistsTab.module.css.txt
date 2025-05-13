@@ -1,0 +1,328 @@
+.playlistsTabContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Add notification styles */
+.notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  max-width: 300px;
+}
+
+.successNotification {
+  background-color: #4caf50;
+  color: white;
+}
+
+.errorNotification {
+  background-color: #f44336;
+  color: white;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.postCard {
+  width: 100%;
+  background-color: #171717;
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 16px;
+  border: 1px solid #252525;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.postCard:hover {
+  border-color: #252525;
+}
+
+.postHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.playlistTitle h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.menuContainer {
+  position: relative;
+}
+
+.postMenu {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  height: 32px;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.postMenu:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.postImageContainer {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.postImageWrapper {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%;
+  /* 16:9 aspect ratio */
+  background-color: #222;
+}
+
+.postImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.forumCount {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+.postEngagement {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #333;
+  padding: 12px 16px;
+  align-items: center;
+}
+
+.playlistUpdate {
+  font-size: 13px;
+  color: #aaa;
+}
+
+.shareBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.shareBtn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.shareBtn svg {
+  margin-right: 4px;
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #222;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 140px;
+  overflow: hidden;
+  z-index: 100;
+  border: 1px solid #333;
+  margin-top: 4px;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s;
+}
+
+.dropdownItem:hover {
+  background-color: #333;
+}
+
+.dropdownItem:active {
+  background-color: #444;
+}
+
+.dropdownItem svg {
+  flex-shrink: 0;
+}
+
+.debugInfo {
+  margin-top: 20px;
+  font-size: 12px;
+  color: #888;
+  background-color: #171717;
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.debugInfo summary {
+  cursor: pointer;
+  user-select: none;
+  color: #4169e1;
+}
+
+.debugInfo pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 300px;
+  overflow: auto;
+  margin-top: 8px;
+  padding: 8px;
+  background-color: #222;
+  border-radius: 4px;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #333;
+  border-radius: 50%;
+  border-top-color: #4169e1;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+
+.errorContainer, .emptyContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  text-align: center;
+  color: #aaa;
+}
+
+.imageLoading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #2a2a2a;
+}
+
+.imagePlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #3b5fe2;
+  color: white;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1100px) {
+  .playlistsTabContainer {
+    grid-template-columns: repeat(2, 1fr);
+    /* 2 columns on medium screens */
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .playlistsTabContainer {
+    grid-template-columns: 1fr;
+    /* Single column on mobile */
+    padding: 0 12px;
+  }
+  
+  .notification {
+    top: 70px;
+    left: 20px;
+    right: 20px;
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .playlistsTabContainer {
+    padding: 0 8px;
+  }
+}

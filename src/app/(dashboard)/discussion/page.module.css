@@ -1,0 +1,385 @@
+/* Update the rightBarWrapper styles */
+.rightBarWrapper {
+  height: 100%;
+  overflow-y: auto;
+  background-color: transparent;
+  transition: transform 0.3s ease;
+  /* Add transition for smooth animation */
+}
+
+.rightBarContent {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  border-left: 1px solid #222;
+}
+
+/* Add right sidebar toggle button styling */
+
+.aiText {
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  transform: rotate(-90deg);
+  /* Rotate 90 degrees anticlockwise */
+  display: inline-block;
+  /* Needed for the rotation to work properly */
+  white-space: nowrap;
+  /* Keep text on one line */
+}
+
+
+.rightSidebarToggle {
+  display: none;
+  position: fixed;
+  right: 0;
+  top: 11%;
+  transform: translateY(-50%);
+  border-top: 1px solid #4169e1;
+  border-left: 1px solid #4169e1;
+  border-bottom: 1px solid #4169e1;
+  border-right: none;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  color: #fff;
+  width: 32px;
+  /* Adjust width for vertical text */
+  height: 80px;
+  /* Make taller to accommodate rotated text */
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  cursor: pointer;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
+  transition: right 0.3s ease;
+  background-color: #4169e1da;
+  backdrop-filter: blur(1px);
+}
+
+.rightSidebarToggle:hover {
+  background-color: #4169e1;
+}
+
+.rightSidebarToggle.active {
+  right: 400px;
+  /* Width of the sidebar when open */
+}
+
+.rightSidebarToggle.active .aiText {
+  color: #fff;
+  /* Change text color when active */
+}
+
+
+.rightSidebarToggle.active svg {
+  transform: rotate(180deg);
+}
+
+/* Keep all existing styles */
+.discussionPageContainer {
+  width: 100%;
+  height: 100vh;
+  background-color: #0f0f0f;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+/* Header gap */
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 60px);
+  margin-top: 60px;
+  /* Space for the fixed header */
+  position: relative;
+  width: 100%;
+}
+
+/* Sidebar container - hidden by default */
+.sidebarContainer {
+  position: fixed;
+  top: 60px;
+  /* Below the header */
+  left: 0;
+  height: calc(100vh - 60px);
+  z-index: 1000;
+  /* Higher z-index to overlay content */
+  width: 330px;
+  /* Full sidebar width */
+  transform: translateX(-100%);
+  /* Hide sidebar by default */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: none;
+  background-color: #121212;
+  /* Ensure it has a background to cover content */
+}
+
+/* Show sidebar when menu is open */
+.mainContent:has(.contentContainer.menuOpen) .sidebarContainer {
+  transform: translateX(0);
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Main content container */
+.contentContainer {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  transition: opacity 0.3s ease;
+  position: relative;
+  /* Added for positioning the toggle button */
+}
+
+/* Left sidebar toggle button */
+.leftSidebarToggle {
+  display: none;
+  /* Hidden by default on larger screens */
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 1px solid #4169d4;
+  border-right: 1px solid #4169d4;
+  border-bottom: 1px solid #4169d4;
+  border-left: none;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  color: #fff;
+  width: 24px;
+  height: 60px;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  cursor: pointer;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+  transition: left 0.3s ease;
+  background-color: rgba(0, 0, 0, 0.099);
+  backdrop-filter: blur(1px);
+}
+
+.leftSidebarToggle:hover {
+  background-color: #1e1e1e;
+}
+
+.leftSidebarToggle.active {
+  left: 400px;
+  /* Width of the sidebar when open */
+}
+
+.leftSidebarToggle.active svg {
+  transform: rotate(180deg);
+}
+
+/* Left sidebar */
+.leftBarWrapper {
+  width: 330px;
+  /* Fixed width */
+  max-width: 330px;
+  /* Ensure it doesn't get larger */
+  min-width: 300px;
+  /* Minimum width */
+  flex: 0 0 330px;
+  /* Fixed width in flex context */
+  height: 100%;
+  overflow: hidden;
+  /* Changed from overflow-y: auto */
+  border-radius: 8px;
+  background-color: #0f0f0f;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  border-right: 1px solid #222;
+}
+
+/* Center content */
+.centerBarWrapper {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  min-width: 0;
+  /* Critical for flex items to prevent overflow */
+  margin: 0 5px;
+}
+
+/* Ensure content in leftBarContent is scrollable */
+.leftBarContent {
+  overflow-y: auto;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Styling when menu is open - applies to all screen sizes */
+.contentContainer.menuOpen {
+  opacity: 0.7;
+  /* Dim the content behind the sidebar */
+  pointer-events: none;
+  /* Prevent interaction with the dimmed content */
+}
+
+/* Add overlay when menu is open - applies to all screen sizes */
+.contentContainer.menuOpen::before {
+  content: '';
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  /* Just below sidebar but above content */
+}
+
+/* Custom scrollbars */
+.leftBarContent::-webkit-scrollbar,
+.centerBarWrapper::-webkit-scrollbar,
+.rightBarWrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.leftBarContent::-webkit-scrollbar-track,
+.centerBarWrapper::-webkit-scrollbar-track,
+.rightBarWrapper::-webkit-scrollbar-track {
+  background: #0f0f0f;
+}
+
+.leftBarContent::-webkit-scrollbar-thumb,
+.centerBarWrapper::-webkit-scrollbar-thumb,
+.rightBarWrapper::-webkit-scrollbar-thumb {
+  background-color: #333;
+  border-radius: 3px;
+}
+
+/* Firefox scrollbar styling */
+.leftBarContent,
+.centerBarWrapper,
+.rightBarWrapper {
+  scrollbar-width: none;
+  scrollbar-color: #333 #0f0f0f;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 1300px) {
+
+  /* Show left sidebar toggle button */
+  .leftSidebarToggle {
+    display: flex;
+  }
+
+  /* Show right sidebar toggle button */
+  .rightSidebarToggle {
+    display: flex;
+  }
+
+  /* Left sidebar positioning for toggle functionality */
+  .leftBarWrapper {
+    position: fixed;
+    left: 0;
+    top: 60px;
+    /* Below header */
+    height: calc(100vh - 60px);
+    z-index: 998;
+    margin-right: 0;
+    transform: translateX(-100%);
+    /* Hide by default */
+    border-radius: 0;
+    overflow: hidden;
+    /* Changed from overflow-y: auto */
+    transition: transform 0.3s ease;
+    /* Ensure smooth animation */
+    width: 400px;
+    /* Fixed width */
+    max-width: 400px;
+    /* Ensure it doesn't get larger */
+    min-width: 300px;
+  }
+
+  .leftBarWrapper.visible {
+    transform: translateX(0);
+    /* Show when toggled */
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Right sidebar positioning for toggle functionality */
+  .rightBarWrapper {
+    position: fixed;
+    right: 0;
+    top: 60px;
+    /* Below header */
+    height: calc(100vh - 60px);
+    z-index: 998;
+    margin-left: 0;
+    transform: translateX(100%);
+    /* Move it completely off-screen to the right */
+    /* Hide by default */
+    border-radius: 0;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    /* Ensure smooth animation */
+    width: 400px !important;
+    /* Use fixed width in mobile view */
+    min-width: 330px !important;
+    max-width: 450px !important;
+  }
+
+  .rightBarWrapper.visible {
+    transform: translateX(0);
+    /* Bring it back to visible position */
+    /* Show when toggled */
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@media (max-width: 992px) {
+  .centerBarWrapper {
+    width: 100%;
+    /* Center content takes full width */
+  }
+}
+
+@media (max-width: 768px) {
+  .contentContainer {
+    padding: 12px 8px;
+  }
+
+  .sidebarContainer {
+    width: 72px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contentContainer{
+    padding: 0px;
+  }
+
+  .rightBarWrapper {
+    width: 350px !important;
+    /* Use fixed width in mobile view */
+    min-width: 300px !important;
+    max-width: 350px !important;
+  }
+
+  .rightSidebarToggle.active {
+    right: 349px;
+    /* Width of the sidebar when open */
+  }
+
+  .leftBarWrapper {
+    width: 350px !important;
+    /* Use fixed width in mobile view */
+    min-width: 300px !important;
+    max-width: 350px !important;
+  }
+
+  .leftSidebarToggle.active {
+    left: 349px;
+    /* Width of the sidebar when open */
+  }
+
+  
+
+
+}
+
+
+

@@ -1,0 +1,325 @@
+.card {
+    background-color: #171717;
+    border-radius: 8px;
+    overflow: hidden;
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #252525;
+}
+
+.card:hover {
+    border: 1px solid #333;
+}
+
+/* List view styling */
+.listCard {
+    flex-direction: column;
+}
+
+/* Post Header with User Info */
+.postHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+}
+
+.avatarContainer {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.avatarPlaceholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.profileImage {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.nameDate {
+    display: flex;
+    flex-direction: column;
+}
+
+.username {
+    font-size: 14px;
+    font-weight: 500;
+    color: #e0e0e0;
+    text-decoration: none;
+}
+
+.username:hover {
+    text-decoration: underline;
+}
+
+.postDate {
+    font-size: 12px;
+    color: #aaa;
+}
+
+/* Menu and dropdown */
+.menuContainer {
+    position: relative;
+}
+
+.postMenu {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    height: 32px;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.postMenu:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #222;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    min-width: 140px;
+    overflow: hidden;
+    z-index: 100;
+    border: 1px solid #333;
+    margin-top: 4px;
+}
+
+.dropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    background: none;
+    border: none;
+    color: #e0e0e0;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.2s;
+}
+
+.dropdownItem:hover {
+    background-color: #333;
+}
+
+.dropdownItem:active {
+    background-color: #444;
+}
+
+.dropdownItem svg {
+    flex-shrink: 0;
+}
+
+/* Post Content */
+.listContent {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 16px;
+    margin-bottom: 15px;
+}
+
+.textContent {
+    flex: 1;
+}
+
+.postTitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 10px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.postContent {
+    font-size: 14px;
+    color: #ddd;
+    margin: 0 0 16px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+
+/* Post Image */
+.postImageContainer {
+    margin-bottom: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.listImageContainer {
+    flex: 0 0 200px;
+    margin-bottom: 0;
+}
+
+.postImageWrapper {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 50%;
+    /* Aspect ratio 2:1 */
+    background-color: #222;
+}
+
+.postImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Video container */
+.videoContainer {
+    margin-bottom: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%;
+    /* 16:9 aspect ratio */
+    background-color: #000;
+}
+
+.videoFrame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Post Engagement */
+.postEngagement {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #333;
+    padding: 12px 0px 0 0px;
+    align-items: center;
+    margin-top: auto;
+}
+
+.discussionsBtn,
+.shareBtn {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    text-decoration: none;
+}
+
+.discussionsBtn:hover,
+.shareBtn:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
+
+.discussionsBtn svg,
+.shareBtn svg {
+    margin-right: 8px;
+}
+
+.discussionsBtn {
+    margin-right: 8px;
+}
+
+.successMessage {
+    background-color: rgba(46, 213, 115, 0.1);
+    color: #2ed573;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-size: 14px;
+    text-align: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .listContent {
+        flex-direction: column;
+    }
+
+    .listImageContainer {
+        width: 100%;
+        margin-bottom: 16px;
+    }
+}
+
+
+@media (max-width: 480px) {
+    .postContent {
+        font-size: 12px;
+    }
+
+    .discussionsBtn,
+    .shareBtn {
+        font-size: 12px;
+    }
+
+    .postMenu {
+        height: 18px;
+        width: 18px;
+    }
+
+    .postDate {
+        font-size: 9px;
+    }
+}

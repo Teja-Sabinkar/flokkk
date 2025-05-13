@@ -1,0 +1,353 @@
+/* src/components/currentprofile/TabContent/ContributionsTab.module.css */
+.contributionsContainer {
+    width: 800px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+.tabSelector {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 8px;
+    justify-content: space-around;
+}
+
+.tabButton {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 14px;
+    padding: 8px 16px;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s ease;
+}
+
+.tabButton:hover {
+    color: white;
+}
+
+.tabButton.active {
+    color: white;
+}
+
+.tabButton.active::after {
+    content: '';
+    position: absolute;
+    bottom: -9px;
+    /* Positioned to overlap the border */
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #4169e1;
+}
+
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+}
+
+.loadingSpinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s linear infinite;
+    margin-bottom: 12px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.errorMessage {
+    background-color: rgba(255, 59, 48, 0.1);
+    color: #ff3b30;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.retryButton {
+    background-color: transparent;
+    border: 1px solid #ff3b30;
+    color: #ff3b30;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: all 0.2s ease;
+}
+
+.retryButton:hover {
+    background-color: rgba(255, 59, 48, 0.1);
+}
+
+.emptyState {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 32px 24px;
+    text-align: center;
+    color: #aaa;
+    margin-top: 12px;
+}
+
+.emptyState p {
+    margin: 0 0 8px;
+}
+
+.contributionsList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.contributionCard {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #252525;
+}
+
+.contributionCard:hover {
+    border: 1px solid #333;
+}
+
+
+.contributionHeader {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 10px;
+}
+
+.contributionTitle {
+    font-size: 14px;
+    margin: 0;
+    color: white;
+    width: 550px;
+}
+
+.contributionTime {
+    font-size: 12px;
+    color: #888;
+}
+
+.contributionMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: #aaa;
+    margin-top: 16px;
+}
+
+.urlDisplay {
+    background-color: #222;
+    padding: 8px 12px;
+    border-radius: 4px;
+    word-break: break-all;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.urlDisplay a {
+    color: #4169e1;
+    text-decoration: none;
+}
+
+.urlDisplay a:hover {
+    text-decoration: underline;
+}
+
+.contributionDescription {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #ddd;
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.actionButtons {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.approveButton,
+.rejectButton {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.approveButton {
+    background-color: #4169e1;
+    border: none;
+    color: white;
+}
+
+.approveButton:hover {
+    background-color: #3a5ecc;
+}
+
+.rejectButton {
+    background-color: transparent;
+    border: 1px solid #ff3b30;
+    color: #ff3b30;
+}
+
+.rejectButton:hover {
+    background-color: rgba(255, 59, 48, 0.1);
+}
+
+.tabModeSelector {
+    display: flex;
+    margin-bottom: 20px;
+    justify-content: space-evenly;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.tabModeButton {
+    display: flex;
+    padding: 12px 24px;
+    background: transparent;
+    border: 1px solid #4169e1;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    position: relative;
+    border-radius: 8px;
+    width: 100px;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.tabModeButton.active {
+    color: white;
+    background: #4169e1;
+    border: none;
+}
+
+.tabModeButton.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+.pendingBadge {
+    background-color: #f0f0f0;
+    color: #718096;
+}
+
+.approvedBadge {
+    background-color: #c6f6d5;
+    color: #22543d;
+}
+
+.rejectedBadge {
+    background-color: #fed7d7;
+    color: #822727;
+}
+
+.postInfo {
+    font-size: 14px;
+    color: #aaa;
+    margin-bottom: 12px;
+}
+
+/* Optional: If you want to make the post title stand out */
+.postInfo {
+    color: #ccc;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .contributionsContainer {
+        padding: 0 12px;
+    }
+
+    .tabButton {
+        padding: 8px 12px;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .contributionsContainer {
+        width: 370px;
+    }
+
+    .contributionsList {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .tabModeButton {
+        font-size: 12px;
+    }
+
+    .tabButton {
+        font-size: 12px;
+    }
+
+    .contributionTime {
+        font-size: 9px;
+        margin-bottom: 3px;
+    }
+
+    .contributionHeader {
+        display: flex;
+        align-items: flex-end;
+        gap: 5px;
+    }
+
+    .postInfo {
+        font-size: 12px;
+    }
+
+    .contributionDescription {
+        font-size: 12px;
+    }
+
+    .emptyState {
+        font-size: 12px;
+    }
+
+    .tabSelector {
+        scrollbar-width: none;
+    }
+
+}

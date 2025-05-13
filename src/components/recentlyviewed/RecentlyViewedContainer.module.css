@@ -1,0 +1,52 @@
+/* Update RecentlyViewedContainer.module.css */
+.container {
+  width: 100%;
+  padding: 20px 0;
+  border-radius: 8px;
+}
+
+.itemsContainer {
+  width: 100%;
+}
+
+.gridView {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.listView {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.noItems {
+  color: #999;
+  font-size: 0.9rem;
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 30px;
+}
+
+.successMessage {
+  background-color: rgba(46, 213, 115, 0.1);
+  color: #2ed573;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 10px 0;
+  font-size: 14px;
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .gridView {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,742 @@
+.leftBarContainer {
+  width: 330px;
+  display: flex;
+  flex-direction: column;
+  background-color: #0f0f0f;
+  color: #fff;
+  border-radius: 4px;
+  overflow: auto;
+  height: 100%;
+  scrollbar-width: none;
+}
+
+
+/* Video Container */
+.videoContainer {
+  width: 92%;
+  background-color: #000;
+  aspect-ratio: 16 / 9;
+  margin: 16px auto;
+  border-radius: 10px;
+
+  position: relative;
+  /* Added for positioning the Image component */
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Loading State */
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(65, 105, 225, 0.3);
+  border-radius: 50%;
+  border-top-color: #4169e1;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.errorState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  color: #ff6b6b;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Image Placeholder */
+.imagePlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  color: #888;
+  text-align: center;
+}
+
+.imagePlaceholder svg {
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.imagePlaceholder p {
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Post Image */
+.postImage {
+  object-fit: cover;
+  object-position: center;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease;
+}
+
+.videoContainer:hover .postImage {
+  transform: scale(1.05);
+}
+
+/* Profile Info */
+.profileInfo {
+  display: flex;
+  align-items: center;
+  padding: 16px 0;
+  margin: 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profilePicture {
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.profileImage {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.initialAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #3498db; /* Blue background */
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* Update profileDetails to take up remaining width */
+.profileDetails {
+  flex-grow: 1;
+  min-width: 0;
+  /* Ensures text truncation works properly */
+}
+
+.channelName {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #fff;
+}
+
+.subscriberCount {
+  font-size: 14px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.subscribeButton {
+  background-color: rgba(65, 105, 225, 0.1);
+  color: white;
+  border: 1px solid #4169e1;
+  border-radius: 10px;
+  padding: 6px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.subscribeButton:hover {
+  background-color: #4169e1;
+}
+
+.subscribedButton {
+  background-color: rgba(65, 105, 225, 0.1);
+  color: #4169e1;
+}
+
+.subscribedButton:hover {
+  background-color: rgba(20, 211, 132, 0.1);
+}
+
+/* Search Container */
+.searchContainer {
+  padding: 16px 0;
+  position: relative;
+  margin: 0 16px;
+}
+
+.searchInput {
+  width: 100%;
+  height: 36px;
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 18px;
+  padding: 0 40px 0 16px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #4169e1;
+  background-color: #252525;
+}
+
+.searchButton {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  height: 36px;
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clearButton {
+  position: absolute;
+  right: 44px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  height: 36px;
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clearButton:hover,
+.searchButton:hover {
+  color: #fff;
+}
+
+/* Links Section */
+.linksSection {
+  padding: 16px 0;
+  margin: 0 16px;
+  border-bottom: 1px solid #222;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  margin-bottom: 12px;
+}
+
+/* New container for the title and toggle indicator */
+.sectionTitleContainer {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex-grow: 1;
+}
+
+/* Section title style (keep your existing styles) */
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #fff;
+}
+
+/* Add toggle indicator */
+.sectionToggle {
+  font-size: 12px;
+  color: #888;
+  margin-left: 8px;
+}
+
+/* Add new button style */
+.addLinkButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background-color: #313131;
+  color: #4169e1;
+  border: 1px solid #4169e1;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.addLinkButton:hover {
+  background-color: #4169e1;
+  color: #fff;
+}
+
+.linksList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.linkItem {
+  display: flex;
+  padding: 12px;
+  position: relative;
+  cursor: pointer;
+  background-color: #0C0C0C;
+  border-radius: 8px;
+  border: 1px solid #222;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.linkItem:hover {
+  background-color: #161616;
+  border-color: #333;
+}
+
+.linkContent {
+  flex: 1;
+  width: 100%;
+}
+
+.linkContentTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.linkTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  text-decoration: none;
+  display: block;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.noLinksMessage {
+  color: #888;
+  font-size: 14px;
+  text-align: center;
+  padding: 16px;
+  background-color: #0C0C0C;
+  border-radius: 8px;
+  border: 1px solid #222;
+  margin-bottom: 10px;
+}
+
+/* View count removed per request*/
+.viewCount {
+  font-size: 12px;
+  color: #888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.linkDescription {
+  font-size: 12px;
+  color: #888;
+  margin: 0 8px 8px 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.linkStats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.linkTag {
+  color: #4169e1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.voteContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.voteButton {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voteButton:hover {
+  color: #fff;
+}
+
+.upvoteButton:hover {
+  color: #6786e7;
+}
+
+.downvoteButton:hover {
+  color: #F44336;
+}
+
+.upvoteButton.active {
+  color: #6786e7;
+}
+
+.downvoteButton.active {
+  color: #F44336;
+}
+
+.voteCount {
+  font-size: 12px;
+  color: #888;
+  min-width: 16px;
+  text-align: center;
+}
+
+.showMoreButton,
+.showLessButton {
+  display: flex;
+  width: 100%;
+  background: none;
+  border: none;
+  color: #737373;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 16px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.showMoreButton:hover,
+.showLessButton:hover {
+  color: #4169e1;
+}
+
+.buttonContainer {
+  display: flex;
+  gap: 8px;
+}
+
+.noResultsMessage {
+  color: #888;
+  font-size: 14px;
+  text-align: center;
+  padding: 16px;
+}
+
+.feedbackMessage {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 8px 16px;
+  font-size: 14px;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.success {
+  background-color: rgba(25, 135, 84, 0.2);
+  color: #20c997;
+  border: 1px solid rgba(25, 135, 84, 0.3);
+}
+
+.error {
+  background-color: rgba(220, 53, 69, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.contributorInfo {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 4px;
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.errorMessage {
+  color: #ff6b6b;
+  font-size: 14px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background-color: rgba(255, 107, 107, 0.1);
+  border-radius: 4px;
+}
+
+/* Vote button states */
+.voteButton:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* Hover effects for active vote buttons */
+.voteButton.active:hover {
+  opacity: 0.8;
+}
+
+/* Pulsing effect for vote count when updating */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.voting .voteCount {
+  animation: pulse 1s infinite;
+}
+
+/* Enhanced feedback message styling */
+.feedbackMessage {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 8px 16px;
+  font-size: 14px;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.success {
+  background-color: rgba(25, 135, 84, 0.2);
+  color: #20c997;
+  border: 1px solid rgba(25, 135, 84, 0.3);
+}
+
+.error {
+  background-color: rgba(220, 53, 69, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced focus states for interactive elements */
+.searchInput:focus,
+.voteButton:focus,
+.addLinkButton:focus,
+.showMoreButton:focus,
+.showLessButton:focus {
+  outline: 2px solid rgba(65, 105, 225, 0.5);
+  outline-offset: 2px;
+}
+
+/* Add these styles to your existing DiscussionPageLeftBar.module.css file */
+
+/* Video container styles */
+.videoContainer {
+  padding-bottom: 56.25%;
+  /* 16:9 aspect ratio */
+  position: relative;
+  background-color: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  cursor: default;
+}
+
+/* When container has a video */
+.hasVideo {
+  cursor: pointer;
+}
+
+/* YouTube iframe */
+.videoIframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Thumbnail container */
+.videoThumbnail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Thumbnail image */
+.thumbnailImage {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+/* Play button overlay */
+.playButtonOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
+}
+
+.playButtonOverlay:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Post image (for non-video posts) */
+.postImage {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+/* Placeholder for when no image or video is available */
+.imagePlaceholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+/* Loading state for when content is loading */
+.loadingState {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+}
+
+/* Loading spinner */
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #3498db;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error state for when content fails to load */
+.errorState {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.clickableChannelName {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.clickableChannelName:hover {
+  text-decoration: underline;
+}
+
+
+
+/* Responsive adjustments */
+@media (max-width: 1300px) {
+  .leftBarContainer {
+    width: 100%;
+    max-width: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .leftBarContainer {
+    max-width: 100%;
+  }
+}

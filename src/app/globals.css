@@ -1,0 +1,28 @@
+/* Global CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --font-family: "Roboto", -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+    font-family: var(--font-roboto, var(--font-family));
+    line-height: 1.5;
+    background-color: #1c1c1c;
+    color: #f8f9fa;
+}
+
+input,
+button,
+textarea,
+select {
+    font: inherit;
+}
+
+a {
+    text-decoration: none;
+}

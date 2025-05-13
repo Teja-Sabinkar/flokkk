@@ -1,0 +1,202 @@
+/* src/components/share/ShareModal.module.css */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+    backdrop-filter: blur(4px);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modal {
+    background-color: #1e1e24;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #2d2d39;
+}
+
+.modalHeader h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #ffffff;
+}
+
+.closeButton {
+    background: transparent;
+    border: none;
+    color: #94949e;
+    cursor: pointer;
+    display: flex;
+    padding: 5px;
+    transition: color 0.2s;
+}
+
+.closeButton:hover {
+    color: #ffffff;
+}
+
+.modalContent {
+    padding: 20px;
+}
+
+.postInfo {
+    margin-bottom: 20px;
+}
+
+.postInfo h4 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    color: #ffffff;
+}
+
+.postUrl {
+    font-size: 14px;
+    color: #94949e;
+    background-color: #2d2d39;
+    padding: 10px;
+    border-radius: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0;
+}
+
+.shareOptions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.shareButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.twitter {
+    background-color: #1da1f2;
+    color: white;
+}
+
+.facebook {
+    background-color: #4267B2;
+    color: white;
+}
+
+.linkedin {
+    background-color: #0077B5;
+    color: white;
+}
+
+.reddit {
+    background-color: #FF4500;
+    color: white;
+}
+
+.email {
+    background-color: #2d2d39;
+    color: white;
+}
+
+.shareButton:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+}
+
+.copyLinkSection {
+    text-align: center;
+}
+
+.copyLinkButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    background-color: #2d2d39;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.copyLinkButton:hover {
+    background-color: #3d3d49;
+}
+
+.success {
+    background-color: #10B981;
+}
+
+.success:hover {
+    background-color: #10B981;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .shareOptions {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+@media (max-width: 480px) {
+
+    .modal{
+        margin-top: 50px;
+    }
+
+
+}

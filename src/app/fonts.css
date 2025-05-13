@@ -1,0 +1,10 @@
+/* Font styles with high specificity */
+html,
+body {
+    font-family: "Roboto", -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+/* Ensure all elements inherit the font */
+* {
+    font-family: inherit;
+}

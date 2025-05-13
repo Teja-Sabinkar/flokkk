@@ -1,0 +1,187 @@
+.recommendationsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 12px;
+}
+
+.recommendationsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.recommendationsHeader h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #d1d1d1;
+    margin: 0;
+}
+
+/* Link container for recommendations */
+.recommendationLink {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.recommendationLink:hover {
+    transform: translateY(-1px);
+}
+
+.recommendationItem {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px;
+    background-color: #171717;
+    border-radius: 8px;
+    border: 1px solid #252525;
+    transition: background-color 0.2s;
+}
+
+.recommendationItem:hover {
+    border: 1px solid #333;
+}
+
+.avatarImage {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* Avatar styling for both text and images */
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    margin-right: 12px;
+    flex-shrink: 0;
+    overflow: hidden;
+    /* Ensure images stay within circular bounds */
+    background-color: #1e1e1e;
+    /* Fallback background if image has transparent areas */
+}
+
+/* Style for the initial letter in avatar */
+.avatarInitial {
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+}
+
+.contentContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    /* Ensures text truncation works */
+}
+
+.titleRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+}
+
+.title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #f0f0f0;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+.menuButton {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 2px;
+    margin-left: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+    z-index: 2;
+    /* Ensure menu button is above other elements */
+}
+
+.menuButton:hover {
+    background-color: #333;
+    color: #bbb;
+}
+
+.metaInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.username {
+    font-size: 12px;
+    color: #888;
+}
+
+.timeAgo {
+    font-size: 12px;
+    color: #666;
+}
+
+.discussionCount {
+    font-size: 12px;
+    color: #888;
+}
+
+.viewMoreButton {
+    display: block;
+    background: none;
+    border: none;
+    color: #3b82f6;
+    font-size: 14px;
+    padding: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.viewMoreButton:hover {
+    color: #60a5fa;
+}
+
+.viewMoreButton:active {
+    color: #2563eb;
+}
+
+.loadingIndicator {
+    font-size: 12px;
+    color: #888;
+    padding: 4px 0;
+    text-align: center;
+}
+
+.errorMessage {
+    font-size: 12px;
+    color: #ef4444;
+    padding: 4px 0;
+}

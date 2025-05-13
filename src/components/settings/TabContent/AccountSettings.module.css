@@ -1,0 +1,196 @@
+.container {
+  color: #f3f4f6;
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #f3f4f6;
+}
+
+.settingsSection {
+  background-color: #1e1e1e;
+  border-radius: 0.375rem;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  border: 1px solid #2d2d2d;
+}
+
+.settingItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #2d2d2d;
+}
+
+.settingItem:last-child {
+  border-bottom: none;
+}
+
+.settingInfo {
+  flex: 1;
+}
+
+.settingTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #e5e7eb;
+  margin: 0;
+}
+
+.settingDescription {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
+}
+
+.settingAction {
+  margin-left: 1rem;
+}
+
+.settingValue {
+  color: #f3f4f6;
+  font-size: 0.875rem;
+}
+
+.clickable {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.clickable:hover {
+  opacity: 0.8;
+}
+
+.actionButton {
+  background-color: transparent;
+  color: #9ca3af;
+  border: 1px solid #374151;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #f3f4f6;
+}
+
+.dangerButton {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.dangerButton:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+
+.premiumButton {
+  background-color: transparent;
+  color: #f3f4f6;
+  border: 1px solid #374151;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.premiumButton:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.arrowIcon {
+  font-size: 1rem;
+  margin-left: 0.25rem;
+}
+
+.selectInput {
+  background-color: #1a1a1a;
+  color: #f3f4f6;
+  border: 1px solid #374151;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  min-width: 120px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.error {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.debugInfo {
+  background-color: #1e1e1e;
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  white-space: pre-wrap;
+  border: 1px solid #333;
+}
+
+.testButton {
+  background-color: #2d3748;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+.testButton:hover {
+  background-color: #4a5568;
+}
+
+@media (max-width: 640px) {
+  .settingItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .settingAction {
+    margin-left: 0;
+    margin-top: 0.5rem;
+    width: 100%;
+  }
+
+  .actionButton,
+  .premiumButton,
+  .selectInput {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+
+@media (max-width: 480px) {
+
+  .settingValue {
+    color: #8e8e8e;
+  }
+}

@@ -1,0 +1,169 @@
+/* src/components/explore/CategorySection.module.css */
+.container {
+    position: relative;
+    width: 100%;
+    /* Add these properties to ensure visibility */
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 10;
+}
+
+.categoriesScroll {
+    overflow-x: auto;
+    scrollbar-width: thin; /* Thin scrollbar for Firefox */
+    scroll-behavior: smooth;
+    padding: 10px 0;
+    min-height: 120px;
+}
+
+.categoriesScroll::-webkit-scrollbar {
+    height: 4px; /* Make the scrollbar thinner */
+    background: transparent;
+}
+
+.categoriesScroll::-webkit-scrollbar-track {
+    background: #1a1a1a; /* Dark background for the track */
+    border-radius: 2px;
+}
+
+.categoriesScroll::-webkit-scrollbar-thumb {
+    background: #555; /* Gray color for the scrollbar thumb */
+    border-radius: 2px;
+}
+
+.categoriesScroll::-webkit-scrollbar-thumb:hover {
+    background: #666; /* Slightly lighter on hover */
+}
+
+.categoriesScroll {
+    scrollbar-color: #555 #1a1a1a; /* thumb color, track color */
+}
+
+/* The rest of your CSS remains unchanged */
+.categoriesWrapper {
+    display: flex;
+    gap: 16px;
+    padding: 0 4px;
+}
+
+.categoryCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+    padding: 16px 20px;
+    background-color: #171717;
+    border-radius: 12px;
+    border: 1px solid #333;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.categoryCard:hover {
+    background-color: #2a2a2a;
+    transform: translateY(-2px);
+    border-color: #444;
+}
+
+.categoryCard.active {
+    border-color: #4169e1;
+}
+
+.iconContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #272727;
+    margin-bottom: 12px;
+    color: #ddd;
+    transition: all 0.2s ease-in-out;
+}
+
+.active .iconContainer {
+    background-color: #4169e1;
+    color: white;
+}
+
+.categoryTitle {
+    font-size: 14px;
+    font-weight: 500;
+    color: #ddd;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.active .categoryTitle {
+    color: white;
+}
+
+.scrollButton {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(30, 30, 30, 0.9);
+    border: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.scrollButton:hover {
+    background-color: rgba(50, 50, 50, 0.9);
+    border-color: #555;
+}
+
+.leftButton {
+    left: 0;
+}
+
+.rightButton {
+    right: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .categoryCard {
+        min-width: 90px;
+        padding: 12px 16px;
+    }
+
+    .iconContainer {
+        width: 42px;
+        height: 42px;
+        margin-bottom: 8px;
+    }
+
+    .categoryTitle {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .categoryCard {
+        min-width: 80px;
+        padding: 10px;
+    }
+
+    .iconContainer {
+        width: 36px;
+        height: 36px;
+        margin-bottom: 6px;
+    }
+
+    .categoryTitle {
+        font-size: 11px;
+    }
+}

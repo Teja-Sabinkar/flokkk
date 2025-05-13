@@ -1,0 +1,428 @@
+import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import styles from './PlaylistsTab.module.css';
+import PlaylistsTabDiscussions from './PlaylistsTabDiscussions';
+
+const PlaylistCard = ({ playlist, onClick, onSave }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isImageError, setIsImageError] = useState(false);
+  const [thumbnailUrl, setThumbnailUrl] = useState(null);
+  const menuRef = useRef(null);
+  
+  // Fetch the first discussion's image directly
+  useEffect(() => {
+    const fetchThumbnail = async () => {
+      if (!playlist || !playlist.id) return;
+      
+      try {
+        // Get auth token
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        // Directly fetch the posts for this playlist
+        const response = await fetch(`/api/playlists/${playlist.id}/posts?limit=1`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.posts && data.posts.length > 0 && data.posts[0].image) {
+            console.log(`Found image for playlist ${playlist.id}:`, data.posts[0].image);
+            setThumbnailUrl(data.posts[0].image);
+          }
+        } else {
+          console.error('Failed to fetch playlist posts');
+        }
+      } catch (error) {
+        console.error('Error fetching thumbnail:', error);
+      }
+    };
+    
+    fetchThumbnail();
+  }, [playlist]);
+  
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
+  // Menu option handlers
+  const handleSave = (e) => {
+    e.stopPropagation();
+    onSave(playlist);
+    setIsMenuOpen(false);
+  };
+
+  const handleReport = (e) => {
+    e.stopPropagation();
+    console.log(`Reported playlist: ${playlist.title}`);
+    setIsMenuOpen(false);
+  };
+
+  const handleMenuClick = (e) => {
+    e.stopPropagation();
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  // Handle image load and error events
+  const handleImageLoad = () => {
+    setIsImageLoading(false);
+  };
+
+  const handleImageError = () => {
+    setIsImageLoading(false);
+    setIsImageError(true);
+  };
+
+  // Generate color from playlist title for fallback
+  const generateColorFromTitle = (title) => {
+    if (!title) return '#3b5fe2'; // Default blue color
+
+    // Simple hash function for consistent color generation
+    let hash = 0;
+    for (let i = 0; i < title.length; i++) {
+      hash = title.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    // Convert hash to a hex color
+    let color = '#';
+    for (let i = 0; i < 3; i++) {
+      const value = (hash >> (i * 8)) & 0xFF;
+      color += ('00' + value.toString(16)).substr(-2);
+    }
+
+    return color;
+  };
+
+  return (
+    <div className={styles.postCard} onClick={() => onClick(playlist)}>
+      <div className={styles.postHeader}>
+        <div className={styles.playlistTitle}>
+          <h3>{playlist.title}</h3>
+        </div>
+        
+        <div className={styles.menuContainer} ref={menuRef}>
+          <button
+            className={styles.postMenu}
+            aria-label="Playlist menu"
+            onClick={handleMenuClick}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="1"></circle>
+              <circle cx="12" cy="5" r="1"></circle>
+              <circle cx="12" cy="19" r="1"></circle>
+            </svg>
+          </button>
+          
+          {isMenuOpen && (
+            <div className={styles.dropdown}>
+              <button 
+                className={styles.dropdownItem}
+                onClick={handleSave}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                <span>Save</span>
+              </button>
+              <button 
+                className={styles.dropdownItem}
+                onClick={handleReport}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span>Report</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <div className={styles.postImageContainer}>
+        <div className={styles.postImageWrapper}>
+          {/* Placeholder background when no valid image */}
+          <div 
+            className={styles.imagePlaceholder}
+            style={{ 
+              backgroundColor: generateColorFromTitle(playlist.title),
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1
+            }}
+          >
+            <span style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>
+              {playlist.title ? playlist.title.charAt(0).toUpperCase() : 'P'}
+            </span>
+          </div>
+          
+          {/* Render the fetched thumbnail if available */}
+          {thumbnailUrl && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              zIndex: 2,
+              overflow: 'hidden'
+            }}>
+              <img
+                src={thumbnailUrl}
+                alt={playlist.title}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+                onLoad={handleImageLoad}
+                onError={handleImageError}
+              />
+            </div>
+          )}
+          
+          {/* Always show forum count on top of everything else */}
+          <div className={styles.forumCount} style={{ zIndex: 3, position: 'absolute', bottom: '8px', right: '8px' }}>
+            {playlist.videoCount}
+          </div>
+        </div>
+      </div>
+      
+      <div className={styles.postEngagement}>
+        <div className={styles.playlistUpdate}>
+          Updated {playlist.updatedAt}
+        </div>
+        
+        <button 
+          className={styles.shareBtn} 
+          onClick={(e) => e.stopPropagation()}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+          <span>Share</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const PlaylistsTab = ({ username }) => {
+  const [playlists, setPlaylists] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+  const [saveStatus, setSaveStatus] = useState({ loading: false, error: null, success: false });
+  
+  useEffect(() => {
+    const fetchUserPlaylists = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const token = localStorage.getItem('token');
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        
+        // Safe encoding of username
+        const encodedUsername = encodeURIComponent(username);
+        console.log(`Fetching playlists for user: ${username} (encoded: ${encodedUsername})`);
+        
+        // Get any URL parameters from the page
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id');
+        
+        // Request with includePostImages and populated post data
+        let apiUrl = `/api/users/${encodedUsername}/playlists?includePostImages=true&includePosts=true`;
+        if (userId) {
+          apiUrl += `&id=${userId}`;
+        }
+        
+        console.log('Fetching playlists from API URL:', apiUrl);
+        const response = await fetch(apiUrl, { headers });
+        console.log('Playlists API Response Status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Playlists API Error:', errorText);
+          try {
+            const errorJson = JSON.parse(errorText);
+            setError(errorJson.message || 'Failed to load playlists');
+          } catch (e) {
+            setError('Failed to load playlists. Please try again later.');
+          }
+          setPlaylists([]);
+        } else {
+          const data = await response.json();
+          console.log('Playlists data received:', data);
+          
+          if (data.canViewPlaylists === false) {
+            setError('This user\'s playlists are private');
+            setPlaylists([]);
+          } else {
+            setPlaylists(data.playlists || []);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching playlists:', error);
+        setError('Failed to load playlists. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (username) fetchUserPlaylists();
+  }, [username]);
+
+  // Handle playlist card click
+  const handlePlaylistClick = (playlist) => {
+    console.log(`Viewing discussions for playlist: ${playlist.title}`);
+    setSelectedPlaylist(playlist);
+  };
+
+  // Save playlist to current user's collection
+  const handleSavePlaylist = async (playlist) => {
+    try {
+      setSaveStatus({ loading: true, error: null, success: false });
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication required to save playlist');
+      }
+      
+      // API request to save the playlist
+      const response = await fetch('/api/playlists/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          originalPlaylistId: playlist.id,
+          title: `${playlist.title} (Saved)`,
+          description: playlist.description || '',
+          visibility: 'private' // Default to private when saving someone else's playlist
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save playlist');
+      }
+      
+      // Set success status and display notification
+      setSaveStatus({ loading: false, error: null, success: true });
+      
+      // Clear success status after 3 seconds
+      setTimeout(() => {
+        setSaveStatus({ loading: false, error: null, success: false });
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error saving playlist:', error);
+      setSaveStatus({ loading: false, error: error.message, success: false });
+      
+      // Clear error after 5 seconds
+      setTimeout(() => {
+        setSaveStatus({ loading: false, error: null, success: false });
+      }, 5000);
+    }
+  };
+
+  // Go back to playlists view
+  const handleBackToPlaylists = () => {
+    setSelectedPlaylist(null);
+  };
+
+  if (isLoading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}></div>
+        <p>Loading playlists...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.errorContainer}>
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (playlists.length === 0) {
+    return (
+      <div className={styles.emptyContainer}>
+        <p>This user hasn't created any playlists yet</p>
+      </div>
+    );
+  }
+  
+  // If a playlist is selected, show its discussions
+  if (selectedPlaylist) {
+    return (
+      <PlaylistsTabDiscussions 
+        playlist={selectedPlaylist} 
+        onBack={handleBackToPlaylists} 
+        username={username}
+      />
+    );
+  }
+
+  // Otherwise show the playlists grid
+  return (
+    <div className={styles.playlistsTabContainer}>
+      {/* Save Status Notification */}
+      {(saveStatus.error || saveStatus.success) && (
+        <div className={`${styles.notification} ${saveStatus.error ? styles.errorNotification : styles.successNotification}`}>
+          {saveStatus.error ? 
+            saveStatus.error : 
+            'Playlist saved successfully to your collection!'
+          }
+        </div>
+      )}
+      
+      {playlists.map(playlist => (
+        <PlaylistCard 
+          key={playlist.id} 
+          playlist={playlist} 
+          onClick={handlePlaylistClick}
+          onSave={handleSavePlaylist}
+        />
+      ))}
+    </div>
+  );
+};
+
+export default PlaylistsTab;

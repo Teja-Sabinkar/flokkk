@@ -1,0 +1,419 @@
+import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import styles from './RecentlyViewedItem.module.css';
+import PostSaveModal from '@/components/home/PostSaveModal';
+import { ReportModal, submitReport } from '@/components/report';
+import ShareModal from '@/components/share/ShareModal'; // Import the ShareModal component
+
+const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
+  const router = useRouter();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [savedPlaylistName, setSavedPlaylistName] = useState('');
+  const [hideSuccess, setHideSuccess] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState(false);
+  const [currentUsername, setCurrentUsername] = useState(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false); // New state for share modal
+  const menuRef = useRef(null);
+
+  const {
+    id,
+    _id,
+    title,
+    description,
+    thumbnail,
+    author,
+    authorAvatar,
+    postedTime,
+    discussionCount,
+    lastViewed
+  } = item;
+
+  const itemId = id || _id;
+
+  // Fetch current user info
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const response = await fetch('/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          setCurrentUsername(userData.username);
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
+  // Handle username click to navigate to appropriate profile
+  const handleUsernameClick = (e) => {
+    e.preventDefault();
+
+    if (!author?.username) return;
+
+    // Check if this is the current user
+    if (currentUsername && author.username === currentUsername) {
+      // Navigate to current user profile
+      router.push(`/currentprofile/${author.username}`);
+    } else {
+      // Navigate to other user profile
+      router.push(`/otheruserprofile/${author.username}`);
+    }
+  };
+
+  // Menu option handlers
+  const handleSave = () => {
+    setIsMenuOpen(false);
+    setIsSaveModalOpen(true);
+  };
+
+  // Handle saving post to playlist
+  const handleSaveToPlaylist = (saveData) => {
+    setSaveSuccess(true);
+    setSavedPlaylistName(saveData.playlistTitle);
+
+    // Hide success message after 3 seconds
+    setTimeout(() => {
+      setSaveSuccess(false);
+    }, 3000);
+  };
+
+  // Handle share button click
+  const handleShare = () => {
+    setIsShareModalOpen(true);
+  };
+
+  // Implement the hide functionality
+  const handleHide = async () => {
+    setIsMenuOpen(false);
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please log in to hide items');
+        return;
+      }
+
+      // Call API to hide the post
+      const response = await fetch('/api/posts/hide', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ postId: itemId })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to hide item');
+      }
+
+      // Show success message temporarily
+      setHideSuccess(true);
+      setTimeout(() => {
+        setHideSuccess(false);
+
+        // Call the parent function to remove this item from UI
+        if (onHideItem) {
+          onHideItem(itemId);
+        }
+      }, 1500);
+
+    } catch (error) {
+      console.error('Error hiding item:', error);
+      alert('Failed to hide item. Please try again.');
+    }
+  };
+
+  const handleReport = () => {
+    setIsMenuOpen(false);
+    setIsReportModalOpen(true);
+  };
+
+  const handleReportSubmit = async (reportData) => {
+    try {
+      await submitReport(reportData);
+      setIsReportModalOpen(false);
+      setReportSuccess(true);
+
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setReportSuccess(false);
+      }, 3000);
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      alert('Failed to submit report. Please try again.');
+    }
+  };
+
+  // Updated discussion click handler to work with your application's routing structure
+  const handleDiscussionClick = () => {
+    if (!itemId) return;
+
+    // Track the view before navigating
+    const trackView = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          await fetch('/api/recently-viewed/track', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ postId: itemId })
+          });
+        }
+      } catch (error) {
+        console.error('Error tracking view:', error);
+        // Continue with navigation even if tracking fails
+      }
+    };
+
+    // Try multiple route formats if needed
+    trackView().then(() => {
+      console.log("Navigating to discussion with ID:", itemId);
+
+      // Most likely correct format based on NextJS app router
+      router.push(`/discussion?id=${itemId}`);
+    });
+  };
+
+  const generateColorFromUsername = (username) => {
+    if (!username) return '#3b5fe2'; // Default blue color
+
+    // Simple hash function for consistent color generation
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+      hash = username.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    // Convert hash to a hex color
+    let color = '#';
+    for (let i = 0; i < 3; i++) {
+      const value = (hash >> (i * 8)) & 0xFF;
+      color += ('00' + value.toString(16)).substr(-2);
+    }
+
+    return color;
+  };
+
+  return (
+    <div className={`${styles.card} ${viewMode === 'list' ? styles.listCard : ''}`}>
+      {/* User Info and Post Header */}
+      <div className={styles.postHeader}>
+        <div className={styles.userInfo}>
+          <div className={styles.avatarContainer}>
+            {(author?.profilePicture && author.profilePicture !== '/profile-placeholder.jpg') ||
+              (authorAvatar && authorAvatar !== '/profile-placeholder.jpg') ? (
+              <Image
+                src={author?.profilePicture || authorAvatar}
+                alt={`${author?.username || 'User'}'s profile`}
+                width={40}
+                height={40}
+                className={styles.avatarImage}
+              />
+            ) : (
+              <div
+                className={styles.avatarPlaceholder}
+                style={{
+                  backgroundColor: generateColorFromUsername(author?.username || 'unknown')
+                }}
+              >
+                <span className={styles.avatarInitial}>
+                  {author?.username ? author.username.charAt(0).toUpperCase() : 'U'}
+                </span>
+              </div>
+            )}
+          </div>
+          <div className={styles.nameDate}>
+            <a
+              href="#"
+              className={styles.username}
+              onClick={handleUsernameClick}
+            >
+              {author?.username || 'user'}
+            </a>
+            <span className={styles.postDate}>{postedTime}</span>
+          </div>
+        </div>
+
+        <div className={styles.menuContainer} ref={menuRef}>
+          <button
+            className={styles.postMenu}
+            aria-label="Post menu"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="1"></circle>
+              <circle cx="12" cy="5" r="1"></circle>
+              <circle cx="12" cy="19" r="1"></circle>
+            </svg>
+          </button>
+
+          {isMenuOpen && (
+            <div className={styles.dropdown}>
+              <button
+                className={styles.dropdownItem}
+                onClick={handleSave}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                <span>Save</span>
+              </button>
+              <button
+                className={styles.dropdownItem}
+                onClick={handleHide}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+                <span>Hide</span>
+              </button>
+              <button
+                className={styles.dropdownItem}
+                onClick={handleReport}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span>Report</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className={viewMode === 'list' ? styles.listContent : ''}>
+        {/* Post Title and Content */}
+        <div className={styles.textContent}>
+          <h2 className={styles.postTitle}>{title}</h2>
+          <p className={styles.postContent}>{description}</p>
+
+          {viewMode === 'list' && (
+            <div className={styles.lastViewedTime}>
+              <span>Last viewed: {lastViewed}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Post Image */}
+        <div className={`${styles.postImageContainer} ${viewMode === 'list' ? styles.listImageContainer : ''}`}>
+          <div className={styles.postImageWrapper}>
+            <Image
+              src={thumbnail || "/api/placeholder/600/300"}
+              alt={title}
+              width={viewMode === 'list' ? 200 : 600}
+              height={viewMode === 'list' ? 100 : 300}
+              className={styles.postImage}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.postEngagement}>
+        <button
+          className={styles.discussionsBtn}
+          onClick={handleDiscussionClick}
+          aria-label="View discussions"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+          </svg>
+          <span>{discussionCount} Discussions</span>
+        </button>
+
+        <button
+          className={styles.shareBtn}
+          onClick={handleShare}
+          aria-label="Share"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+          <span>Share</span>
+        </button>
+      </div>
+
+      {/* Report Modal */}
+      {isReportModalOpen && (
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          onSubmit={handleReportSubmit}
+          contentDetails={{
+            postId: item.id || item._id,
+            userId: item.userId || (item.author?.id || ''),
+            username: item.author?.username || 'unknown',
+            title: item.title || 'Untitled',
+            content: (item.content || item.description || '').toString(),
+            hashtags: item.hashtags || [],
+            image: item.thumbnail || item.image
+          }}
+        />
+      )}
+
+      {/* Save Modal */}
+      <PostSaveModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        post={item}
+        onSave={handleSaveToPlaylist}
+      />
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        postData={{
+          id: itemId,
+          title: title || 'Untitled Discussion'
+        }}
+      />
+    </div>
+  );
+};
+
+export default RecentlyViewedItem;

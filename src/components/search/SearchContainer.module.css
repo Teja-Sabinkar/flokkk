@@ -1,0 +1,215 @@
+.container {
+  width: 100%;
+  padding: 0 0 30px 0;
+  border-radius: 8px;
+}
+
+.resultGroup {
+  margin-bottom: 40px;
+}
+
+.groupHeading {
+  color: #e0e0e0;
+  font-size: 1.25rem;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #333;
+  font-weight: 500;
+}
+
+/* Horizontal scrolling profiles container */
+.horizontalScroll {
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+  padding: 4px 0 16px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #333 #1a1a1a;
+}
+
+.horizontalScroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.horizontalScroll::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+
+.horizontalScroll::-webkit-scrollbar-thumb {
+  background-color: #333;
+  border-radius: 4px;
+}
+
+.profilesContainer {
+  display: flex;
+  gap: 16px;
+  padding: 0 4px;
+  min-width: min-content;
+}
+
+.profileCard {
+  flex: 0 0 auto;
+  width: 280px;
+  max-width: 280px;
+}
+
+/* Grid layout for discussions/posts */
+.itemsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 20px;
+}
+
+.itemsGrid.listView {
+  grid-template-columns: 1fr;
+}
+
+/* Loading State */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  color: #888;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #333;
+  border-radius: 50%;
+  border-top-color: #4169e1;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  text-align: center;
+  color: #e0e0e0;
+}
+
+.errorContainer svg {
+  color: #ff4040;
+  margin-bottom: 16px;
+}
+
+.errorContainer h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+}
+
+.errorContainer p {
+  margin: 0 0 20px 0;
+  color: #888;
+  max-width: 400px;
+}
+
+.retryButton {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.retryButton:hover {
+  background-color: #3a3a3a;
+}
+
+/* Empty State */
+.emptyContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  text-align: center;
+  color: #e0e0e0;
+  background-color: #171717;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.emptyContainer svg {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.emptyContainer h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+}
+
+.emptyContainer p {
+  margin: 0 0 24px 0;
+  color: #888;
+}
+
+.exploreButton {
+  background-color: #4169e1;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.exploreButton:hover {
+  background-color: #3555c2;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+  .itemsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+  }
+
+  .profileCard {
+    width: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .itemsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .emptyContainer {
+    padding: 60px 20px;
+  }
+
+  .profileCard {
+    width: 220px;
+  }
+}
+
+@media (max-width: 480px) {
+  .groupHeading {
+    font-size: 1.1rem;
+  }
+
+  .profileCard {
+    width: 200px;
+  }
+}

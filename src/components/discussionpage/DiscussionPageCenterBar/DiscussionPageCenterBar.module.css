@@ -1,0 +1,31 @@
+.centerBarContainer {
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0 10px;
+  /* Make sure this component can handle width changes */
+  min-width: 0; /* Critical for flex items to prevent overflow issues */
+}
+
+.topSection {
+  width: 100%;
+}
+
+.bottomSection {
+  width: 100%;
+}
+
+/* Responsive adjustments */
+
+@media (max-width: 768px) {
+  .centerBarContainer {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .centerBarContainer {
+    padding: 0px;
+  }
+}

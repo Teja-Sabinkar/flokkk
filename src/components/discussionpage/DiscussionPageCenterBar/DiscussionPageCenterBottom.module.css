@@ -1,0 +1,605 @@
+.discussionContainer {
+  width: 100%;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 150px;
+}
+
+
+/* Comment thread */
+.commentThread {
+  padding: 0;
+  width: 100%;
+}
+
+/* Comment styling */
+.comment {
+  position: relative;
+  padding: 0;
+  margin-bottom: 0;
+  line-height: 21px;
+  border: none;
+  background-color: transparent;
+}
+
+.commentWrapper {
+  margin-left: 12px;
+  display: flex;
+  width: 100%;
+  padding: 8px 4px 0px 4px;
+  position: relative;
+}
+
+.commentBody {
+  flex: 1;
+  position: relative;
+  padding-right: 4px;
+}
+
+/* Comment header */
+.commentHeader {
+  margin-left: 6px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  margin-right: 5px;
+  margin-left: 5px;
+  overflow: hidden;
+  background-color: #2a2a2a;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.username {
+  color: #e0e0e0;
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+.username:hover {
+  text-decoration: underline;
+}
+
+.userIsMod {
+  background-color: #dbb13b;
+  color: #000;
+  border-radius: 2px;
+  padding: 0 4px;
+  font-size: 10px;
+  margin-right: 4px;
+  font-weight: 600;
+  line-height: 15px;
+}
+
+.userIsAdmin {
+  background-color: #199650;
+  color: white;
+  border-radius: 2px;
+  padding: 0 4px;
+  font-size: 10px;
+  margin-right: 4px;
+  font-weight: 600;
+  line-height: 15px;
+}
+
+.timestamp {
+  color: #888;
+  font-size: 10px;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.timestamp::before {
+  content: "•";
+  margin-right: 4px;
+}
+
+.edited {
+  color: #888;
+  font-size: 12px;
+  margin-right: 4px;
+}
+
+.edited::before {
+  content: "*";
+  margin-right: 1px;
+}
+
+/* Comment content */
+.commentContent {
+  color: #e0e0e0;
+  font-size: 12px;
+  line-height: 21px;
+  margin-bottom: 6px;
+  word-break: break-word;
+  padding-right: 15px;
+  text-align: justify;
+  transition: background-color 0.3s ease;
+}
+
+.highlighted {
+  background-color: rgba(65, 105, 225, 0.264);
+  border-left: 3px solid #4169e1;
+  padding-left: 10px; /* Adjust for the border */
+  position: relative;
+  border-radius: 4px;
+}
+
+
+.currentHighlight {
+  background-color: rgba(65, 105, 225, 0.264);
+  border-left: 3px solid #4169e1;
+  padding-left: 10px; /* Adjust for the border */
+  position: relative;
+  border-radius: 4px;
+}
+
+.currentHighlight::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 5px solid #4169e1;
+}
+
+.searchMatch {
+  background-color: rgb(219 177 59 / 55%);
+  border-radius: 2px;
+  padding: 0 2px;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes highlightPulse {
+  0% { background-color: rgba(65, 105, 225, 0.1); }
+  50% { background-color: rgba(65, 105, 225, 0.3); }
+  100% { background-color: rgba(65, 105, 225, 0.1); }
+}
+
+.commentContent {
+  color: #e0e0e0;
+  font-size: 12px;
+  line-height: 21px;
+  margin-bottom: 6px;
+  word-break: break-word;
+  padding-right: 15px;
+  text-align: justify;
+  transition: background-color 0.3s ease;
+}
+
+.filteredViewBanner {
+  margin-bottom: 12px;
+  padding: 8px 0;
+  width: 100%;
+  border-radius: 4px;
+  animation: fadeInDown 0.4s ease-out;
+}
+
+.filteredViewIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #e0e0e0;
+  background-color: #00ff3612;
+  padding: 8px 16px;
+  border-radius: 4px;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.filteredViewIndicator svg {
+  color: #8aff8a;
+}
+
+@keyframes fadeInDown {
+  from { 
+    opacity: 0; 
+    transform: translateY(-10px);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
+}
+
+.commentContent {
+  color: #e0e0e0;
+  font-size: 12px;
+  line-height: 21px;
+  margin-bottom: 6px;
+  word-break: break-word;
+  padding-right: 15px;
+  text-align: justify;
+  transition: background-color 0.3s ease;
+}
+
+/* Comment collapse button */
+.collapseButton {
+  position: absolute;
+  left: -12px;
+  top: 5px;
+  background: none;
+  border: none;
+  color: #4fbcff;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  font-size: 25px;
+  line-height: 1;
+  font-weight: normal;
+}
+
+.collapseButton:hover {
+  color: #274af8;
+}
+
+.disabledCollapseButton {
+  color: #555 !important; /* Lighter gray color to indicate disabled state */
+  cursor: default !important; /* Change cursor to default instead of pointer */
+  opacity: 0.5; /* Reduce opacity to indicate it's disabled */
+  pointer-events: none; /* Prevent click events - additional safety with disabled attribute */
+}
+
+/* This ensures proper styling when the button is disabled via the HTML disabled attribute */
+.collapseButton:disabled {
+  color: #555;
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* Comment actions */
+.commentActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+  opacity: 0.9;
+}
+
+.comment:hover .commentActions {
+  opacity: 1;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.actionButton:hover {
+  color: #e0e0e0;
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.actionVoteButtons {
+  font-size: 12px;
+  border-radius: 8px;
+  background-color: rgba(128, 128, 128, 0.17);
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+  gap: 4px;
+}
+
+.actionVoteCount {
+  color: #888;
+  font-weight: 700;
+}
+
+.upvoted {
+  color: #7193ff;
+}
+
+.downvoted {
+  color: #ff4500;
+}
+
+.actionUpvoted {
+  color: #7193ff;
+}
+
+.actionDownvoted {
+  color: #ff4500;
+}
+
+.actionIcon {
+  margin-right: 6px;
+  font-size: 14px;
+}
+
+/* Nested comments */
+.nestedComments {
+  position: relative;
+  padding-right: 4px;
+  padding-left: 8px;
+  margin-top: 20px;
+  transition: max-height 0.2s ease, opacity 0.2s ease;
+  max-height: 9999px;
+  opacity: 1;
+  border-left: 2px solid #333;
+  margin-left: 8px;
+  overflow: hidden;
+}
+
+.nestedComments.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+/* Continue thread link */
+.continueThread {
+  display: inline-block;
+  color: #4169e1;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 4px 0 16px 8px;
+  cursor: pointer;
+}
+
+.continueThread:hover {
+  text-decoration: underline;
+}
+
+.replyingTo {
+  color: #888;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.replyingTo::before {
+  content: "•";
+  margin-right: 4px;
+}
+
+.replyingToLink {
+  color: #4169e1;
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 5px;
+}
+
+.replyingToLink:hover {
+  text-decoration: underline;
+}
+
+/* Added animation for highlighting a comment when scrolled to */
+@keyframes highlightFade {
+  0% { background-color: rgba(65, 105, 225, 0.2); }
+  70% { background-color: rgba(65, 105, 225, 0.2); }
+  100% { background-color: transparent; }
+ 
+}
+
+.highlightedComment {
+  animation: highlightFade 2s ease-out;
+  border-radius: 8px;
+}
+
+/* Styling for the "Take me to continuation thread" link */
+
+.continuationIndicator {
+  color: #888;
+  font-size: 12px;
+  margin-left: 4px;
+  background-color: rgba(65, 105, 225, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.continuationIndicator::before {
+  content: "•";
+  margin-right: 4px;
+}
+
+.continuationIndicatorLink {
+  color: #4169e1;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.continuationIndicatorLink:hover {
+  text-decoration: underline;
+}
+
+/* Collapsed thread indicator */
+.collapsedThreadInfo {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #4169e1;
+  padding: 2px 0;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 10px;
+}
+
+.collapsedThreadInfo:hover {
+  text-decoration: underline;
+}
+
+.collapsedIndicator {
+  color: #888;
+  margin-right: 6px;
+  font-size: 10px;
+}
+
+.collapsedThreadInfo:hover .collapsedIndicator {
+  color: #e0e0e0;
+}
+
+.collapsedUsername {
+  color: #4169e1;
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+.collapsedThreadInfo:hover .collapsedUsername {
+  text-decoration: underline;
+}
+
+/* Comment box container */
+.commentBoxContainer {
+  margin-bottom: 16px;
+}
+
+/* Empty comments state */
+.emptyComments {
+  text-align: center;
+  color: #888;
+  padding: 32px 16px;
+  background-color: #1a1a1b;
+  border-radius: 4px;
+  border: 1px solid #343536;
+}
+
+.emptyComments svg {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 8px;
+  color: #888;
+}
+
+.emptyComments p {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.emptyComments .emptySubtext {
+  font-size: 12px;
+}
+
+/* Loading and error states */
+.loadingComments {
+  text-align: center;
+  padding: 30px;
+  color: #888;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(65, 105, 225, 0.3);
+  border-radius: 50%;
+  border-top-color: #4169e1;
+  animation: spin 1s ease-in-out infinite;
+  margin: 0 auto 15px;
+}
+
+.errorMessage {
+  text-align: center;
+  padding: 30px;
+  color: #ff6b6b;
+  background-color: rgba(255, 107, 107, 0.1);
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.retryButton {
+  background-color: #4169e1;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin-top: 10px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.retryButton:hover {
+  background-color: #365bd6;
+}
+
+.clickableUsername {
+  color: var(--link-color, #4f9eed);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.clickableUsername:hover {
+  text-decoration: underline;
+}
+
+.continuationThreadItem{
+  cursor: pointer;
+  padding: 3px 0;
+}
+
+.continuationThreadItem:hover {
+  background-color: rgba(92, 126, 228, 0.355);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Media queries for responsive design */
+@media screen and (max-width: 768px) {
+  .commentContent {
+    font-size: 11px;
+  }
+
+  .commentActions {
+    font-size: 11px;
+  }
+
+  .nestedComments {
+    padding-left: 4px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .commentHeader {
+    flex-wrap: wrap;
+    font-size: 10px;
+  }
+
+  .commentContent {
+    font-size: 10px;
+  }
+
+  .actionButton {
+    font-size: 10px;
+  }
+
+  .collapseButton {
+    left: -8px;
+  }
+}

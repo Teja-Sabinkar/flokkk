@@ -1,0 +1,319 @@
+.card {
+  padding: 5px 5px 0 5px;
+  background-color: #171717;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid transparent;
+  height: 100%;
+}
+
+.card:hover {
+  border-color: #252525;
+}
+
+.card.listView {
+  flex-direction: row;
+  align-items: center;
+  padding: 16px;
+  gap: 20px;
+}
+
+.profileLink {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.card.listView .profileLink {
+  flex-direction: row;
+  padding: 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+}
+
+.profileHeader {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.card.listView .profileHeader {
+  text-align: left;
+  margin-bottom: 0;
+  order: 2;
+}
+
+.profileName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 4px 0;
+}
+
+.profileUsername {
+  font-size: 14px;
+  color: #888;
+  margin: 0;
+}
+
+.statsContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.card.listView .statsContainer {
+  margin-bottom: 0;
+  margin-left: auto;
+  order: 3;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.card.listView .statItem {
+  padding: 0 8px;
+}
+
+.statValue {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.card.listView .statValue {
+  font-size: 16px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.statDivider {
+  width: 1px;
+  height: 30px;
+  background-color: #333;
+}
+
+.profileImage {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.card.listView .profileImage {
+  margin-bottom: 0;
+  order: 1;
+}
+
+.avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #333;
+}
+
+.profileInitial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 42px;
+  position: relative;
+  z-index: 1;
+  border: 3px solid var(--background-color, #121212);
+}
+
+.card.listView .avatar {
+  width: 60px;
+  height: 60px;
+}
+
+.avatarFallback {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background-color: #4169e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 32px;
+}
+
+.card.listView .avatarFallback {
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
+}
+
+.actionContainer {
+  padding: 0 20px 20px 20px;
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* Add gap between buttons */
+  flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+}
+
+.card.listView .actionContainer {
+  padding: 0;
+  margin-left: 16px;
+  flex-wrap: nowrap; /* Keep buttons in a row in list view */
+}
+
+.followButton,
+.editButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 8px;
+  min-width: 100px; /* Ensure consistent width */
+  flex: 1; /* Allow buttons to share space equally */
+}
+
+.card.listView .followButton,
+.card.listView .editButton {
+  padding: 8px 16px;
+  min-width: auto;
+  flex: 0 1 auto; /* Don't grow in list view */
+}
+
+.followButton {
+  background-color: #4169e1;
+  color: white;
+  border: none;
+}
+
+.followButton:hover {
+  background-color: #3555c2;
+}
+
+.followButton.following {
+  background-color: transparent;
+  border: 1px solid #4169e1;
+  color: #4169e1;
+}
+
+.followButton.following:hover {
+  background-color: rgba(65, 225, 158, 0.1);
+}
+
+.followButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.editButton {
+  background-color: transparent;
+  border: 1px solid #888;
+  color: #e0e0e0;
+  text-decoration: none;
+}
+
+.editButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #aaa;
+}
+
+.viewButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: #333;
+  border: 1px solid #444;
+  color: #e0e0e0;
+  text-decoration: none;
+  gap: 8px;
+  min-width: 100px; /* Ensure consistent width */
+  flex: 1; /* Allow buttons to share space equally */
+}
+
+.viewButton:hover {
+  background-color: #444;
+}
+
+.card.listView .viewButton {
+  padding: 8px 16px;
+  min-width: auto;
+  flex: 0 1 auto; /* Don't grow in list view */
+}
+
+/* Responsive Behavior */
+@media (max-width: 768px) {
+  .card.listView {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .card.listView .profileLink {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  .card.listView .profileHeader {
+    text-align: center;
+    margin-bottom: 16px;
+    order: 1;
+  }
+
+  .card.listView .profileImage {
+    margin-bottom: 16px;
+    order: 0;
+  }
+
+  .card.listView .statsContainer {
+    margin-left: 0;
+    order: 2;
+    margin-bottom: 16px;
+  }
+
+  .card.listView .actionContainer {
+    margin-left: 0;
+    width: 100%;
+    gap: 8px; /* Smaller gap in mobile view */
+  }
+  
+  /* Make buttons stack in very small screens */
+  @media (max-width: 400px) {
+    .actionContainer {
+      flex-direction: column;
+    }
+    
+    .card.listView .actionContainer {
+      flex-direction: column;
+    }
+  }
+}

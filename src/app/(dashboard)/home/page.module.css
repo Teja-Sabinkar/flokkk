@@ -1,0 +1,256 @@
+/* Main container for the entire page - more aggressive positioning */
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0f0f0f;
+  color: #fff;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Add a background element to cover any gaps */
+.pageContainer::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0f0f0f;
+  z-index: -1;
+}
+
+/* Header container */
+.headerContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 60px;
+  /* Should match the header height */
+  background-color: #0f0f0f;
+}
+
+/* Main content area with three columns */
+.mainContent {
+  display: flex;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0f0f0f;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Left sidebar container */
+.sidebarContainer {
+  width: 330px;
+  /* Match sidebar width */
+  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background-color: #121212;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  z-index: 100;
+  /* Ensure sidebar is above overlay */
+}
+
+.sidebarScrollable {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  /* Enable independent scrolling */
+  background-color: #121212;
+  /* Ensure bottom is covered */
+  padding-bottom: 20px;
+}
+
+/* Center feed container */
+.feedContainer {
+  flex: 1;
+  position: absolute;
+  top: 0;
+  left: 330px;
+  /* Match sidebar width */
+  right: 340px;
+  /* Match right sidebar width */
+  bottom: 0;
+  background-color: #0f0f0f;
+  overflow: hidden;
+  transition: left 0.3s ease, right 0.3s ease;
+}
+
+.feedScrollable {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  /* Enable independent scrolling */
+  padding: 20px;
+  background-color: #0f0f0f;
+  /* Ensure bottom is covered */
+  padding-bottom: 40px;
+  scrollbar-width: none;
+}
+
+/* Right sidebar container */
+.rightSidebarContainer {
+  width: 330px;
+  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0f0f0f;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.rightSidebarScrollable {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  /* Enable independent scrolling */
+  padding: 20px 20px 20px 0;
+  /* Removed left padding to prevent component being cut */
+  background-color: #0f0f0f;
+  border-left: 1px solid #222;
+}
+
+/* Section title for sidebar components */
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #fff;
+}
+
+/* Mobile overlay for sidebar toggle */
+.mobileOverlay {
+  display: none;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 90;
+  /* Lower than sidebar */
+  backdrop-filter: blur(4px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1300px) {
+
+  /* Hide right sidebar */
+  .rightSidebarContainer {
+    display: none;
+  }
+
+  /* Hide left sidebar by default, will be shown with toggle */
+  .sidebarContainer {
+    transform: translateX(-100%);
+  }
+
+  /* Show sidebar when open class is applied */
+  .sidebarContainer.open {
+    transform: translateX(0);
+  }
+
+  /* Adjust feed container to take full width */
+  .feedContainer {
+    left: 0;
+    right: 0;
+  }
+
+  /* Show overlay when sidebar is open - but only cover the feed area */
+  .mobileOverlay {
+    display: none;
+    /* Hidden by default */
+  }
+
+  /* When sidebar is open, show the overlay but only to the right of the sidebar */
+  .open~.mobileOverlay,
+  .open+.mobileOverlay,
+  .open~* .mobileOverlay {
+    display: block;
+    left: 0px;
+    /* Width of the sidebar on mobile */
+  }
+}
+
+@media (max-width: 992px) {
+  .mainContent {
+    flex-direction: column;
+  }
+
+
+
+  /* Update overlay left position to match sidebar width */
+  .open~.mobileOverlay,
+  .open+.mobileOverlay,
+  .open~* .mobileOverlay {
+    left: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .feedScrollable {
+    padding: 12px;
+  }
+
+  .sidebarScrollable {
+    width: 72px;
+  }
+
+  .sidebarContainer {
+    width: 72px;
+  }
+
+
+  /* Update overlay left position to match sidebar width */
+  .open~.mobileOverlay,
+  .open+.mobileOverlay,
+  .open~* .mobileOverlay {
+    left: 0px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebarContainer {
+    width: 72px;
+    /* Even narrower for small screens */
+  }
+
+  /* Update overlay left position to match sidebar width */
+  .open~.mobileOverlay,
+  .open+.mobileOverlay,
+  .open~* .mobileOverlay {
+    left: 0px;
+  }
+
+  .feedScrollable {
+    padding: 8px;
+    padding-bottom: 40px;
+  }
+
+}

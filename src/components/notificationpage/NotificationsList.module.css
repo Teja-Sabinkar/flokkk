@@ -1,0 +1,38 @@
+.notificationsList {
+  min-height: 200px;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.emptyStateIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: #1e1e1e;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.emptyStateTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin: 0 0 0.5rem;
+}
+
+.emptyStateText {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin: 0;
+  max-width: 300px;
+}

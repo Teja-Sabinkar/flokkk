@@ -1,0 +1,417 @@
+.postCard {
+  background-color: #171717;
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #252525;
+}
+
+.postCard:hover {
+  border: 1px solid #333;
+}
+
+/* Post Header with User Info */
+.postHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+}
+
+.avatarContainer {
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatarPlaceholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #4169e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.avatarInitial {
+  color: white;
+  font-size: 16px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.nameDate {
+  display: flex;
+  flex-direction: column;
+}
+
+.username {
+  font-size: 14px;
+  font-weight: 500;
+  color: #e0e0e0;
+  text-decoration: none;
+}
+
+.username:hover {
+  text-decoration: underline;
+}
+
+.postDate {
+  font-size: 12px;
+  color: #888;
+}
+
+/* Menu and dropdown */
+.menuContainer {
+  position: relative;
+}
+
+.postMenu {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  height: 32px;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.postMenu:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #222;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 140px;
+  overflow: hidden;
+  z-index: 100;
+  border: 1px solid #333;
+  margin-top: 4px;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s;
+}
+
+.dropdownItem:hover {
+  background-color: #333;
+}
+
+.dropdownItem:active {
+  background-color: #444;
+}
+
+.dropdownItem svg {
+  flex-shrink: 0;
+}
+
+/* Post Content */
+.postTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 10px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.postContent {
+  font-size: 14px;
+  color: #ccc;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  /* Add this to wrap long words */
+  word-break: break-word;
+  /* Add this to break long words without spaces */
+  max-width: 100%;
+  /* Ensure content doesn't exceed container width */
+}
+
+.readMoreBtn {
+  background: none;
+  border: none;
+  color: #4169e1;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 6px;
+}
+
+.readMoreBtn:hover {
+  text-decoration: underline;
+}
+
+.readMoreBtn[aria-expanded="true"]::before {
+  font-size: 10px;
+}
+
+.readMoreBtn[aria-expanded="false"]::before {
+  font-size: 10px;
+}
+
+/* Post Image */
+.postImageContainer {
+  margin-bottom: 12px;
+  /* Reduced from 16px to bring hashtags closer */
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.postImageWrapper {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 50%;
+  /* Aspect ratio 2:1 */
+  background-color: #222;
+}
+
+.postImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Hashtags Section - With Show More Functionality */
+.hashtagsWrapper {
+  position: relative;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.hashtagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.hashtagsContainer.expanded {
+  max-height: 500px !important;
+  /* Large enough to show all hashtags */
+}
+
+.hashtagsContainer.collapsed {
+  max-height: 20px;
+  /* Height of one line of hashtags */
+}
+
+.hashtag {
+  background-color: transparent;
+  /* Almost black background matching the image */
+  border: none;
+  color: #4169e1;
+  /* Vibrant blue text */
+  font-size: 11px;
+  border-radius: 16px;
+  transition: background-color 0.2s;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.showMoreContainer {
+  display: inline-flex;
+  align-items: center;
+  background-color: transparent;
+  border-radius: 16px;
+  margin-left: 3px;
+}
+
+.showMoreHashtags {
+  background: none;
+  border: none;
+  color: #737373;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+
+.showMoreHashtags:hover {
+  color: #b0b0b0;
+}
+
+/* Post Engagement */
+.postEngagement {
+  display: flex;
+  border-top: 1px solid #333;
+  padding-top: 12px;
+}
+
+.discussionsBtn,
+.shareBtn {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.discussionsBtn:hover,
+.shareBtn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.discussionsBtn svg,
+.shareBtn svg {
+  margin-right: 8px;
+}
+
+.discussionsBtn {
+  margin-right: 8px;
+}
+
+.successMessage {
+  background-color: rgba(46, 213, 115, 0.1);
+  color: #2ed573;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 10px 0;
+  font-size: 14px;
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .postTitle {
+    font-size: 15px;
+  }
+
+  .postContent {
+    font-size: 13px;
+  }
+
+  .hashtag {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+
+  .showMoreHashtags {
+    font-size: 12px;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .postTitle {
+    font-size: 14px;
+  }
+
+  .postContent {
+    font-size: 12px;
+  }
+
+  .postDate {
+    font-size: 9px;
+  }
+
+  .postMenu {
+    width: 18px;
+    height: 18px;
+  }
+
+  .readMoreBtn {
+    font-size: 12px;
+  }
+
+  .discussionsBtn {
+    font-size: 12px;
+  }
+
+  .shareBtn {
+    font-size: 12px;
+  }
+
+  .hashtagsContainer {
+    gap: 0px;
+  }
+
+  .hashtag {
+    font-size: 10px;
+    padding: 4px 4px;
+  }
+
+  .showMoreHashtags {
+    font-size: 10px;
+  }
+
+  .dropdownItem {
+    font-size: 12px;
+  }
+
+  .postEngagement {
+    display: flex;
+    border-top: 1px solid #333;
+    padding-top: 12px;
+    justify-content: space-between;
+  }
+
+}
