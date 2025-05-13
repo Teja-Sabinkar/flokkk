@@ -163,33 +163,33 @@ const NotificationItem = ({ notification, activeTab, onUpdate, currentUser }) =>
         // We need to extract the post ID from either:
         // 1. The notification.postId if it exists
         // 2. From the related comment's postId field (not available in frontend)
-        
+
         // Check if the notification content is comment-related
         if (notification.content.includes('comment')) {
           // If the backend is properly updated to include postId, use it
           if (notification.postId) {
             return `/discussion?id=${notification.postId}`;
           }
-          
+
           // Otherwise, try to fetch this information on the fly
           // This requires a special API route to look up a comment by ID
           // For now, redirect to a page where we'll handle the lookup
-          
+
           // Instead of sending to home, send directly to the comment's post
           // Note: This relies on the backend storing the post ID correctly
           // with the comment
-          
+
           // As a last resort, use the relatedId (comment ID) in a different way
           return `/api/redirect/comment/${notification.relatedId}`;
         }
-        
+
         // For regular post votes, use the relatedId
         return `/discussion?id=${notification.relatedId}`;
       case 'message':
         return `/messages/${notification.sender}`;
       case 'contribution':
-        if (notification.content.includes('approved your link contribution') || 
-            notification.content.includes('declined your link contribution')) {
+        if (notification.content.includes('approved your link contribution') ||
+          notification.content.includes('declined your link contribution')) {
           return `/discussion?id=${notification.relatedId}`;
         } else {
           return `/currentprofile/${currentUser?.username || ''}?tab=contributions`;
@@ -205,11 +205,25 @@ const NotificationItem = ({ notification, activeTab, onUpdate, currentUser }) =>
       style={borderStyle}
     >
       <div className={styles.avatarContainer}>
-        <div className={styles.avatarPlaceholder}>
-          <span className={styles.avatarInitial}>
-            {(notification.senderUsername || 'U').charAt(0).toUpperCase()}
-          </span>
-        </div>
+        {/* This component only uses initials, but adding profile picture support */}
+        {notification.senderProfilePicture && notification.senderProfilePicture !== '/profile-placeholder.jpg' ? (
+          <Image
+            src={notification.senderProfilePicture}
+            alt={`${notification.senderUsername}'s profile`}
+            width={40}
+            height={40}
+            className={styles.avatarImage}
+            priority
+            unoptimized
+            key={notification.senderProfilePicture}
+          />
+        ) : (
+          <div className={styles.avatarPlaceholder}>
+            <span className={styles.avatarInitial}>
+              {(notification.senderUsername || 'U').charAt(0).toUpperCase()}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className={styles.contentContainer}>

@@ -175,7 +175,6 @@ const DiscussionPost = ({ post, onHidePost, onRemovePost }) => {
 
   return (
     <div className={styles.postCard}>
-
       <div className={styles.postHeader}>
         <div className={styles.userInfo}>
           <div className={styles.avatarContainer}>
@@ -186,6 +185,9 @@ const DiscussionPost = ({ post, onHidePost, onRemovePost }) => {
                 width={40}
                 height={40}
                 className={styles.avatarImage}
+                priority
+                unoptimized
+                key={post.profilePicture} // Force re-render when URL changes
               />
             ) : (
               <div

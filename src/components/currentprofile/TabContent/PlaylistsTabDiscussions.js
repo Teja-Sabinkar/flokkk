@@ -173,6 +173,9 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
                 width={40}
                 height={40}
                 className={styles.avatarImage}
+                priority
+                unoptimized
+                key={post.profilePicture} // Force re-render when URL changes
               />
             ) : (
               <div
