@@ -129,6 +129,7 @@ const CurrentProfileHeader = ({
           backgroundSize: 'cover',
           backgroundPosition: 'center'
         } : {}}
+        key={profileData.profileBanner} // Force re-render when banner URL changes
       >
         {isLoading && (
           <div className={styles.bannerLoadingOverlay}>
@@ -136,13 +137,17 @@ const CurrentProfileHeader = ({
           </div>
         )}
 
-        {/* Fallback method to display banner */}
+        {/* Fallback method to display banner - updated to use Next Image */}
         {profileData.profileBanner && (
           <div className={styles.bannerDebug}>
-            <img
+            <Image
               src={profileData.profileBanner}
               alt="Profile Banner"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
+              fill
+              style={{ objectFit: 'cover' }}
+              priority
+              unoptimized
+              key={profileData.profileBanner} // Force re-render when URL changes
             />
           </div>
         )}
