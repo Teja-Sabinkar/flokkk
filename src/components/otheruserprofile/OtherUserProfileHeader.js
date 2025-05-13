@@ -181,9 +181,7 @@ const OtherUserProfileHeader = ({
   return (
     <div className={styles.profileHeaderContainer}>
       {/* Profile Banner - Improved implementation */}
-      <div
-        className={styles.profileBanner}
-      >
+      <div className={styles.profileBanner}>
         {profileData.profileBanner && !bannerError ? (
           <Image
             src={profileData.profileBanner}
@@ -191,6 +189,8 @@ const OtherUserProfileHeader = ({
             layout="fill"
             objectFit="cover"
             priority={true}
+            unoptimized={true}
+            key={`profile-banner-${profileData.username || profileData.id || Date.now()}-${profileData.profileBanner}`} // Force re-render when image changes
             onError={handleBannerError}
             className={styles.bannerImage}
           />
