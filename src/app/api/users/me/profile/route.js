@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import { put, del } from '@vercel/blob';
 import dbConnect from '@/lib/mongoose';
 import User from '@/models/User';
-import { saveFile, deleteFile } from '@/lib/fileUpload';
 
 export async function GET(request) {
   // This route redirects to /api/auth/me for consistency
@@ -69,27 +69,43 @@ export async function PATCH(request) {
       profileBanner = formData.get('profileBanner');
       
       // Process profile picture
-      if (profilePicture) {
-        // Delete old profile picture if it exists and is not the default
-        if (user.profilePicture && user.profilePicture !== '/profile-placeholder.jpg') {
-          await deleteFile(user.profilePicture);
+      if (profilePicture && profilePicture instanceof File) {
+        // Delete old profile picture from Vercel Blob if it exists and is not the default
+        if (user.profilePicture && 
+            user.profilePicture !== '/profile-placeholder.jpg' &&
+            user.profilePicture.includes('blob.vercel-storage.com')) {
+          try {
+            await del(user.profilePicture);
+          } catch (error) {
+            console.error('Failed to delete old profile picture:', error);
+          }
         }
         
-        // Save new profile picture
-        const profilePicturePath = await saveFile(profilePicture, 'avatars');
-        profileData.profilePicture = profilePicturePath;
+        // Upload new profile picture to Vercel Blob
+        const filename = `avatars/${decoded.id}-${Date.now()}-${profilePicture.name}`;
+        const blob = await put(filename, profilePicture, {
+          access: 'public',
+        });
+        profileData.profilePicture = blob.url;
       }
       
       // Process profile banner
-      if (profileBanner) {
-        // Delete old banner if it exists
-        if (user.profileBanner) {
-          await deleteFile(user.profileBanner);
+      if (profileBanner && profileBanner instanceof File) {
+        // Delete old banner from Vercel Blob if it exists
+        if (user.profileBanner && user.profileBanner.includes('blob.vercel-storage.com')) {
+          try {
+            await del(user.profileBanner);
+          } catch (error) {
+            console.error('Failed to delete old banner:', error);
+          }
         }
         
-        // Save new banner
-        const profileBannerPath = await saveFile(profileBanner, 'banner');
-        profileData.profileBanner = profileBannerPath;
+        // Upload new banner to Vercel Blob
+        const filename = `banners/${decoded.id}-${Date.now()}-${profileBanner.name}`;
+        const blob = await put(filename, profileBanner, {
+          access: 'public',
+        });
+        profileData.profileBanner = blob.url;
       }
     } else {
       // Handle regular JSON data (no files)
