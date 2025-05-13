@@ -276,20 +276,20 @@ export default function Post({ post, onHidePost }) {
 
   const generateColorFromUsername = (username) => {
     if (!username) return '#3b5fe2'; // Default color
-    
+
     // Simple hash function to get consistent colors
     let hash = 0;
     for (let i = 0; i < username.length; i++) {
       hash = username.charCodeAt(i) + ((hash << 5) - hash);
     }
-    
+
     // Convert to hex color
     let color = '#';
     for (let i = 0; i < 3; i++) {
       const value = (hash >> (i * 8)) & 0xFF;
       color += ('00' + value.toString(16)).substr(-2);
     }
-    
+
     return color;
   };
 
@@ -446,6 +446,9 @@ export default function Post({ post, onHidePost }) {
             width={600}
             height={300}
             className={styles.postImage}
+            priority
+            unoptimized
+            key={`post-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
           />
         </div>
       </div>
