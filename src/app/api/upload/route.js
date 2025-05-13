@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
-import { saveFile } from '@/lib/fileUpload';
-import User from '@/models/User';
+import { put } from '@vercel/blob';
 
 export async function POST(request) {
   try {
@@ -41,10 +40,21 @@ export async function POST(request) {
       );
     }
     
-    // Save file and get path
-    const filepath = await saveFile(file, directory);
+    // Create a unique filename with directory structure
+    const timestamp = Date.now();
+    const filename = `${directory}/${timestamp}-${file.name}`;
     
-    return NextResponse.json({ filepath }, { status: 201 });
+    // Upload to Vercel Blob
+    const blob = await put(filename, file, {
+      access: 'public',
+    });
+    
+    // Return the URL in the same format your app expects
+    return NextResponse.json({ 
+      filepath: blob.url,
+      url: blob.url 
+    }, { status: 201 });
+    
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
