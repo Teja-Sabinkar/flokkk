@@ -9,6 +9,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
   });
   
   const [imagePreview, setImagePreview] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
 
   // Handle input changes
@@ -28,6 +29,12 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
     // Check if file is an image
     if (!file.type.match('image.*')) {
       alert('Please select an image file');
+      return;
+    }
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size exceeds 5MB limit. Please choose a smaller image.');
       return;
     }
 
@@ -63,7 +70,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Basic validation
@@ -72,16 +79,55 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
       return;
     }
     
-    onSave(formData);
+    // Prevent multiple submissions
+    if (isSubmitting) return;
     
-    // Reset form and close modal
-    setFormData({
-      title: '',
-      description: '',
-      image: null
-    });
-    setImagePreview(null);
-    onClose();
+    try {
+      setIsSubmitting(true);
+      
+      // Handle image upload - this is where we need to ensure uniqueness
+      // by adding a timestamp to the formData if there's an image
+      const submissionData = {...formData};
+      
+      if (submissionData.image) {
+        // Add a timestamp to the file name to prevent caching issues
+        const originalFile = submissionData.image;
+        const timestamp = Date.now();
+        
+        // Create a new file with timestamp in the name
+        // This is a workaround for Vercel's caching behavior
+        const fileExtension = originalFile.name.split('.').pop();
+        const newFileName = `${originalFile.name.split('.')[0]}_${timestamp}.${fileExtension}`;
+        
+        // Create a new File object with the timestamped name
+        const newFile = new File([originalFile], newFileName, {
+          type: originalFile.type,
+          lastModified: originalFile.lastModified
+        });
+        
+        submissionData.image = newFile;
+        submissionData.imageTimestamp = timestamp; // Add timestamp for reference
+      }
+      
+      // Call the onSave function provided by the parent component
+      const saveResult = await onSave(submissionData);
+      
+      if (saveResult) {
+        // Reset form and close modal on successful save
+        setFormData({
+          title: '',
+          description: '',
+          image: null
+        });
+        setImagePreview(null);
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error saving post:', error);
+      alert('Failed to create post. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -91,7 +137,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
       <div className={styles.modalContainer}>
         <div className={styles.modalHeader}>
           <h2>Create Post</h2>
-          <button className={styles.closeButton} onClick={onClose}>
+          <button className={styles.closeButton} onClick={onClose} type="button" disabled={isSubmitting}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -107,9 +153,11 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
               name="title"
               value={formData.title}
               onChange={handleChange}
-              placeholder="Enter a title for your post (max 200characters)."
+              placeholder="Enter a title for your post (max 200 characters)."
               className={styles.input}
               required
+              maxLength={200}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -123,6 +171,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
               placeholder="Write something about your post..."
               className={styles.textArea}
               rows="4"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -142,6 +191,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
                     type="button" 
                     className={styles.browseButton}
                     onClick={handleBrowseClick}
+                    disabled={isSubmitting}
                   >
                     Browse Files
                   </button>
@@ -151,6 +201,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
                     accept="image/*"
                     onChange={handleFileChange}
                     className={styles.fileInput}
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -165,6 +216,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
                   type="button" 
                   className={styles.removeImageButton}
                   onClick={handleRemoveImage}
+                  disabled={isSubmitting}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -179,14 +231,16 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
               type="button" 
               onClick={onClose} 
               className={styles.cancelButton}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button 
               type="submit" 
               className={styles.saveButton}
+              disabled={isSubmitting}
             >
-              Post
+              {isSubmitting ? 'Posting...' : 'Post'}
             </button>
           </div>
         </form>
