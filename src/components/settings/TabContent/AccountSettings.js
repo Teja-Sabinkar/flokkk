@@ -1,14 +1,18 @@
 // AccountSettings.js
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './AccountSettings.module.css';
 import ContactInfoEditModal from './ContactInfoEditModal';
+import DeleteAccountModal from './DeleteAccountModal';
 
 const AccountSettings = () => {
+  const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isClearingHistory, setIsClearingHistory] = useState(false);
   const [clearHistoryMessage, setClearHistoryMessage] = useState('');
   
@@ -124,6 +128,37 @@ const AccountSettings = () => {
       setLoading(false);
     }
   };
+  
+  // Add this new function to handle account deletion
+  const handleDeleteAccount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+      
+      const response = await fetch('/api/users/me', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete account');
+      }
+      
+      // Clear local token and redirect to login page
+      localStorage.removeItem('token');
+      router.push('/login');
+      
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      throw error;
+    }
+  };
 
   if (loading) {
     return <div className={styles.loading}>Loading user data...</div>;
@@ -198,7 +233,7 @@ const AccountSettings = () => {
               disabled={isClearingHistory}
             >
               {isClearingHistory ? 'Clearing...' : 'Clear'}
-              <span className={`material-icons ${styles.arrowIcon}`}>chevron_right</span>
+              <span className={`material-icons ${styles.arrowIcon}`}>history</span>
             </button>
           </div>
         </div>
@@ -206,11 +241,17 @@ const AccountSettings = () => {
         <div className={styles.settingItem}>
           <div className={styles.settingInfo}>
             <h3 className={styles.settingTitle}>Account Deletion</h3>
+            <p className={styles.settingDescription}>
+              This will permanently delete your account and all your content.
+            </p>
           </div>
           <div className={styles.settingAction}>
-            <button className={`${styles.actionButton} ${styles.dangerButton}`}>
+            <button 
+              className={`${styles.actionButton} ${styles.dangerButton}`}
+              onClick={() => setIsDeleteModalOpen(true)}
+            >
               Delete
-              <span className={`material-icons ${styles.arrowIcon}`}>chevron_right</span>
+              <span className={`material-icons ${styles.arrowIcon}`}>Account</span>
             </button>
           </div>
         </div>
@@ -222,6 +263,14 @@ const AccountSettings = () => {
           contactInfo={user?.contactInfo || ''}
           onClose={() => setIsContactModalOpen(false)}
           onSave={handleContactInfoUpdate}
+        />
+      )}
+      
+      {/* Delete Account Modal */}
+      {isDeleteModalOpen && (
+        <DeleteAccountModal
+          onClose={() => setIsDeleteModalOpen(false)}
+          onDelete={handleDeleteAccount}
         />
       )}
     </div>
