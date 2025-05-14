@@ -27,19 +27,19 @@ export async function GET(request) {
         // Build query filters
         let filters = {};
         let user = null;
-        
+
         // If username is provided, we need to find this user first and filter by their userId
         if (username) {
             console.log(`Filtering community posts for username: ${username}`);
-            
+
             // Find user by username to get the userId (case insensitive)
-            user = await User.findOne({ 
-                username: { $regex: new RegExp(`^${username}$`, 'i') } 
+            user = await User.findOne({
+                username: { $regex: new RegExp(`^${username}$`, 'i') }
             });
-            
+
             if (user) {
                 console.log(`Found user with ID: ${user._id}`);
-                
+
                 // Create a more flexible filter that checks for either userId or username
                 filters = {
                     $or: [
@@ -47,11 +47,11 @@ export async function GET(request) {
                         { username: { $regex: new RegExp(`^${username}$`, 'i') } }
                     ]
                 };
-                
+
                 console.log('Using flexible filter:', JSON.stringify(filters));
             } else {
                 console.log(`User not found for username: ${username}`);
-                
+
                 // Even if user is not found, try to filter by the provided username
                 filters = { username: { $regex: new RegExp(`^${username}$`, 'i') } };
                 console.log('Falling back to username-only filter:', JSON.stringify(filters));
@@ -67,7 +67,7 @@ export async function GET(request) {
             .limit(limit);
 
         console.log(`Found ${posts.length} community posts`);
-        
+
         // Debug log the first few posts
         if (posts.length > 0) {
             console.log('First post details:', {
@@ -120,12 +120,12 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         console.log('POST /api/community-posts - Creating new community post');
-        
+
         // Get auth token from header
         const headersList = headers();
         const authHeader = headersList.get('Authorization');
         const contentType = headersList.get('content-type') || '';
-        
+
         console.log('Content-Type:', contentType);
         console.log('Auth header present:', !!authHeader);
 
@@ -167,7 +167,7 @@ export async function POST(request) {
                 { status: 404 }
             );
         }
-        
+
         console.log('Found user:', user.username);
 
         let postData = {};
@@ -176,100 +176,21 @@ export async function POST(request) {
 
         // Handle different content types
         if (contentType.includes('multipart/form-data')) {
-            console.log('Processing multipart/form-data request');
-            // Handle multipart form data (with files)
-            const formData = await request.formData();
-            
-            console.log('FormData fields:', [...formData.keys()]);
-
-            // Get text fields
-            const title = formData.get('title');
-            const content = formData.get('description') || formData.get('content') || '';
-            const tagsJson = formData.get('tags');
-            const tags = tagsJson ? JSON.parse(tagsJson) : [];
-            
-            // Get author username if explicitly provided
-            authorUsername = formData.get('authorUsername');
-            console.log('Author username from form:', authorUsername);
-            
-            console.log('Parsed form data:', { title, contentLength: content?.length, tags });
-
-            // Validate required fields
-            if (!title) {
-                console.error('Validation error: Title is required');
-                return NextResponse.json(
-                    { message: 'Title is required' },
-                    { status: 400 }
-                );
-            }
-
             // Get file fields
-            image = formData.get('image');
-            console.log('Image present:', !!image);
+            const imagePath = formData.get('image');
+            console.log('Image path:', imagePath);
 
-            // Process image if provided
-            let imagePath = null;
-            if (image) {
-                try {
-                    console.log('Saving image file...');
-                    imagePath = await saveFile(image, 'posts');
-                    console.log('Image saved successfully at:', imagePath);
-                } catch (fileError) {
-                    console.error('Error saving file:', fileError);
-                    return NextResponse.json(
-                        { message: 'Failed to save image: ' + fileError.message },
-                        { status: 500 }
-                    );
-                }
-            }
-
-            // Use provided username or fall back to user's username
-            const username = authorUsername || user.username || user.name.toLowerCase().replace(/\s+/g, '_');
-            console.log('Using username for post:', username);
-
-            // Prepare post data
+            // Prepare post data with the image path
             postData = {
                 title,
                 content,
                 tags,
-                image: imagePath,
-                userId: user._id,
-                username: username
-            };
-        } else {
-            console.log('Processing JSON request');
-            // Handle regular JSON data
-            const data = await request.json();
-            console.log('JSON data:', data);
-
-            // Get author username if explicitly provided
-            authorUsername = data.authorUsername;
-            console.log('Author username from JSON:', authorUsername);
-
-            // Validate required fields
-            if (!data.title) {
-                console.error('Validation error: Title is required');
-                return NextResponse.json(
-                    { message: 'Title is required' },
-                    { status: 400 }
-                );
-            }
-
-            // Use provided username or fall back to user's username
-            const username = authorUsername || user.username || user.name.toLowerCase().replace(/\s+/g, '_');
-            console.log('Using username for post:', username);
-            
-            // Prepare post data
-            postData = {
-                title: data.title,
-                content: data.content || data.description || '',
-                tags: data.tags || [],
-                image: data.image || null,
+                image: imagePath, // This will now be the URL path to the MongoDB-stored image
                 userId: user._id,
                 username: username
             };
         }
-        
+
         console.log('Prepared post data:', {
             title: postData.title,
             contentLength: postData.content?.length,
@@ -291,14 +212,14 @@ export async function POST(request) {
             console.log('Notifying followers of new community post...');
             // Find all followers of the post creator
             const follows = await Follow.find({ following: user._id });
-            
+
             console.log(`Found ${follows.length} followers for user ${user._id}`);
-            
+
             // Create notifications for each follower
             if (follows && follows.length > 0) {
                 for (const follow of follows) {
                     console.log(`Creating notification for follower: ${follow.follower}`);
-                    
+
                     try {
                         await createNotification({
                             userId: follow.follower,
@@ -314,7 +235,7 @@ export async function POST(request) {
                         console.error(`Error creating notification for follower ${follow.follower}:`, notifyError);
                     }
                 }
-                
+
                 console.log('All follower notifications created');
             } else {
                 console.log('No followers to notify');
