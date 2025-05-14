@@ -233,7 +233,7 @@ const AccountSettings = () => {
               disabled={isClearingHistory}
             >
               {isClearingHistory ? 'Clearing...' : 'Clear'}
-              <span className={`material-icons ${styles.arrowIcon}`}>chevron_right</span>
+              <span className={`material-icons ${styles.arrowIcon}`}>history</span>
             </button>
           </div>
         </div>
@@ -251,7 +251,7 @@ const AccountSettings = () => {
               onClick={() => setIsDeleteModalOpen(true)}
             >
               Delete
-              <span className={`material-icons ${styles.arrowIcon}`}>chevron_right</span>
+              <span className={`material-icons ${styles.arrowIcon}`}>Account</span>
             </button>
           </div>
         </div>
