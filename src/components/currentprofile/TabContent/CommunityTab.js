@@ -411,85 +411,14 @@ const CommunityTab = ({ username }) => {
     try {
       setLoading(true);
 
-      // Validate image if present
-      if (postData.image) {
-        const fileSize = postData.image.size;
-        // Check if image is too large (5MB limit)
-        if (fileSize > 5 * 1024 * 1024) {
-          setError('Image size must be less than 5MB');
-          setLoading(false);
-          return false;
-        }
-      }
-
-      // Get authentication token
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-
-      // First, handle the image upload if there is an image
-      let imagePath = null;
-      if (postData.image) {
-        try {
-          // Create a separate FormData just for the image
-          const imageFormData = new FormData();
-          imageFormData.append('file', postData.image);
-          imageFormData.append('directory', 'community-posts');
-
-          // Upload the image to MongoDB via the /api/images endpoint
-          const imageResponse = await fetch('/api/images', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            },
-            body: imageFormData
-          });
-
-          if (!imageResponse.ok) {
-            const errorData = await imageResponse.json();
-            throw new Error(errorData.message || 'Failed to upload image');
-          }
-
-          // Get the image URL path from the response
-          const imageData = await imageResponse.json();
-          imagePath = imageData.filepath;
-          console.log('Image uploaded successfully, path:', imagePath);
-        } catch (imageError) {
-          console.error('Error uploading image:', imageError);
-          throw new Error('Failed to upload image: ' + imageError.message);
-        }
-      }
-
-      // Now create the post with the image URL
-      const postFormData = new FormData();
-      postFormData.append('title', postData.title);
-      postFormData.append('content', postData.description || '');
-
-      // If we have an image path, include it in the form data
-      if (imagePath) {
-        postFormData.append('image', imagePath);
-      }
-
-      // Submit the post
-      const response = await fetch('/api/community-posts', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: postFormData
+      // Submit the post to the API
+      const result = await createCommunityPost({
+        title: postData.title,
+        content: postData.description,
+        image: postData.image
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create post');
-      }
-
-      const result = await response.json();
-
       if (result && result.post) {
-        console.log('Post created successfully:', result.post);
-
         // Fetch latest user profile for the new post author
         const updatedPost = await fetchUserProfiles([result.post]);
 

@@ -4,9 +4,9 @@ import jwt from 'jsonwebtoken';
 import dbConnect from '@/lib/mongoose';
 import User from '@/models/User';
 import CommunityPost from '@/models/CommunityPost';
-import Follow from '@/models/Follow';
-import { createNotification } from '@/lib/notifications';
-import { connectToDatabase } from '@/lib/mongodb';
+import Follow from '@/models/Follow'; // Add this import
+import { createNotification } from '@/lib/notifications'; // Add this import
+import { saveFile } from '@/lib/fileUpload';
 
 // GET community posts with pagination
 export async function GET(request) {
@@ -27,19 +27,19 @@ export async function GET(request) {
         // Build query filters
         let filters = {};
         let user = null;
-
+        
         // If username is provided, we need to find this user first and filter by their userId
         if (username) {
             console.log(`Filtering community posts for username: ${username}`);
-
+            
             // Find user by username to get the userId (case insensitive)
-            user = await User.findOne({
-                username: { $regex: new RegExp(`^${username}$`, 'i') }
+            user = await User.findOne({ 
+                username: { $regex: new RegExp(`^${username}$`, 'i') } 
             });
-
+            
             if (user) {
                 console.log(`Found user with ID: ${user._id}`);
-
+                
                 // Create a more flexible filter that checks for either userId or username
                 filters = {
                     $or: [
@@ -47,11 +47,11 @@ export async function GET(request) {
                         { username: { $regex: new RegExp(`^${username}$`, 'i') } }
                     ]
                 };
-
+                
                 console.log('Using flexible filter:', JSON.stringify(filters));
             } else {
                 console.log(`User not found for username: ${username}`);
-
+                
                 // Even if user is not found, try to filter by the provided username
                 filters = { username: { $regex: new RegExp(`^${username}$`, 'i') } };
                 console.log('Falling back to username-only filter:', JSON.stringify(filters));
@@ -67,7 +67,7 @@ export async function GET(request) {
             .limit(limit);
 
         console.log(`Found ${posts.length} community posts`);
-
+        
         // Debug log the first few posts
         if (posts.length > 0) {
             console.log('First post details:', {
@@ -118,212 +118,240 @@ export async function GET(request) {
 
 // Create a new community post
 export async function POST(request) {
-  try {
-    console.log('POST /api/community-posts - Creating new community post');
-    
-    // Get auth token from header
-    const headersList = headers();
-    const authHeader = headersList.get('Authorization');
-    const contentType = headersList.get('content-type') || '';
-    
-    console.log('Content-Type:', contentType);
-    console.log('Auth header present:', !!authHeader);
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error('Unauthorized: No valid Authorization header');
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split(' ')[1];
-
-    // Verify JWT token
-    let decoded;
     try {
-      decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET);
-      console.log('JWT verified successfully. User ID:', decoded.id);
-    } catch (error) {
-      console.error('Token verification error:', error);
-      return NextResponse.json({ message: 'Invalid or expired token' }, { status: 401 });
-    }
-
-    // Connect to database
-    console.log('Connecting to database...');
-    await dbConnect();
-    console.log('Database connection established');
-
-    // Find user by id from token
-    const user = await User.findById(decoded.id);
-
-    if (!user) {
-      console.error('User not found with ID:', decoded.id);
-      return NextResponse.json({ message: 'User not found' }, { status: 404 });
-    }
-    
-    console.log('Found user:', user.username);
-
-    let postData = {};
-    let authorUsername = null;
-
-    try {
-      // Handle content from request based on content type
-      if (contentType.includes('multipart/form-data')) {
-        console.log('Processing multipart/form-data request');
-        const formData = await request.formData();
+        console.log('POST /api/community-posts - Creating new community post');
         
-        console.log('FormData fields:', [...formData.keys()]);
+        // Get auth token from header
+        const headersList = headers();
+        const authHeader = headersList.get('Authorization');
+        const contentType = headersList.get('content-type') || '';
         
-        // Get text fields
-        const title = formData.get('title');
-        const content = formData.get('content') || formData.get('description') || '';
-        const tagsJson = formData.get('tags');
-        const tags = tagsJson ? JSON.parse(tagsJson) : [];
-        const imagePath = formData.get('image'); // Now this will be a URL path
-        
-        // Get author username if explicitly provided
-        authorUsername = formData.get('authorUsername');
-        console.log('Author username from form:', authorUsername);
-        
-        console.log('Parsed form data:', { title, contentLength: content?.length, tags, imagePath });
+        console.log('Content-Type:', contentType);
+        console.log('Auth header present:', !!authHeader);
 
-        // Validate required fields
-        if (!title) {
-          console.error('Validation error: Title is required');
-          return NextResponse.json({ message: 'Title is required' }, { status: 400 });
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            console.error('Unauthorized: No valid Authorization header');
+            return NextResponse.json(
+                { message: 'Unauthorized' },
+                { status: 401 }
+            );
         }
 
-        // Use provided username or fall back to user's username
-        const username = authorUsername || user.username || user.name.toLowerCase().replace(/\s+/g, '_');
-        console.log('Using username for post:', username);
+        const token = authHeader.split(' ')[1];
 
-        // Prepare post data
-        postData = {
-          title,
-          content,
-          tags,
-          image: imagePath,
-          userId: user._id,
-          username: username
-        };
-      } else {
-        console.log('Processing JSON request');
-        // Handle regular JSON data
-        const data = await request.json();
-        console.log('JSON data:', data);
-
-        // Get author username if explicitly provided
-        authorUsername = data.authorUsername;
-        console.log('Author username from JSON:', authorUsername);
-
-        // Validate required fields
-        if (!data.title) {
-          console.error('Validation error: Title is required');
-          return NextResponse.json({ message: 'Title is required' }, { status: 400 });
+        // Verify JWT token
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET);
+            console.log('JWT verified successfully. User ID:', decoded.id);
+        } catch (error) {
+            console.error('Token verification error:', error);
+            return NextResponse.json(
+                { message: 'Invalid or expired token' },
+                { status: 401 }
+            );
         }
 
-        // Use provided username or fall back to user's username
-        const username = authorUsername || user.username || user.name.toLowerCase().replace(/\s+/g, '_');
-        console.log('Using username for post:', username);
-        
-        // Prepare post data
-        postData = {
-          title: data.title,
-          content: data.content || data.description || '',
-          tags: data.tags || [],
-          image: data.image || null,
-          userId: user._id,
-          username: username
-        };
-      }
-      
-      console.log('Prepared post data:', {
-        title: postData.title,
-        contentLength: postData.content?.length,
-        hasImage: !!postData.image,
-        userId: postData.userId.toString(),
-        username: postData.username
-      });
+        // Connect to database
+        console.log('Connecting to database...');
+        await dbConnect();
+        console.log('Database connection established');
 
-      // Create the community post
-      console.log('Creating community post in database...');
-      const newPost = await CommunityPost.create(postData);
-      console.log('Community post created successfully with ID:', newPost._id);
+        // Find user by id from token
+        const user = await User.findById(decoded.id);
 
-      // Format the timeAgo for the response
-      const timeAgo = getTimeAgo(newPost.createdAt);
+        if (!user) {
+            console.error('User not found with ID:', decoded.id);
+            return NextResponse.json(
+                { message: 'User not found' },
+                { status: 404 }
+            );
+        }
+        
+        console.log('Found user:', user.username);
 
-      // NOTIFICATION LOGIC
-      try {
-        console.log('Notifying followers of new community post...');
-        // Find all followers of the post creator
-        const follows = await Follow.find({ following: user._id });
-        
-        console.log(`Found ${follows.length} followers for user ${user._id}`);
-        
-        // Create notifications for each follower
-        if (follows && follows.length > 0) {
-          for (const follow of follows) {
-            console.log(`Creating notification for follower: ${follow.follower}`);
+        let postData = {};
+        let image = null;
+        let authorUsername = null;
+
+        // Handle different content types
+        if (contentType.includes('multipart/form-data')) {
+            console.log('Processing multipart/form-data request');
+            // Handle multipart form data (with files)
+            const formData = await request.formData();
             
-            try {
-              await createNotification({
-                userId: follow.follower,
-                type: 'new_post',
-                content: `${user.username || user.name} has added a new post for the community`,
-                sender: user._id,
-                senderUsername: user.username || user.name,
-                relatedId: newPost._id,
-                onModel: 'CommunityPost',
-                thumbnail: newPost.image || null
-              });
-            } catch (notifyError) {
-              console.error(`Error creating notification for follower ${follow.follower}:`, notifyError);
+            console.log('FormData fields:', [...formData.keys()]);
+
+            // Get text fields
+            const title = formData.get('title');
+            const content = formData.get('description') || formData.get('content') || '';
+            const tagsJson = formData.get('tags');
+            const tags = tagsJson ? JSON.parse(tagsJson) : [];
+            
+            // Get author username if explicitly provided
+            authorUsername = formData.get('authorUsername');
+            console.log('Author username from form:', authorUsername);
+            
+            console.log('Parsed form data:', { title, contentLength: content?.length, tags });
+
+            // Validate required fields
+            if (!title) {
+                console.error('Validation error: Title is required');
+                return NextResponse.json(
+                    { message: 'Title is required' },
+                    { status: 400 }
+                );
             }
-          }
-          
-          console.log('All follower notifications created');
+
+            // Get file fields
+            image = formData.get('image');
+            console.log('Image present:', !!image);
+
+            // Process image if provided
+            let imagePath = null;
+            if (image) {
+                try {
+                    console.log('Saving image file...');
+                    imagePath = await saveFile(image, 'posts');
+                    console.log('Image saved successfully at:', imagePath);
+                } catch (fileError) {
+                    console.error('Error saving file:', fileError);
+                    return NextResponse.json(
+                        { message: 'Failed to save image: ' + fileError.message },
+                        { status: 500 }
+                    );
+                }
+            }
+
+            // Use provided username or fall back to user's username
+            const username = authorUsername || user.username || user.name.toLowerCase().replace(/\s+/g, '_');
+            console.log('Using username for post:', username);
+
+            // Prepare post data
+            postData = {
+                title,
+                content,
+                tags,
+                image: imagePath,
+                userId: user._id,
+                username: username
+            };
         } else {
-          console.log('No followers to notify');
-        }
-      } catch (notifyError) {
-        // Log the error but don't fail the request
-        console.error('Error notifying followers:', notifyError);
-      }
+            console.log('Processing JSON request');
+            // Handle regular JSON data
+            const data = await request.json();
+            console.log('JSON data:', data);
 
-      // Return the created post
-      return NextResponse.json({
-        message: 'Community post created successfully',
-        post: {
-          id: newPost._id,
-          title: newPost.title,
-          content: newPost.content,
-          image: newPost.image,
-          voteCount: newPost.voteCount || 0,
-          commentCount: newPost.commentCount || 0,
-          shareCount: newPost.shareCount || 0,
-          tags: newPost.tags || [],
-          username: newPost.username,
-          userId: newPost.userId.toString(),
-          createdAt: newPost.createdAt,
-          timeAgo: timeAgo,
-          avatarSrc: '/api/placeholder/64/64' // Default avatar for display
+            // Get author username if explicitly provided
+            authorUsername = data.authorUsername;
+            console.log('Author username from JSON:', authorUsername);
+
+            // Validate required fields
+            if (!data.title) {
+                console.error('Validation error: Title is required');
+                return NextResponse.json(
+                    { message: 'Title is required' },
+                    { status: 400 }
+                );
+            }
+
+            // Use provided username or fall back to user's username
+            const username = authorUsername || user.username || user.name.toLowerCase().replace(/\s+/g, '_');
+            console.log('Using username for post:', username);
+            
+            // Prepare post data
+            postData = {
+                title: data.title,
+                content: data.content || data.description || '',
+                tags: data.tags || [],
+                image: data.image || null,
+                userId: user._id,
+                username: username
+            };
         }
-      }, { status: 201 });
-    } catch (formProcessingError) {
-      console.error('Error processing form data:', formProcessingError);
-      return NextResponse.json(
-        { message: 'Failed to process form data: ' + formProcessingError.message },
-        { status: 400 }
-      );
+        
+        console.log('Prepared post data:', {
+            title: postData.title,
+            contentLength: postData.content?.length,
+            hasImage: !!postData.image,
+            userId: postData.userId.toString(),
+            username: postData.username
+        });
+
+        // Create the community post
+        console.log('Creating community post in database...');
+        const newPost = await CommunityPost.create(postData);
+        console.log('Community post created successfully with ID:', newPost._id);
+
+        // Format the timeAgo for the response
+        const timeAgo = getTimeAgo(newPost.createdAt);
+
+        // NOTIFICATION LOGIC - ADDED HERE (after newPost is created)
+        try {
+            console.log('Notifying followers of new community post...');
+            // Find all followers of the post creator
+            const follows = await Follow.find({ following: user._id });
+            
+            console.log(`Found ${follows.length} followers for user ${user._id}`);
+            
+            // Create notifications for each follower
+            if (follows && follows.length > 0) {
+                for (const follow of follows) {
+                    console.log(`Creating notification for follower: ${follow.follower}`);
+                    
+                    try {
+                        await createNotification({
+                            userId: follow.follower,
+                            type: 'new_post', // This will appear in the Posts tab
+                            content: `${user.username || user.name} has added a new post for the community`,
+                            sender: user._id,
+                            senderUsername: user.username || user.name,
+                            relatedId: newPost._id,
+                            onModel: 'CommunityPost', // Since it's a community post
+                            thumbnail: newPost.image || null
+                        });
+                    } catch (notifyError) {
+                        console.error(`Error creating notification for follower ${follow.follower}:`, notifyError);
+                    }
+                }
+                
+                console.log('All follower notifications created');
+            } else {
+                console.log('No followers to notify');
+            }
+        } catch (notifyError) {
+            // Log the error but don't fail the request
+            console.error('Error notifying followers:', notifyError);
+        }
+
+        // Return the created post
+        return NextResponse.json({
+            message: 'Community post created successfully',
+            post: {
+                id: newPost._id,
+                title: newPost.title,
+                content: newPost.content,
+                image: newPost.image,
+                voteCount: newPost.voteCount || 0,
+                commentCount: newPost.commentCount || 0,
+                shareCount: newPost.shareCount || 0,
+                tags: newPost.tags || [],
+                username: newPost.username,
+                userId: newPost.userId.toString(),
+                createdAt: newPost.createdAt,
+                timeAgo: timeAgo,
+                avatarSrc: '/api/placeholder/64/64' // Default avatar for display
+            }
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error('Community post creation error:', error);
+        return NextResponse.json(
+            { message: 'Failed to create community post: ' + error.message },
+            { status: 500 }
+        );
     }
-  } catch (error) {
-    console.error('Community post creation error:', error);
-    return NextResponse.json(
-      { message: 'Failed to create community post: ' + error.message },
-      { status: 500 }
-    );
-  }
 }
-
 
 // Helper function to calculate time ago
 function getTimeAgo(timestamp) {

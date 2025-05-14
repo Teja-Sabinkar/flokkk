@@ -1,51 +1,65 @@
-// api/upload/route.js
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
-import { connectToDatabase } from '@/lib/mongodb';
-import { v4 as uuidv4 } from 'uuid';
+import { put } from '@vercel/blob';
 
 export async function POST(request) {
   try {
-    // Auth verification code...
+    // Get auth token from header
+    const headersList = headers();
+    const authHeader = headersList.get('Authorization');
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { message: 'Unauthorized - No token provided' },
+        { status: 401 }
+      );
+    }
+    
+    const token = authHeader.split(' ')[1];
+    
+    // Verify JWT token
+    try {
+      jwt.verify(token, process.env.NEXTAUTH_SECRET);
+    } catch (error) {
+      console.error('Token verification error:', error);
+      return NextResponse.json(
+        { message: 'Unauthorized - Invalid token' },
+        { status: 401 }
+      );
+    }
     
     const formData = await request.formData();
     const file = formData.get('file');
     const directory = formData.get('directory') || 'posts';
     
     if (!file) {
-      return NextResponse.json({ message: 'No file provided' }, { status: 400 });
+      return NextResponse.json(
+        { message: 'No file provided' },
+        { status: 400 }
+      );
     }
     
-    // Generate a unique image ID
-    const imageId = uuidv4();
+    // Create a unique filename with directory structure
+    const timestamp = Date.now();
+    const filename = `${directory}/${timestamp}-${file.name}`;
     
-    // Convert file to buffer
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    
-    // Connect to MongoDB
-    const { db } = await connectToDatabase();
-    
-    // Store the image in a dedicated collection
-    await db.collection('images').insertOne({
-      _id: imageId,
-      filename: file.name,
-      contentType: file.type,
-      directory,
-      data: buffer,
-      createdAt: new Date()
+    // Upload to Vercel Blob
+    const blob = await put(filename, file, {
+      access: 'public',
     });
     
-    // Return a URL that points to your image API
-    const imageUrl = `/api/images/${imageId}`;
-    
-    return NextResponse.json({
-      filepath: imageUrl, // Keep the same response structure for compatibility
-      message: 'Image uploaded successfully'
+    // Return the URL in the same format your app expects
+    return NextResponse.json({ 
+      filepath: blob.url,
+      url: blob.url 
     }, { status: 201 });
+    
   } catch (error) {
     console.error('Upload error:', error);
-    return NextResponse.json({ message: 'Upload failed' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'File upload failed: ' + error.message },
+      { status: 500 }
+    );
   }
 }
