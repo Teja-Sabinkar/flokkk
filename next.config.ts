@@ -9,13 +9,11 @@ const nextConfig: NextConfig = {
   },
   images: {
     domains: [
-      'i.ytimg.com',        // YouTube thumbnails
-      'img.youtube.com',    // Alternative YouTube thumbnail domain
-      'localhost',          // Local development
-      'via.placeholder.com',// Placeholder images
-      'i.vimeocdn.com',     // Vimeo thumbnails (optional)
-      'vercel-blob.com',
-    '*.blob.vercel-storage.com' // This will cover all Vercel Blob domains
+      'i.ytimg.com',       // YouTube thumbnails
+      'img.youtube.com',   // Alternative YouTube thumbnail domain
+      'localhost',         // Local development
+      'via.placeholder.com', // Placeholder images
+      'i.vimeocdn.com'     // Vimeo thumbnails (optional)
     ],
   },
   /* any other config options you might have */

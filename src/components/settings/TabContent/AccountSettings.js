@@ -1,20 +1,16 @@
 // AccountSettings.js
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './AccountSettings.module.css';
 import ContactInfoEditModal from './ContactInfoEditModal';
-import DeleteAccountModal from './DeleteAccountModal';
 
 const AccountSettings = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isClearingHistory, setIsClearingHistory] = useState(false);
   const [clearHistoryMessage, setClearHistoryMessage] = useState('');
-  const router = useRouter();
   
   useEffect(() => {
     const fetchUserData = async () => {
@@ -128,40 +124,6 @@ const AccountSettings = () => {
       setLoading(false);
     }
   };
-  
-  // Add this function to handle account deletion
-  const handleDeleteAccount = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
-      
-      const response = await fetch('/api/users/me/delete', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete account');
-      }
-      
-      // Clear token from localStorage
-      localStorage.removeItem('token');
-      
-      // Redirect to login page
-      router.push('/login?message=Account+successfully+deleted');
-      
-    } catch (err) {
-      console.error('Error deleting account:', err);
-      throw err;
-    }
-  };
 
   if (loading) {
     return <div className={styles.loading}>Loading user data...</div>;
@@ -199,6 +161,20 @@ const AccountSettings = () => {
             </span>
           </div>
         </div>
+        
+        <div className={styles.settingItem}>
+          <div className={styles.settingInfo}>
+            <h3 className={styles.settingTitle}>Language</h3>
+          </div>
+          <div className={styles.settingAction}>
+            <select className={styles.selectInput}>
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+            </select>
+          </div>
+        </div>
       </div>
       
       {/* Advanced Section */}
@@ -222,7 +198,7 @@ const AccountSettings = () => {
               disabled={isClearingHistory}
             >
               {isClearingHistory ? 'Clearing...' : 'Clear'}
-              <span className={`material-icons ${styles.arrowIcon}`}>history</span>
+              <span className={`material-icons ${styles.arrowIcon}`}>chevron_right</span>
             </button>
           </div>
         </div>
@@ -230,17 +206,11 @@ const AccountSettings = () => {
         <div className={styles.settingItem}>
           <div className={styles.settingInfo}>
             <h3 className={styles.settingTitle}>Account Deletion</h3>
-            <p className={styles.settingDescription}>
-              Permanently delete your account and all associated data
-            </p>
           </div>
           <div className={styles.settingAction}>
-            <button 
-              className={`${styles.actionButton} ${styles.dangerButton}`}
-              onClick={() => setIsDeleteModalOpen(true)}
-            >
+            <button className={`${styles.actionButton} ${styles.dangerButton}`}>
               Delete
-              <span className={`material-icons ${styles.arrowIcon}`}>delete_forever</span>
+              <span className={`material-icons ${styles.arrowIcon}`}>chevron_right</span>
             </button>
           </div>
         </div>
@@ -252,14 +222,6 @@ const AccountSettings = () => {
           contactInfo={user?.contactInfo || ''}
           onClose={() => setIsContactModalOpen(false)}
           onSave={handleContactInfoUpdate}
-        />
-      )}
-      
-      {/* Delete Account Modal */}
-      {isDeleteModalOpen && (
-        <DeleteAccountModal
-          onClose={() => setIsDeleteModalOpen(false)}
-          onConfirm={handleDeleteAccount}
         />
       )}
     </div>

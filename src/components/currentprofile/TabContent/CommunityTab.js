@@ -216,42 +216,12 @@ const CommunityPost = ({ post, onVote }) => {
         {/* Post Image Container */}
         {post.image && (
           <div className={styles.postImageContainer}>
-            {post.image.includes('vercel-blob.com') || post.image.includes('vercel-storage.com') ? (
-              // Use Next.js Image component for Blob URLs for optimization
-              <Image
-                src={post.image}
-                alt={post.title || "Post image"}
-                width={600}
-                height={400}
-                className={styles.postImage}
-                priority={true}
-                unoptimized={false}
-                quality={85}
-                loading="eager"
-                objectFit="contain"
-                key={`community-image-${post.id || post._id}-${post.image}`}
-                onError={(e) => {
-                  console.error(`Failed to load image: ${post.image}`);
-                  // @ts-ignore - typescript doesn't recognize this but it works
-                  e.target.src = "/api/placeholder/600/300";
-                }}
-              />
-            ) : (
-              // Use regular img tag for legacy or external images
-              <img
-                src={post.image}
-                alt={post.title || "Post image"}
-                className={styles.postImage}
-                key={`community-image-${post.id || post._id}-${post.image}`}
-                loading="eager"
-                decoding="async"
-                onError={(e) => {
-                  console.error(`Failed to load image: ${post.image}`);
-                  // @ts-ignore - typescript doesn't recognize this but it works
-                  e.target.src = "/api/placeholder/600/300";
-                }}
-              />
-            )}
+            <img
+              src={post.image}
+              alt={post.title || "Post image"}
+              className={styles.postImage}
+              key={`community-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
+            />
           </div>
         )}
       </div>
@@ -307,10 +277,6 @@ const CommunityTab = ({ username }) => {
         try {
           const userData = await fetchUserProfile(username, token);
           if (userData) {
-            // Add timestamp to profilePicture if it exists
-            if (userData.profilePicture && userData.profilePicture !== '/profile-placeholder.jpg') {
-              userData.profilePicture = `${userData.profilePicture}?t=${Date.now()}`;
-            }
             profileData[username] = userData;
           }
         } catch (error) {
@@ -320,18 +286,11 @@ const CommunityTab = ({ username }) => {
 
       setUserProfiles(profileData);
 
-      // Update posts with latest profile pictures and add timestamp to post images
+      // Update posts with latest profile pictures
       return postsArray.map(post => {
         const userProfile = profileData[post.username];
-        // Add timestamp to post image if it exists and is not already a blob URL
-        let updatedImage = post.image;
-        if (updatedImage && typeof updatedImage === 'string' && !updatedImage.startsWith('blob:')) {
-          updatedImage = `${updatedImage}?t=${Date.now()}`;
-        }
-
         return {
           ...post,
-          image: updatedImage,
           profilePicture: userProfile?.profilePicture || post.avatarSrc || '/profile-placeholder.jpg'
         };
       });
@@ -452,27 +411,14 @@ const CommunityTab = ({ username }) => {
     try {
       setLoading(true);
 
-      // Add timestamp to image if it exists and is a string URL
-      let postDataWithTimestamp = { ...postData };
-      if (postData.image && typeof postData.image === 'string') {
-        // Add timestamp to URL to prevent caching
-        const timestamp = Date.now();
-        postDataWithTimestamp.image = `${postData.image}?t=${timestamp}`;
-      }
-
       // Submit the post to the API
       const result = await createCommunityPost({
         title: postData.title,
         content: postData.description,
-        image: postData.image // The API should handle file upload or URL processing
+        image: postData.image
       });
 
       if (result && result.post) {
-        // Add timestamp to the returned image URL if it exists
-        if (result.post.image && typeof result.post.image === 'string') {
-          result.post.image = `${result.post.image}?t=${Date.now()}`;
-        }
-
         // Fetch latest user profile for the new post author
         const updatedPost = await fetchUserProfiles([result.post]);
 

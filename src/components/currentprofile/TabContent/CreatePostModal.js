@@ -9,7 +9,6 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
   });
   
   const [imagePreview, setImagePreview] = useState(null);
-  const [previewKey, setPreviewKey] = useState(Date.now()); // Add key state to force re-renders
   const fileInputRef = useRef(null);
 
   // Handle input changes
@@ -42,8 +41,6 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       setImagePreview(e.target.result);
-      // Update the key to force re-render of image preview
-      setPreviewKey(Date.now());
     };
     reader.readAsDataURL(file);
   };
@@ -75,15 +72,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
       return;
     }
     
-    // Add timestamp to form data for better cache busting
-    const submissionData = {...formData};
-    if (submissionData.image instanceof File) {
-      // It's a file - already unique, no need to modify
-      // But we can add metadata if needed
-      submissionData.imageTimestamp = Date.now();
-    }
-    
-    onSave(submissionData);
+    onSave(formData);
     
     // Reset form and close modal
     setFormData({
@@ -170,15 +159,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
                 <img 
                   src={imagePreview} 
                   alt="Preview" 
-                  className={styles.imagePreview}
-                  key={`preview-${previewKey}`} // Use key to force re-render
-                  loading="eager"
-                  decoding="async"
-                  onError={(e) => {
-                    console.error('Failed to load image preview');
-                    // Optionally provide a fallback
-                    e.target.src = "/api/placeholder/600/300";
-                  }}
+                  className={styles.imagePreview} 
                 />
                 <button 
                   type="button" 
@@ -204,7 +185,6 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
             <button 
               type="submit" 
               className={styles.saveButton}
-              disabled={formData.title.trim() === ''} // Disable if title is empty
             >
               Post
             </button>
