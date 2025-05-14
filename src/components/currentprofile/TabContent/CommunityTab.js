@@ -411,14 +411,55 @@ const CommunityTab = ({ username }) => {
     try {
       setLoading(true);
 
-      // Submit the post to the API
-      const result = await createCommunityPost({
-        title: postData.title,
-        content: postData.description,
-        image: postData.image
+      // Validate image if present
+      if (postData.image) {
+        const fileSize = postData.image.size;
+        // Check if image is too large (5MB limit)
+        if (fileSize > 5 * 1024 * 1024) {
+          setError('Image size must be less than 5MB');
+          setLoading(false);
+          return false;
+        }
+
+        console.log('Image file selected:', postData.image.name, 'Size:', Math.round(fileSize / 1024), 'KB');
+      }
+
+      // Create form data for multipart/form-data submission
+      const formData = new FormData();
+      formData.append('title', postData.title);
+      formData.append('content', postData.description || '');
+
+      // If there's an image, add it to form data directly
+      // This will be sent to MongoDB and stored as binary data
+      if (postData.image) {
+        formData.append('image', postData.image);
+      }
+
+      // Get authentication token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      // Use fetch directly for more control over the multipart request
+      const response = await fetch('/api/community-posts', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create post');
+      }
+
+      const result = await response.json();
+
       if (result && result.post) {
+        console.log('Post created successfully with image:', !!postData.image);
+
         // Fetch latest user profile for the new post author
         const updatedPost = await fetchUserProfiles([result.post]);
 
