@@ -216,19 +216,42 @@ const CommunityPost = ({ post, onVote }) => {
         {/* Post Image Container */}
         {post.image && (
           <div className={styles.postImageContainer}>
-            <img
-              src={post.image}
-              alt={post.title || "Post image"}
-              className={styles.postImage}
-              key={`community-image-${post.id || post._id}-${post.image}`}
-              loading="eager" // Load image eagerly for better user experience
-              decoding="async" // Use async decoding for performance
-              onError={(e) => {
-                // Add fallback for error handling
-                console.error(`Failed to load image: ${post.image}`);
-                e.target.src = "/api/placeholder/600/300";
-              }}
-            />
+            {post.image.includes('vercel-blob.com') || post.image.includes('vercel-storage.com') ? (
+              // Use Next.js Image component for Blob URLs for optimization
+              <Image
+                src={post.image}
+                alt={post.title || "Post image"}
+                width={600}
+                height={400}
+                className={styles.postImage}
+                priority={true}
+                unoptimized={false}
+                quality={85}
+                loading="eager"
+                objectFit="contain"
+                key={`community-image-${post.id || post._id}-${post.image}`}
+                onError={(e) => {
+                  console.error(`Failed to load image: ${post.image}`);
+                  // @ts-ignore - typescript doesn't recognize this but it works
+                  e.target.src = "/api/placeholder/600/300";
+                }}
+              />
+            ) : (
+              // Use regular img tag for legacy or external images
+              <img
+                src={post.image}
+                alt={post.title || "Post image"}
+                className={styles.postImage}
+                key={`community-image-${post.id || post._id}-${post.image}`}
+                loading="eager"
+                decoding="async"
+                onError={(e) => {
+                  console.error(`Failed to load image: ${post.image}`);
+                  // @ts-ignore - typescript doesn't recognize this but it works
+                  e.target.src = "/api/placeholder/600/300";
+                }}
+              />
+            )}
           </div>
         )}
       </div>
