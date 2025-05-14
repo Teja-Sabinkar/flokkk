@@ -1,3 +1,4 @@
+// next.config.ts
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -13,7 +14,8 @@ const nextConfig: NextConfig = {
       'img.youtube.com',   // Alternative YouTube thumbnail domain
       'localhost',         // Local development
       'via.placeholder.com', // Placeholder images
-      'i.vimeocdn.com'     // Vimeo thumbnails (optional)
+      'i.vimeocdn.com',     // Vimeo thumbnails (optional) - COMMA WAS MISSING HERE
+      'flock-ruddy.vercel.app', // Add your Vercel domain
     ],
   },
   /* any other config options you might have */
