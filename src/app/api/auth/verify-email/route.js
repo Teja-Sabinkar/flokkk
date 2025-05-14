@@ -9,45 +9,33 @@ export async function GET(request) {
     const token = searchParams.get('token');
 
     if (!token) {
-      // Use absolute URL instead of relying on environment variable
-      return NextResponse.redirect(new URL('/login?error=invalid-token', request.url));
+      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=invalid-token`);
     }
 
     // Connect to database
-    try {
-      await dbConnect();
-    } catch (dbError) {
-      console.error('Database connection error:', dbError);
-      return NextResponse.redirect(new URL('/login?error=database-connection', request.url));
-    }
+    await dbConnect();
 
-    // Find user with the token - use explicit date object for comparison
-    const currentDate = new Date();
+    // Find user with the token
     const user = await User.findOne({
       verificationToken: token,
-      verificationTokenExpires: { $gt: currentDate }
+      verificationTokenExpires: { $gt: Date.now() }
     });
 
     if (!user) {
-      return NextResponse.redirect(new URL('/login?error=expired-token', request.url));
+      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=expired-token`);
     }
 
     // Update user to verified
-    try {
-      user.isEmailVerified = true;
-      user.verificationToken = undefined;
-      user.verificationTokenExpires = undefined;
-      await user.save();
-    } catch (saveError) {
-      console.error('Error saving user:', saveError);
-      return NextResponse.redirect(new URL('/login?error=verification-update', request.url));
-    }
+    user.isEmailVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await user.save();
 
     // Redirect to login with success message
-    return NextResponse.redirect(new URL('/login?verified=true', request.url));
+    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?verified=true`);
     
   } catch (error) {
     console.error('Email verification error:', error);
-    return NextResponse.redirect(new URL('/login?error=server-error', request.url));
+    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=server-error`);
   }
 }
