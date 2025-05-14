@@ -107,21 +107,6 @@ const CommunityPost = ({ post, onVote }) => {
     return color;
   };
 
-  // Add cache-busting parameter to image URL if it's from Vercel
-  const getOptimizedImageUrl = (imageUrl) => {
-    if (!imageUrl) return null;
-    
-    // Skip if it's a placeholder
-    if (imageUrl.includes('/profile-placeholder.jpg') || 
-        imageUrl.includes('/api/placeholder')) {
-      return imageUrl;
-    }
-    
-    // Add cache-busting parameter
-    const separator = imageUrl.includes('?') ? '&' : '?';
-    return `${imageUrl}${separator}t=${post.imageUpdatedAt || Date.now()}`;
-  };
-
   return (
     <div className={styles.postCard}>
       <div className={styles.postHeader}>
@@ -129,14 +114,14 @@ const CommunityPost = ({ post, onVote }) => {
           <div className={styles.avatarContainer}>
             {post.profilePicture && post.profilePicture !== '/profile-placeholder.jpg' && post.profilePicture !== '/api/placeholder/64/64' ? (
               <Image
-                src={getOptimizedImageUrl(post.profilePicture)}
+                src={post.profilePicture}
                 alt={`${post.username}'s avatar`}
                 width={32}
                 height={32}
                 className={styles.avatar}
                 priority
                 unoptimized
-                key={`profile-${post.id}-${post.imageUpdatedAt || Date.now()}`} // Force re-render when URL changes
+                key={post.profilePicture} // Force re-render when URL changes
               />
             ) : (
               <div
@@ -228,15 +213,21 @@ const CommunityPost = ({ post, onVote }) => {
           </button>
         )}
 
-        {/* Post Image Container with optimized image loading */}
+        {/* Post Image Container */}
         {post.image && (
           <div className={styles.postImageContainer}>
             <img
-              src={getOptimizedImageUrl(post.image)}
+              src={post.image}
               alt={post.title || "Post image"}
               className={styles.postImage}
-              key={`community-image-${post.id || post._id}-${post.imageUpdatedAt || Date.now()}`} // Force re-render with unique key
-              loading="lazy"
+              key={`community-image-${post.id || post._id}-${post.image}`}
+              loading="eager" // Load image eagerly for better user experience
+              decoding="async" // Use async decoding for performance
+              onError={(e) => {
+                // Add fallback for error handling
+                console.error(`Failed to load image: ${post.image}`);
+                e.target.src = "/api/placeholder/600/300";
+              }}
             />
           </div>
         )}
@@ -276,14 +267,8 @@ const CommunityTab = ({ username }) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [userProfiles, setUserProfiles] = useState({}); // Add userProfiles state
-  const [refreshKey, setRefreshKey] = useState(Date.now()); // Add refresh key for forcing re-renders
 
-  // Function to force refresh of all content
-  const forceRefresh = () => {
-    setRefreshKey(Date.now());
-  };
-
-  // New function to fetch and update user profiles with better image handling
+  // New function to fetch and update user profiles
   const fetchUserProfiles = async (postsArray) => {
     try {
       const token = localStorage.getItem('token');
@@ -299,8 +284,10 @@ const CommunityTab = ({ username }) => {
         try {
           const userData = await fetchUserProfile(username, token);
           if (userData) {
-            // Add a timestamp to force re-rendering of images
-            userData.imageUpdatedAt = Date.now();
+            // Add timestamp to profilePicture if it exists
+            if (userData.profilePicture && userData.profilePicture !== '/profile-placeholder.jpg') {
+              userData.profilePicture = `${userData.profilePicture}?t=${Date.now()}`;
+            }
             profileData[username] = userData;
           }
         } catch (error) {
@@ -310,13 +297,19 @@ const CommunityTab = ({ username }) => {
 
       setUserProfiles(profileData);
 
-      // Update posts with latest profile pictures and timestamps
+      // Update posts with latest profile pictures and add timestamp to post images
       return postsArray.map(post => {
         const userProfile = profileData[post.username];
+        // Add timestamp to post image if it exists and is not already a blob URL
+        let updatedImage = post.image;
+        if (updatedImage && typeof updatedImage === 'string' && !updatedImage.startsWith('blob:')) {
+          updatedImage = `${updatedImage}?t=${Date.now()}`;
+        }
+
         return {
           ...post,
-          profilePicture: userProfile?.profilePicture || post.avatarSrc || '/profile-placeholder.jpg',
-          imageUpdatedAt: Date.now() // Add timestamp to force image refresh
+          image: updatedImage,
+          profilePicture: userProfile?.profilePicture || post.avatarSrc || '/profile-placeholder.jpg'
         };
       });
     } catch (error) {
@@ -338,17 +331,13 @@ const CommunityTab = ({ username }) => {
       }
 
       // Use the general community posts endpoint with username filter
-      // Add cache-busting parameter to prevent stale data
-      const url = `/api/community-posts?username=${encodeURIComponent(username)}&page=${currentPage}&limit=10&t=${Date.now()}`;
+      const url = `/api/community-posts?username=${encodeURIComponent(username)}&page=${currentPage}&limit=10`;
 
       console.log(`Fetching community posts from: ${url}`);
 
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -365,14 +354,8 @@ const CommunityTab = ({ username }) => {
 
       const newPosts = data.posts || [];
 
-      // Add timestamp to each post to ensure images refresh properly
-      const postsWithTimestamps = newPosts.map(post => ({
-        ...post,
-        imageUpdatedAt: Date.now()
-      }));
-
       // Fetch latest profile pictures for all post authors
-      const postsWithUpdatedProfiles = await fetchUserProfiles(postsWithTimestamps);
+      const postsWithUpdatedProfiles = await fetchUserProfiles(newPosts);
 
       if (reset) {
         setPosts(postsWithUpdatedProfiles);
@@ -407,13 +390,13 @@ const CommunityTab = ({ username }) => {
       setError('User information not available');
       setLoading(false);
     }
-  }, [username, refreshKey]); // Add refreshKey to dependencies to force reload when needed
+  }, [username]);
 
   // Listen for profile updates
   useEffect(() => {
     const handleProfileUpdate = () => {
       console.log('Profile updated event received, refreshing community posts');
-      forceRefresh(); // Use forceRefresh instead of directly calling loadPosts
+      loadPosts(true);
     };
 
     window.addEventListener('profile-updated', handleProfileUpdate);
@@ -421,7 +404,7 @@ const CommunityTab = ({ username }) => {
     return () => {
       window.removeEventListener('profile-updated', handleProfileUpdate);
     };
-  }, []);
+  }, [username]);
 
   // Handle loading more posts
   const handleLoadMore = () => {
@@ -446,36 +429,33 @@ const CommunityTab = ({ username }) => {
     try {
       setLoading(true);
 
-      // Add timestamp to ensure image refreshes
-      const enhancedPostData = {
-        ...postData,
-        imageTimestamp: Date.now()
-      };
+      // Add timestamp to image if it exists and is a string URL
+      let postDataWithTimestamp = { ...postData };
+      if (postData.image && typeof postData.image === 'string') {
+        // Add timestamp to URL to prevent caching
+        const timestamp = Date.now();
+        postDataWithTimestamp.image = `${postData.image}?t=${timestamp}`;
+      }
 
       // Submit the post to the API
       const result = await createCommunityPost({
-        title: enhancedPostData.title,
-        content: enhancedPostData.description,
-        image: enhancedPostData.image,
-        imageTimestamp: enhancedPostData.imageTimestamp
+        title: postData.title,
+        content: postData.description,
+        image: postData.image // The API should handle file upload or URL processing
       });
 
       if (result && result.post) {
-        // Add timestamp to force image refresh
-        const newPost = {
-          ...result.post,
-          imageUpdatedAt: Date.now()
-        };
+        // Add timestamp to the returned image URL if it exists
+        if (result.post.image && typeof result.post.image === 'string') {
+          result.post.image = `${result.post.image}?t=${Date.now()}`;
+        }
 
         // Fetch latest user profile for the new post author
-        const updatedPosts = await fetchUserProfiles([newPost]);
-        
-        // Add the new post to the beginning of the posts array
-        setPosts(prevPosts => [updatedPosts[0] || newPost, ...prevPosts]);
+        const updatedPost = await fetchUserProfiles([result.post]);
 
-        // Force a refresh after a short delay to ensure images load properly
-        setTimeout(forceRefresh, 500);
-        
+        // Add the new post to the beginning of the posts array
+        setPosts(prevPosts => [updatedPost[0] || result.post, ...prevPosts]);
+
         return true;
       }
 
@@ -579,9 +559,7 @@ const CommunityTab = ({ username }) => {
         <div style={errorMessageStyle}>
           {error}
           <button
-            onClick={() => {
-              forceRefresh(); // Use forceRefresh to ensure a complete reload
-            }}
+            onClick={() => loadPosts(true)}
             style={retryButtonStyle}
           >
             Retry
@@ -593,7 +571,7 @@ const CommunityTab = ({ username }) => {
         {posts.length > 0 ? (
           posts.map(post => (
             <CommunityPost
-              key={`post-${post.id || post._id}-${post.imageUpdatedAt || Date.now()}`}
+              key={post.id || post._id}
               post={post}
               onVote={handleVote}
             />

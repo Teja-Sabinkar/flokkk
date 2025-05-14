@@ -9,7 +9,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
   });
   
   const [imagePreview, setImagePreview] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewKey, setPreviewKey] = useState(Date.now()); // Add key state to force re-renders
   const fileInputRef = useRef(null);
 
   // Handle input changes
@@ -32,12 +32,6 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
       return;
     }
 
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('File size exceeds 5MB limit. Please choose a smaller image.');
-      return;
-    }
-
     // Update form data with the file
     setFormData(prev => ({
       ...prev,
@@ -48,6 +42,8 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       setImagePreview(e.target.result);
+      // Update the key to force re-render of image preview
+      setPreviewKey(Date.now());
     };
     reader.readAsDataURL(file);
   };
@@ -70,7 +66,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     // Basic validation
@@ -79,55 +75,24 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
       return;
     }
     
-    // Prevent multiple submissions
-    if (isSubmitting) return;
-    
-    try {
-      setIsSubmitting(true);
-      
-      // Handle image upload - this is where we need to ensure uniqueness
-      // by adding a timestamp to the formData if there's an image
-      const submissionData = {...formData};
-      
-      if (submissionData.image) {
-        // Add a timestamp to the file name to prevent caching issues
-        const originalFile = submissionData.image;
-        const timestamp = Date.now();
-        
-        // Create a new file with timestamp in the name
-        // This is a workaround for Vercel's caching behavior
-        const fileExtension = originalFile.name.split('.').pop();
-        const newFileName = `${originalFile.name.split('.')[0]}_${timestamp}.${fileExtension}`;
-        
-        // Create a new File object with the timestamped name
-        const newFile = new File([originalFile], newFileName, {
-          type: originalFile.type,
-          lastModified: originalFile.lastModified
-        });
-        
-        submissionData.image = newFile;
-        submissionData.imageTimestamp = timestamp; // Add timestamp for reference
-      }
-      
-      // Call the onSave function provided by the parent component
-      const saveResult = await onSave(submissionData);
-      
-      if (saveResult) {
-        // Reset form and close modal on successful save
-        setFormData({
-          title: '',
-          description: '',
-          image: null
-        });
-        setImagePreview(null);
-        onClose();
-      }
-    } catch (error) {
-      console.error('Error saving post:', error);
-      alert('Failed to create post. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+    // Add timestamp to form data for better cache busting
+    const submissionData = {...formData};
+    if (submissionData.image instanceof File) {
+      // It's a file - already unique, no need to modify
+      // But we can add metadata if needed
+      submissionData.imageTimestamp = Date.now();
     }
+    
+    onSave(submissionData);
+    
+    // Reset form and close modal
+    setFormData({
+      title: '',
+      description: '',
+      image: null
+    });
+    setImagePreview(null);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -137,7 +102,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
       <div className={styles.modalContainer}>
         <div className={styles.modalHeader}>
           <h2>Create Post</h2>
-          <button className={styles.closeButton} onClick={onClose} type="button" disabled={isSubmitting}>
+          <button className={styles.closeButton} onClick={onClose}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -153,11 +118,9 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
               name="title"
               value={formData.title}
               onChange={handleChange}
-              placeholder="Enter a title for your post (max 200 characters)."
+              placeholder="Enter a title for your post (max 200characters)."
               className={styles.input}
               required
-              maxLength={200}
-              disabled={isSubmitting}
             />
           </div>
 
@@ -171,7 +134,6 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
               placeholder="Write something about your post..."
               className={styles.textArea}
               rows="4"
-              disabled={isSubmitting}
             />
           </div>
 
@@ -191,7 +153,6 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
                     type="button" 
                     className={styles.browseButton}
                     onClick={handleBrowseClick}
-                    disabled={isSubmitting}
                   >
                     Browse Files
                   </button>
@@ -201,7 +162,6 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
                     accept="image/*"
                     onChange={handleFileChange}
                     className={styles.fileInput}
-                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -210,13 +170,20 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
                 <img 
                   src={imagePreview} 
                   alt="Preview" 
-                  className={styles.imagePreview} 
+                  className={styles.imagePreview}
+                  key={`preview-${previewKey}`} // Use key to force re-render
+                  loading="eager"
+                  decoding="async"
+                  onError={(e) => {
+                    console.error('Failed to load image preview');
+                    // Optionally provide a fallback
+                    e.target.src = "/api/placeholder/600/300";
+                  }}
                 />
                 <button 
                   type="button" 
                   className={styles.removeImageButton}
                   onClick={handleRemoveImage}
-                  disabled={isSubmitting}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -231,16 +198,15 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
               type="button" 
               onClick={onClose} 
               className={styles.cancelButton}
-              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button 
               type="submit" 
               className={styles.saveButton}
-              disabled={isSubmitting}
+              disabled={formData.title.trim() === ''} // Disable if title is empty
             >
-              {isSubmitting ? 'Posting...' : 'Post'}
+              Post
             </button>
           </div>
         </form>

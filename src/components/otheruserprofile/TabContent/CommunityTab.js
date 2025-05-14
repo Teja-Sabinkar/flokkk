@@ -4,11 +4,11 @@ import Link from 'next/link';
 import styles from './CommunityTab.module.css';
 import { ReportModal, submitReport } from '@/components/report'; // Import ReportModal and submitReport
 
-// Add this component for fetching and displaying user avatars with cache-busting
+// Add this component for fetching and displaying user avatars
 const UserAvatar = ({ username }) => {
   const [profilePic, setProfilePic] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(Date.now()); // Add refresh key
+  const [imageKey, setImageKey] = useState(Date.now()); // Add imageKey state for forcing re-renders
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -17,26 +17,18 @@ const UserAvatar = ({ username }) => {
         const token = localStorage.getItem('token');
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        // Add cache-busting parameter to prevent stale images
-        const cacheBuster = Date.now();
-        const response = await fetch(`/api/users/${encodeURIComponent(username)}?t=${cacheBuster}`, {
-          headers: {
-            ...headers,
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
+        const response = await fetch(`/api/users/${encodeURIComponent(username)}`, {
+          headers
         });
 
         if (response.ok) {
           const userData = await response.json();
           if (userData.profilePicture &&
             userData.profilePicture !== '/profile-placeholder.jpg') {
-            // Add a timestamp parameter to the URL to prevent caching
-            const imageUrl = userData.profilePicture.includes('?') 
-              ? `${userData.profilePicture}&t=${cacheBuster}` 
-              : `${userData.profilePicture}?t=${cacheBuster}`;
-            setProfilePic(imageUrl);
+            // Add timestamp to force cache refresh
+            const timestamp = Date.now();
+            setProfilePic(`${userData.profilePicture}?t=${timestamp}`);
+            setImageKey(timestamp); // Update key to force re-render
           }
         }
       } catch (error) {
@@ -49,12 +41,7 @@ const UserAvatar = ({ username }) => {
     if (username) {
       fetchUserProfile();
     }
-  }, [username, refreshKey]); // Include refreshKey in dependencies
-
-  // Function to force a refresh of the avatar
-  const refreshAvatar = () => {
-    setRefreshKey(Date.now());
-  };
+  }, [username]);
 
   if (loading) {
     return (
@@ -79,7 +66,13 @@ const UserAvatar = ({ username }) => {
         className={styles.avatar}
         priority
         unoptimized
-        key={`${username}-avatar-${refreshKey}`} // Force re-render with unique key
+        key={`avatar-${username}-${imageKey}`} // Use dynamic key with timestamp
+        loading="eager"
+        decoding="async"
+        onError={(e) => {
+          console.error(`Failed to load profile picture for ${username}`);
+          e.target.style.display = 'none'; // Hide broken image
+        }}
       />
     );
   }
@@ -116,22 +109,6 @@ const generateColorFromUsername = (username) => {
   return color;
 };
 
-// Helper function to add cache-busting parameters to image URLs
-const getOptimizedImageUrl = (imageUrl) => {
-  if (!imageUrl) return null;
-  
-  // Skip if it's a placeholder
-  if (imageUrl.includes('/profile-placeholder.jpg') || 
-      imageUrl.includes('/api/placeholder')) {
-    return imageUrl;
-  }
-  
-  // Add cache-busting parameter
-  const cacheBuster = Date.now();
-  const separator = imageUrl.includes('?') ? '&' : '?';
-  return `${imageUrl}${separator}t=${cacheBuster}`;
-};
-
 const CommunityPost = ({ post, onHide }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -149,9 +126,7 @@ const CommunityPost = ({ post, onHide }) => {
   const textRef = useRef(null);
   // State to track if content needs expand button
   const [needsExpand, setNeedsExpand] = useState(false);
-  // Add state to track image loading
-  const [imageLoaded, setImageLoaded] = useState(false);
-  // Add timestamp for cache-busting
+  // Add image timestamp to force refreshes
   const [imageTimestamp, setImageTimestamp] = useState(Date.now());
 
   // Toggle expanded state
@@ -234,16 +209,11 @@ const CommunityPost = ({ post, onHide }) => {
 
       console.log(`Sending vote: ${value} for post: ${post.id} (vote change: ${voteChange})`);
 
-      // Add cache-busting parameter to prevent stale responses
-      const cacheBuster = Date.now();
-      const response = await fetch(`/api/community-posts/${post.id}/vote?t=${cacheBuster}`, {
+      const response = await fetch(`/api/community-posts/${post.id}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ vote: value })
       });
@@ -298,16 +268,12 @@ const CommunityPost = ({ post, onHide }) => {
         throw new Error('Authentication required');
       }
 
-      // Call the hide API with cache-busting parameter
-      const cacheBuster = Date.now();
-      const response = await fetch(`/api/posts/hide?t=${cacheBuster}`, {
+      // Call the hide API
+      const response = await fetch('/api/posts/hide', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ postId: post.id })
       });
@@ -362,13 +328,17 @@ const CommunityPost = ({ post, onHide }) => {
     }
   };
 
-  // Function to handle image load errors
-  const handleImageError = () => {
-    console.error('Failed to load image:', post.image);
-    // Retry with a new timestamp after brief delay
-    setTimeout(() => {
-      setImageTimestamp(Date.now());
-    }, 1000);
+  // Prepare image URL with timestamp
+  const getImageUrl = () => {
+    if (!post.image) return null;
+    
+    // Don't modify if it's already a blob URL or data URL
+    if (post.image.startsWith('blob:') || post.image.startsWith('data:')) {
+      return post.image;
+    }
+    
+    // Add timestamp to URL to prevent caching
+    return `${post.image}?t=${imageTimestamp}`;
   };
 
   return (
@@ -381,14 +351,20 @@ const CommunityPost = ({ post, onHide }) => {
                 {/* Check if we have a profile picture from the post or need to fetch it */}
                 {(post.avatarSrc && post.avatarSrc !== '/profile-placeholder.jpg' && post.avatarSrc !== '/api/placeholder/64/64') ? (
                   <Image
-                    src={getOptimizedImageUrl(post.avatarSrc)}
+                    src={`${post.avatarSrc}?t=${imageTimestamp}`} // Add timestamp
                     alt={`${post.username}'s avatar`}
                     width={32}
                     height={32}
                     className={styles.avatar}
                     priority
                     unoptimized
-                    key={`profile-${post.id}-${imageTimestamp}`} // Force re-render with unique key
+                    key={`avatar-${post.username}-${imageTimestamp}`} // Update key with timestamp
+                    loading="eager"
+                    decoding="async"
+                    onError={(e) => {
+                      console.error(`Failed to load avatar for ${post.username}`);
+                      e.target.style.display = 'none'; // Hide broken image
+                    }}
                   />
                 ) : (
                   <UserAvatar username={post.username} />
@@ -475,17 +451,20 @@ const CommunityPost = ({ post, onHide }) => {
           </button>
         )}
 
-        {/* Post Image Container with improved image handling */}
+        {/* Post Image Container - Updated with better image loading */}
         {post.image && (
           <div className={styles.postImageContainer}>
             <img
-              src={getOptimizedImageUrl(post.image)}
+              src={getImageUrl()}
               alt={post.title || "Post image"}
               className={styles.postImage}
-              key={`community-image-${post.id}-${imageTimestamp}`} // Force re-render when timestamp changes
-              loading="lazy"
-              onError={handleImageError}
-              onLoad={() => setImageLoaded(true)}
+              loading="eager"
+              decoding="async"
+              key={`community-image-${post.id || post._id}-${imageTimestamp}`} // Updated dynamic key
+              onError={(e) => {
+                console.error(`Failed to load image: ${post.image}`);
+                e.target.src = "/api/placeholder/600/300"; // Fallback image
+              }}
             />
           </div>
         )}
@@ -526,27 +505,6 @@ const CommunityPost = ({ post, onHide }) => {
         </button>
       </div>
 
-      {/* Success message for reporting */}
-      {reportSuccess && (
-        <div className={styles.successMessage || styles.statusMessage}>
-          Report submitted successfully.
-        </div>
-      )}
-
-      {/* Error message for hide operation */}
-      {hideStatus.error && (
-        <div className={styles.errorMessage || styles.statusMessage}>
-          Error: {hideStatus.error}
-        </div>
-      )}
-
-      {/* Success message for hide operation */}
-      {hideStatus.success && (
-        <div className={styles.successMessage || styles.statusMessage}>
-          Post hidden successfully.
-        </div>
-      )}
-
       {/* Report Modal component */}
       {isReportModalOpen && (
         <div
@@ -586,12 +544,6 @@ const CommunityTab = ({ username }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hiddenPostIds, setHiddenPostIds] = useState([]); // Track hidden post IDs
-  const [refreshKey, setRefreshKey] = useState(Date.now()); // Add refresh key for forcing re-renders
-
-  // Function to force refresh of all posts
-  const forceRefresh = () => {
-    setRefreshKey(Date.now());
-  };
 
   // Handler for hiding posts
   const handleHidePost = (postId) => {
@@ -609,24 +561,13 @@ const CommunityTab = ({ username }) => {
         setError(null);
 
         const token = localStorage.getItem('token');
-        const headers = token ? { 
-          'Authorization': `Bearer ${token}`,
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        } : {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        };
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
         // First, fetch hidden posts to filter them out later
         let hiddenIds = [];
         if (token) {
           try {
-            // Add timestamp to prevent caching
-            const cacheBuster = Date.now();
-            const hiddenResponse = await fetch(`/api/posts/hidden?t=${cacheBuster}`, { headers });
+            const hiddenResponse = await fetch('/api/posts/hidden', { headers });
 
             if (hiddenResponse.ok) {
               const hiddenData = await hiddenResponse.json();
@@ -649,12 +590,13 @@ const CommunityTab = ({ username }) => {
 
         // Add ID to URL if available for more reliable lookup
         // Also add includeProfilePictures=true to get profile pictures
-        // Add timestamp to prevent caching
-        const cacheBuster = Date.now();
-        let apiUrl = `/api/users/${encodedUsername}/community?includeProfilePictures=true&t=${cacheBuster}`;
+        let apiUrl = `/api/users/${encodedUsername}/community?includeProfilePictures=true`;
         if (userId) {
           apiUrl += `&id=${userId}`;
         }
+
+        // Add timestamp to bust cache
+        apiUrl += `&t=${Date.now()}`;
 
         const response = await fetch(apiUrl, { headers });
         console.log('Community API Response Status:', response.status);
@@ -682,11 +624,27 @@ const CommunityTab = ({ username }) => {
               !hiddenIds.includes(post.id)
             );
 
-            // Add timestamp to each post for image cache-busting
-            const postsWithTimestamps = filteredPosts.map(post => ({
-              ...post,
-              imageTimestamp: Date.now()
-            }));
+            // Add timestamp to all image URLs to prevent caching issues
+            const timestamp = Date.now();
+            const postsWithTimestamps = filteredPosts.map(post => {
+              // Add timestamp to post image if it exists
+              let updatedPost = {...post};
+              
+              // Add timestamp to image URL if it's a string URL (not a blob or data URL)
+              if (post.image && typeof post.image === 'string' && 
+                  !post.image.startsWith('blob:') && !post.image.startsWith('data:')) {
+                updatedPost.image = `${post.image}?t=${timestamp}`;
+              }
+              
+              // Also add timestamp to avatar URL if it exists
+              if (post.avatarSrc && typeof post.avatarSrc === 'string' &&
+                  post.avatarSrc !== '/profile-placeholder.jpg' && 
+                  post.avatarSrc !== '/api/placeholder/64/64') {
+                updatedPost.avatarSrc = `${post.avatarSrc}?t=${timestamp}`;
+              }
+              
+              return updatedPost;
+            });
 
             console.log(`Displaying ${postsWithTimestamps.length} posts after filtering out ${hiddenIds.length} hidden posts`);
             setPosts(postsWithTimestamps);
@@ -701,66 +659,34 @@ const CommunityTab = ({ username }) => {
     };
 
     if (username) fetchCommunityPosts();
-  }, [username, refreshKey]); // Add refreshKey to dependencies to trigger refetch when needed
-
-  // Add a retry function for failed loads
-  const handleRetry = () => {
-    forceRefresh(); // Use forceRefresh instead of directly fetching again
-  };
-
-  if (isLoading) {
-    return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.loadingSpinner}></div>
-        <p>Loading community posts...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={styles.errorContainer}>
-        <p>{error}</p>
-        <button 
-          className={styles.retryButton || "retryButton"} 
-          onClick={handleRetry}
-          style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            border: 'none',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            marginTop: '10px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  if (posts.length === 0) {
-    return (
-      <div className={styles.emptyContainer}>
-        <p>This user hasn't posted in the community yet</p>
-      </div>
-    );
-  }
+  }, [username]);
 
   return (
     <div className={styles.communityTabContainer}>
-      <div className={styles.postsContainer}>
-        {posts.map(post => (
-          <CommunityPost
-            key={`post-${post.id}-${post.imageTimestamp || Date.now()}`} // Use timestamp in key
-            post={post}
-            onHide={handleHidePost}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className={styles.loadingContainer}>
+          <div className={styles.loadingSpinner}></div>
+          <p>Loading community posts...</p>
+        </div>
+      ) : error ? (
+        <div className={styles.errorContainer}>
+          <p>{error}</p>
+        </div>
+      ) : posts.length === 0 ? (
+        <div className={styles.emptyContainer}>
+          <p>This user hasn't posted in the community yet</p>
+        </div>
+      ) : (
+        <div className={styles.postsContainer}>
+          {posts.map(post => (
+            <CommunityPost
+              key={post.id}
+              post={post}
+              onHide={handleHidePost}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
