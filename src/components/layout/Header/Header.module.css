@@ -356,16 +356,14 @@
 }
 
 .avatarFallback {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: #4169e1;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
   color: white;
   font-weight: bold;
-  font-size: 14px;
 }
 
 /* Profile dropdown styling */
@@ -525,12 +523,16 @@
 }
 
 .searchResultAvatar {
-  width: 36px;
-  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   overflow: hidden;
-  margin-right: 12px;
+  /* This is important to keep the avatar circular */
   flex-shrink: 0;
+  margin-right: 10px;
 }
 
 .searchResultIcon {

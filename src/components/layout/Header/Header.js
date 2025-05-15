@@ -565,20 +565,30 @@ export default function Header({ user, onMenuToggle, isMobileMenuOpen }) {
                       {result.type === 'profile' && (
                         <div className={styles.searchResultProfile}>
                           <div className={styles.searchResultAvatar}>
-                            {(result.profilePicture || result.avatar) &&
-                              (result.profilePicture || result.avatar) !== '/profile-placeholder.jpg' ? (
+                            {result.profilePicture ? (
+                              // If profilePicture exists and is not the default placeholder
                               <Image
-                                src={result.profilePicture || result.avatar}
+                                src={result.profilePicture}
                                 alt={`${result.name}'s profile`}
                                 width={32}
                                 height={32}
                                 className={styles.avatar}
+                                priority
+                                unoptimized
                               />
                             ) : (
                               <div
                                 className={styles.avatarFallback}
                                 style={{
-                                  backgroundColor: generateColorFromUsername(result.username || result.name)
+                                  backgroundColor: generateColorFromUsername(result.username || result.name),
+                                  width: '32px',
+                                  height: '32px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  borderRadius: '50%',
+                                  color: 'white',
+                                  fontWeight: 'bold'
                                 }}
                               >
                                 <span>

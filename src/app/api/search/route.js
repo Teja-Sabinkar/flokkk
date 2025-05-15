@@ -173,7 +173,9 @@ export async function GET(request) {
           name: profile.name || 'User',
           username: profile.username || '',
           usertag: profile.username ? `@${profile.username}` : `@${lastEightDigits}`,
-          avatar: profile.profilePicture || null, // Make sure this is set from profilePicture
+          // Map profilePicture to what the UI component expects
+          profilePicture: profile.profilePicture || null,
+          avatar: profile.profilePicture || null, // Include both for backward compatibility
           bio: profile.bio || '',
           followers,
           discussionCount,
