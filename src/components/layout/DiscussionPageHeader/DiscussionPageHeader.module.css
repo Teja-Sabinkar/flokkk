@@ -618,11 +618,29 @@
     gap: 8px;
   }
 
-  .notificationDropdown {
-    right: -30px;
-  }
-
   .searchButton {
     display: none;
   }
+
+  .createDropdown {
+    top: 50px;
+    right: 10px;
+  }
+
+  .notificationDropdown {
+    top: 50px;
+    right: -5px;
+    width: 300px;
+  }
+
+  .searchInput {
+    font-size: 12px;
+  }
+
+  .searchDropdown {
+    width: 300px;
+    left: 30px;
+    top: 60px;
+  }
+
 }
