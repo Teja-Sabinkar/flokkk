@@ -1,6 +1,47 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './EditProfileModal.module.css';
 
+// Image compression function
+const compressImage = (file, maxWidth = 1200, maxHeight = 800, quality = 0.8) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob((blob) => {
+          resolve(new File([blob], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          }));
+        }, 'image/jpeg', quality);
+      };
+    };
+  });
+};
+
 const EditProfileModal = ({ isOpen, onClose, profileData, onSave }) => {
   const [formData, setFormData] = useState({
     bio: '',
@@ -97,7 +138,7 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSave }) => {
   };
   
   // Handle profile picture change
-  const handleProfilePictureChange = (e) => {
+  const handleProfilePictureChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       // Validate file type and size
@@ -114,15 +155,23 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSave }) => {
         return;
       }
       
-      setProfilePicture(file);
-      const previewUrl = URL.createObjectURL(file);
-      setProfilePicturePreview(previewUrl);
-      setErrorMessage('');
+      try {
+        // Compress the image before setting it
+        const compressedFile = await compressImage(file, 800, 800, 0.8);
+        
+        setProfilePicture(compressedFile);
+        const previewUrl = URL.createObjectURL(compressedFile);
+        setProfilePicturePreview(previewUrl);
+        setErrorMessage('');
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        setErrorMessage('Error processing image. Please try another.');
+      }
     }
   };
   
   // Handle profile banner change
-  const handleProfileBannerChange = (e) => {
+  const handleProfileBannerChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       // Validate file type and size
@@ -139,10 +188,18 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSave }) => {
         return;
       }
       
-      setProfileBanner(file);
-      const previewUrl = URL.createObjectURL(file);
-      setProfileBannerPreview(previewUrl);
-      setErrorMessage('');
+      try {
+        // Compress the banner image - using larger dimensions for banner
+        const compressedFile = await compressImage(file, 1200, 400, 0.8);
+        
+        setProfileBanner(compressedFile);
+        const previewUrl = URL.createObjectURL(compressedFile);
+        setProfileBannerPreview(previewUrl);
+        setErrorMessage('');
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        setErrorMessage('Error processing image. Please try another.');
+      }
     }
   };
   
