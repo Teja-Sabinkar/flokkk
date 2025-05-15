@@ -4,6 +4,47 @@ import { useState, useRef } from 'react';
 import Image from 'next/image';
 import styles from './CreateDiscussionModal.module.css';
 
+// Image compression function
+const compressImage = (file, maxWidth = 1200, maxHeight = 800, quality = 0.8) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob((blob) => {
+          resolve(new File([blob], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          }));
+        }, 'image/jpeg', quality);
+      };
+    };
+  });
+};
+
 export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
   // Form state
   const [videoUrl, setVideoUrl] = useState('');
@@ -14,6 +55,7 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
   const [hashtags, setHashtags] = useState([]);
   const [currentHashtag, setCurrentHashtag] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [standardizedVideoUrl, setStandardizedVideoUrl] = useState('');
   const [error, setError] = useState(null);
   
@@ -139,7 +181,7 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
   };
   
   // Handle thumbnail file selection
-  const handleThumbnailChange = (e) => {
+  const handleThumbnailChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
@@ -157,14 +199,28 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
     }
     
     setError(null);
-    setThumbnailFile(file);
     
-    // Create preview URL
-    const previewUrl = URL.createObjectURL(file);
-    setThumbnailPreview(previewUrl);
-    
-    // Clean up previous preview URL to avoid memory leaks
-    return () => URL.revokeObjectURL(previewUrl);
+    try {
+      setIsProcessingImage(true);
+      
+      // Compress the image - parameters tuned for thumbnails (1280×720 is a good size for YouTube thumbnails)
+      const compressedFile = await compressImage(file, 1280, 720, 0.85);
+      console.log(`Original file: ${file.size} bytes, Compressed: ${compressedFile.size} bytes`);
+      
+      setThumbnailFile(compressedFile);
+      
+      // Create preview URL from compressed file
+      const previewUrl = URL.createObjectURL(compressedFile);
+      setThumbnailPreview(previewUrl);
+      
+      // Clean up previous preview URL to avoid memory leaks
+      return () => URL.revokeObjectURL(previewUrl);
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      setError('Error processing the image. Please try another file.');
+    } finally {
+      setIsProcessingImage(false);
+    }
   };
   
   // Handle choosing a file
@@ -297,13 +353,14 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
 
   // Check if form is valid for submit button state
   const isFormValid = title.trim() && (thumbnailFile || thumbnailPreview);
+  const isProcessing = isLoading || isProcessingImage;
 
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>Create New Discussion</h2>
-          <button className={styles.closeButton} onClick={onClose}>
+          <button className={styles.closeButton} onClick={onClose} disabled={isProcessing}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -327,12 +384,13 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
                 className={styles.videoInput}
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
+                disabled={isProcessing}
               />
               <button 
                 type="button" 
                 className={styles.fetchButton}
                 onClick={handleFetchInfo}
-                disabled={isLoading || !videoUrl}
+                disabled={isProcessing || !videoUrl}
               >
                 {isLoading ? 'Loading...' : 'Fetch'}
               </button>
@@ -349,6 +407,7 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
+              disabled={isProcessing}
             />
           </div>
           
@@ -359,6 +418,7 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={6}
+              disabled={isProcessing}
             />
           </div>
           
@@ -371,8 +431,9 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
               type="button" 
               className={styles.fileButton}
               onClick={handleChooseFile}
+              disabled={isProcessing}
             >
-              Choose File
+              {isProcessingImage ? 'Processing...' : 'Choose File'}
             </button>
             <input 
               type="file" 
@@ -380,17 +441,25 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
               className={styles.fileInput}
               accept="image/*"
               onChange={handleThumbnailChange}
+              disabled={isProcessing}
             />
             
             <div className={styles.thumbnailPreview}>
               {thumbnailPreview ? (
-                <Image 
-                  src={thumbnailPreview}
-                  alt="Thumbnail preview"
-                  width={600}
-                  height={300}
-                  className={styles.previewImage}
-                />
+                <>
+                  {isProcessingImage && (
+                    <div className={styles.processingOverlay}>
+                      <span>Processing image...</span>
+                    </div>
+                  )}
+                  <Image 
+                    src={thumbnailPreview}
+                    alt="Thumbnail preview"
+                    width={600}
+                    height={300}
+                    className={styles.previewImage}
+                  />
+                </>
               ) : (
                 <div className={styles.noImageSelected}>
                   No image selected (Required)
@@ -408,6 +477,7 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
               value={currentHashtag}
               onChange={(e) => setCurrentHashtag(e.target.value)}
               onKeyDown={handleHashtagKeyDown}
+              disabled={isProcessing}
             />
             
             {hashtags.length > 0 && (
@@ -419,6 +489,7 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
                       type="button" 
                       className={styles.removeHashtag}
                       onClick={() => removeHashtag(tag)}
+                      disabled={isProcessing}
                     >
                       ×
                     </button>
@@ -449,6 +520,7 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
                   placeholder="Link title"
                   value={currentLinkTitle}
                   onChange={(e) => setCurrentLinkTitle(e.target.value)}
+                  disabled={isProcessing}
                 />
                 
                 <input 
@@ -457,6 +529,7 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
                   placeholder="URL (https://...)"
                   value={currentLinkUrl}
                   onChange={(e) => setCurrentLinkUrl(e.target.value)}
+                  disabled={isProcessing}
                 />
               </div>
               
@@ -467,12 +540,14 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
                   value={currentLinkDescription}
                   onChange={(e) => setCurrentLinkDescription(e.target.value)}
                   rows={2}
+                  disabled={isProcessing}
                 ></textarea>
                 
                 <button 
                   type="button" 
                   className={styles.addLinkButton}
                   onClick={addCreatorLink}
+                  disabled={isProcessing}
                 >
                   Add Link
                 </button>
@@ -496,6 +571,7 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
                       type="button" 
                       className={styles.removeLinkButton}
                       onClick={() => removeCreatorLink(link.id)}
+                      disabled={isProcessing}
                     >
                       ×
                     </button>
@@ -507,10 +583,10 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
           
           <button 
             type="submit" 
-            className={`${styles.submitButton} ${!isFormValid ? styles.submitButtonDisabled : ''}`} 
-            disabled={isLoading || !isFormValid}
+            className={`${styles.submitButton} ${(!isFormValid || isProcessing) ? styles.submitButtonDisabled : ''}`} 
+            disabled={isProcessing || !isFormValid}
           >
-            {isLoading ? 'Creating...' : 'Create Discussion'}
+            {isProcessing ? 'Processing...' : 'Create Discussion'}
           </button>
         </form>
       </div>

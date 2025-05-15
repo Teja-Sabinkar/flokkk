@@ -1,6 +1,47 @@
 import React, { useState, useRef } from 'react';
 import styles from './CreatePostModal.module.css';
 
+// Image compression function
+const compressImage = (file, maxWidth = 1200, maxHeight = 800, quality = 0.8) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob((blob) => {
+          resolve(new File([blob], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          }));
+        }, 'image/jpeg', quality);
+      };
+    };
+  });
+};
+
 const CreatePostModal = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -9,6 +50,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
   });
   
   const [imagePreview, setImagePreview] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef(null);
 
   // Handle input changes
@@ -21,7 +63,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
   };
 
   // Handle file input changes
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -31,18 +73,30 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
       return;
     }
 
-    // Update form data with the file
-    setFormData(prev => ({
-      ...prev,
-      image: file
-    }));
+    try {
+      setIsProcessing(true);
+      
+      // Compress the image before setting it
+      const compressedFile = await compressImage(file, 1200, 800, 0.8);
+      
+      // Update form data with the compressed file
+      setFormData(prev => ({
+        ...prev,
+        image: compressedFile
+      }));
 
-    // Create a preview URL for the image
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target.result);
-    };
-    reader.readAsDataURL(file);
+      // Create a preview URL for the compressed image
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      alert('Error processing image. Please try another.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // Trigger file input click
@@ -142,8 +196,9 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
                     type="button" 
                     className={styles.browseButton}
                     onClick={handleBrowseClick}
+                    disabled={isProcessing}
                   >
-                    Browse Files
+                    {isProcessing ? 'Processing...' : 'Browse Files'}
                   </button>
                   <input
                     ref={fileInputRef}
@@ -151,6 +206,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
                     accept="image/*"
                     onChange={handleFileChange}
                     className={styles.fileInput}
+                    disabled={isProcessing}
                   />
                 </div>
               </div>
@@ -165,6 +221,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
                   type="button" 
                   className={styles.removeImageButton}
                   onClick={handleRemoveImage}
+                  disabled={isProcessing}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -179,14 +236,16 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
               type="button" 
               onClick={onClose} 
               className={styles.cancelButton}
+              disabled={isProcessing}
             >
               Cancel
             </button>
             <button 
               type="submit" 
               className={styles.saveButton}
+              disabled={isProcessing}
             >
-              Post
+              {isProcessing ? 'Processing...' : 'Post'}
             </button>
           </div>
         </form>
