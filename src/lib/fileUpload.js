@@ -1,51 +1,42 @@
+// src/lib/fileUpload.js
+import { put, del } from '@vercel/blob';
 import { v4 as uuidv4 } from 'uuid';
-import fs from 'node:fs/promises';
-import path from 'path';
 
-// Function to save a file to the public directory
+// Function to save a file to Vercel Blob Storage
 export const saveFile = async (file, directory = 'posts') => {
   try {
-    // Create directory if it doesn't exist
-    const publicDir = path.join(process.cwd(), 'public', directory);
-    try {
-      await fs.access(publicDir);
-    } catch {
-      await fs.mkdir(publicDir, { recursive: true });
-    }
-    
     // Generate a unique filename
-    const filename = `${uuidv4()}_${file.name.replace(/\s+/g, '_')}`;
-    const filepath = path.join(publicDir, filename);
+    const originalName = file.name || 'file';
+    const filename = `${uuidv4()}_${originalName.replace(/\s+/g, '_')}`;
+    const fullPath = `${directory}/${filename}`;
     
-    // Write file to disk
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await fs.writeFile(filepath, buffer);
+    // Upload to Vercel Blob
+    const { url } = await put(fullPath, file, {
+      access: 'public',
+    });
     
-    // Return the path relative to the public directory
-    return `/${directory}/${filename}`;
+    // Return the URL of the uploaded file
+    return url;
   } catch (error) {
     console.error('File upload error:', error);
-    throw new Error('File upload failed');
+    throw new Error(`File upload failed: ${error.message}`);
   }
 };
 
-export const deleteFile = async (filepath) => {
+export const deleteFile = async (fileUrl) => {
   try {
-    // Skip if file path is a placeholder
-    if (filepath.startsWith('/api/placeholder')) return true;
+    // Skip if URL is a placeholder
+    if (fileUrl.startsWith('/api/placeholder')) return true;
     
-    // Remove leading slash and construct full path
-    const fullPath = path.join(process.cwd(), 'public', filepath.substring(1));
-    
-    // Check if file exists and delete
-    try {
-      await fs.access(fullPath);
-      await fs.unlink(fullPath);
+    // Check if it's a Vercel Blob URL (contains .public.blob.vercel-storage.com)
+    if (fileUrl.includes('.public.blob.vercel-storage.com')) {
+      await del(fileUrl);
       return true;
-    } catch {
-      return false;
     }
+    
+    // For backward compatibility with old file paths
+    console.warn('Attempted to delete a non-Blob Storage file:', fileUrl);
+    return false;
   } catch (error) {
     console.error('File deletion error:', error);
     return false;

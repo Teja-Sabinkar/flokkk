@@ -66,7 +66,20 @@ export async function POST(request) {
         const attachmentFile = formData.get('file');
 
         if (attachmentFile && attachmentFile.size > 0) {
-            attachmentPath = await saveFile(attachmentFile, 'feedback');
+            try {
+                // This will now be a URL instead of a file path
+                attachmentPath = await saveFile(attachmentFile, 'feedback');
+
+                // Update the email template to use the URL directly
+                // Instead of: ${process.env.NEXTAUTH_URL}${attachmentPath}
+                // Just use: ${attachmentPath}
+            } catch (fileError) {
+                console.error('File save error:', fileError);
+                return NextResponse.json(
+                    { message: 'Error saving file: ' + fileError.message },
+                    { status: 500 }
+                );
+            }
         }
 
         // Prepare email content
