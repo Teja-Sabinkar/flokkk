@@ -56,10 +56,10 @@ const ProfileResultItem = ({ profile, viewMode, currentUser }) => {
   // Improved current user detection with more checks
   const isCurrentUserProfile = Boolean(currentUser) && Boolean(profile) && (
     // Compare by username (case insensitive) - with null checks
-    (currentUserUsername && username && 
+    (currentUserUsername && username &&
       currentUserUsername.toLowerCase() === username.toLowerCase()) ||
     // Compare by ID - with null checks and toString fallbacks
-    (currentUserId && _id && 
+    (currentUserId && _id &&
       String(currentUserId) === String(_id))
   );
 
@@ -102,34 +102,34 @@ const ProfileResultItem = ({ profile, viewMode, currentUser }) => {
   const handleFollowToggle = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (isCurrentUserProfile) return; // Don't allow following yourself
-    
+
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
-      
+
       if (!token) {
         alert('Please log in to follow users');
         setIsLoading(false);
         return;
       }
-      
+
       const action = isFollowing ? 'unfollow' : 'follow';
-      
+
       const response = await fetch('/api/users/follow', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           userId: _id, // Send the ID directly
           username: username, // Also send username as fallback
           action
         })
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         setIsFollowing(result.isFollowing);
@@ -151,12 +151,12 @@ const ProfileResultItem = ({ profile, viewMode, currentUser }) => {
   const handleViewProfile = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Get safe username to use in URL - multiple fallbacks
-    const safeUsername = username || 
-                         (name || '').toLowerCase().replace(/\s+/g, '_') ||
-                         'user';
-    
+    const safeUsername = username ||
+      (name || '').toLowerCase().replace(/\s+/g, '_') ||
+      'user';
+
     if (isCurrentUserProfile) {
       // Navigate to current user profile with ID if available
       if (_id) {
@@ -176,11 +176,11 @@ const ProfileResultItem = ({ profile, viewMode, currentUser }) => {
 
   // Get the profile picture from either avatar or profilePicture property
   const profilePictureUrl = avatar || profilePicture || '/profile-placeholder.jpg';
-  const isDefaultProfilePicture = profilePictureUrl === '/profile-placeholder.jpg' || 
-                                 profilePictureUrl === '/api/placeholder/64/64';
+  const isDefaultProfilePicture = profilePictureUrl === '/profile-placeholder.jpg' ||
+    profilePictureUrl === '/api/placeholder/64/64';
 
   return (
-    <div 
+    <div
       className={`${styles.card} ${viewMode === 'list' ? styles.listView : ''}`}
     >
       <div className={styles.profileContent}>
@@ -188,7 +188,7 @@ const ProfileResultItem = ({ profile, viewMode, currentUser }) => {
           <h3 className={styles.profileName}>{name || 'User'}</h3>
           <p className={styles.profileUsername}>@{username || (_id && _id.slice(-8)) || 'username'}</p>
         </div>
-        
+
         <div className={styles.statsContainer}>
           <div className={styles.statItem}>
             <div className={styles.statValue}>{followerCount}</div>
@@ -200,27 +200,36 @@ const ProfileResultItem = ({ profile, viewMode, currentUser }) => {
             <div className={styles.statLabel}>forums</div>
           </div>
         </div>
-        
+
         {/* Modified profileImage section to match the CurrentProfileHeader style */}
         <div className={styles.profileImage}>
-          {!isDefaultProfilePicture ? (
-            <Image 
-              src={profilePictureUrl} 
+          {(profilePictureUrl && profilePictureUrl !== '/profile-placeholder.jpg') ? (
+            <Image
+              src={profilePictureUrl}
               alt={`${name}'s profile`}
               width={96}
               height={96}
               className={`${styles.avatar} ${isLoading ? styles.loadingImage : ''}`}
+              priority
+              unoptimized
+              onError={(e) => {
+                // Fallback to initial if image fails to load
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
             />
-          ) : (
-            <div 
-              className={`${styles.profileInitial} ${isLoading ? styles.loadingImage : ''}`}
-              style={{ backgroundColor: generateColorFromUsername(displayUsername) }}
-            >
-              <span>
-                {displayUsername ? displayUsername.charAt(0).toUpperCase() : 'U'}
-              </span>
-            </div>
-          )}
+          ) : null}
+          <div
+            className={`${styles.profileInitial} ${isLoading ? styles.loadingImage : ''}`}
+            style={{
+              backgroundColor: generateColorFromUsername(displayUsername),
+              display: (profilePictureUrl && profilePictureUrl !== '/profile-placeholder.jpg') ? 'none' : 'flex'
+            }}
+          >
+            <span>
+              {displayUsername ? displayUsername.charAt(0).toUpperCase() : 'U'}
+            </span>
+          </div>
           {isLoading && (
             <div className={styles.loadingOverlay}>
               <div className={styles.spinner}></div>
@@ -228,10 +237,10 @@ const ProfileResultItem = ({ profile, viewMode, currentUser }) => {
           )}
         </div>
       </div>
-      
+
       <div className={styles.actionContainer} onClick={(e) => e.stopPropagation()}>
         {/* Always show View Profile button */}
-        <button 
+        <button
           onClick={handleViewProfile}
           className={styles.viewButton}
         >
@@ -241,10 +250,10 @@ const ProfileResultItem = ({ profile, viewMode, currentUser }) => {
           </svg>
           View
         </button>
-        
+
         {/* Only show Follow button for other users and if not already following */}
         {!isCurrentUserProfile && !isCheckingFollow && (
-          <button 
+          <button
             className={`${styles.followButton} ${isFollowing ? styles.following : ''}`}
             onClick={handleFollowToggle}
             disabled={isLoading}
