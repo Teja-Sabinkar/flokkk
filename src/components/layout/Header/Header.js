@@ -565,9 +565,10 @@ export default function Header({ user, onMenuToggle, isMobileMenuOpen }) {
                       {result.type === 'profile' && (
                         <div className={styles.searchResultProfile}>
                           <div className={styles.searchResultAvatar}>
-                            {result.avatar && result.avatar !== '/profile-placeholder.jpg' ? (
+                            {(result.profilePicture || result.avatar) &&
+                              (result.profilePicture || result.avatar) !== '/profile-placeholder.jpg' ? (
                               <Image
-                                src={result.avatar}
+                                src={result.profilePicture || result.avatar}
                                 alt={`${result.name}'s profile`}
                                 width={32}
                                 height={32}
@@ -588,13 +589,7 @@ export default function Header({ user, onMenuToggle, isMobileMenuOpen }) {
                               </div>
                             )}
                           </div>
-                          <div className={styles.searchResultInfo}>
-                            <div className={styles.searchResultTitle}>{result.name}</div>
-                            <div className={styles.searchResultSubtitle}>
-                              @{result.username || (result._id && result._id.slice(-8)) || 'user'}
-                            </div>
-                          </div>
-                          <div className={styles.searchResultType}>Profile</div>
+                          {/* Rest of the profile result */}
                         </div>
                       )}
 
