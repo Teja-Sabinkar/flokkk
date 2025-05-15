@@ -247,11 +247,10 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
     fileInputRef.current.click();
   };
 
-  // Handle hashtag input
-  const handleHashtagKeyDown = (e) => {
-    // Add hashtag when pressing Enter or Space
-    if ((e.key === 'Enter' || e.key === ' ') && currentHashtag.trim()) {
-      e.preventDefault();
+
+  // First, I'll add a new function to handle adding hashtags (can be reused)
+  const addHashtag = () => {
+    if (currentHashtag.trim()) {
       const newHashtag = currentHashtag.trim().startsWith('#')
         ? currentHashtag.trim()
         : `#${currentHashtag.trim()}`;
@@ -260,6 +259,15 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
         setHashtags([...hashtags, newHashtag]);
       }
       setCurrentHashtag('');
+    }
+  };
+
+  // Handle hashtag input
+  const handleHashtagKeyDown = (e) => {
+    // Add hashtag when pressing Enter or Space
+    if ((e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      addHashtag();
     }
   };
 
@@ -489,15 +497,25 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
 
           <div className={styles.formGroup}>
             <label className={styles.label}>Hashtags</label>
-            <input
-              type="text"
-              className={styles.input}
-              placeholder="Type and press Enter to add hashtags"
-              value={currentHashtag}
-              onChange={(e) => setCurrentHashtag(e.target.value)}
-              onKeyDown={handleHashtagKeyDown}
-              disabled={isProcessing}
-            />
+            <div className={styles.hashtagInputContainer}>
+              <input
+                type="text"
+                className={styles.hashtagInput}
+                placeholder="Type a hashtag"
+                value={currentHashtag}
+                onChange={(e) => setCurrentHashtag(e.target.value)}
+                onKeyDown={handleHashtagKeyDown}
+                disabled={isProcessing}
+              />
+              <button
+                type="button"
+                className={styles.addHashtagButton}
+                onClick={addHashtag}
+                disabled={isProcessing || !currentHashtag.trim()}
+              >
+                Add
+              </button>
+            </div>
 
             {hashtags.length > 0 && (
               <div className={styles.hashtagsContainer}>

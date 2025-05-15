@@ -503,6 +503,52 @@
     font-weight: bold;
 }
 
+.hashtagInputContainer {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.hashtagInput {
+    width: 100%;
+    height: 40px;
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 0 12px;
+    color: #fff;
+    font-size: 14px;
+}
+
+.hashtagInput:focus {
+    outline: none;
+    border-color: #4169e1;
+    background-color: #252525;
+}
+
+.addHashtagButton {
+    height: 40px;
+    padding: 0 16px;
+    background-color: #171717;
+    border: 1px solid #4169e1;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    white-space: nowrap;
+}
+
+.addHashtagButton:hover:not(:disabled) {
+    background-color: #4169e1;
+}
+
+.addHashtagButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* Responsive adjustments */
 @media (max-width: 600px) {
     .modalContent {
@@ -544,6 +590,14 @@
 
     .formGroup {
         margin-bottom: 10px;
+    }
+
+    .hashtagInputContainer {
+        flex-direction: column;
+    }
+
+    .addHashtagButton {
+        width: 100%;
     }
 
 }
