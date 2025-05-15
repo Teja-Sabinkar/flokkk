@@ -197,19 +197,6 @@ const AccountSettings = () => {
           </div>
         </div>
         
-        <div className={styles.settingItem}>
-          <div className={styles.settingInfo}>
-            <h3 className={styles.settingTitle}>Language</h3>
-          </div>
-          <div className={styles.settingAction}>
-            <select className={styles.selectInput}>
-              <option value="en">English</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-            </select>
-          </div>
-        </div>
       </div>
       
       {/* Advanced Section */}
