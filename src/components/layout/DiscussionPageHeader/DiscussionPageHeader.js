@@ -313,7 +313,14 @@ export default function DiscussionPageHeader({ user, onMenuToggle, isMobileMenuO
     // Navigate based on notification type
     switch (notification.type) {
       case 'new_post':
-        router.push(`/discussion?id=${notification.relatedId}`);
+        // Check if this is a community post notification
+        if (notification.onModel === 'CommunityPost') {
+          // Redirect to the sender's profile community tab
+          router.push(`/otheruserprofile/${notification.senderUsername}?tab=community`);
+        } else {
+          // For regular posts, continue with existing behavior
+          router.push(`/discussion?id=${notification.relatedId}`);
+        }
         break;
       case 'reply':
         router.push(`/discussion?id=${notification.relatedId}`);
