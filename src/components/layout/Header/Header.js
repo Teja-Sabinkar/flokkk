@@ -562,7 +562,42 @@ export default function Header({ user, onMenuToggle, isMobileMenuOpen }) {
                       className={styles.searchResultItem}
                       onClick={() => handleSearchResultClick(result)}
                     >
-                      
+                      {result.type === 'profile' && (
+                        <div className={styles.searchResultProfile}>
+                          <div className={styles.searchResultAvatar}>
+                            {(result.profilePicture || result.avatar) &&
+                              (result.profilePicture || result.avatar) !== '/profile-placeholder.jpg' ? (
+                              <Image
+                                src={result.profilePicture || result.avatar}
+                                alt={`${result.name}'s profile`}
+                                width={32}
+                                height={32}
+                                className={styles.avatar}
+                              />
+                            ) : (
+                              <div
+                                className={styles.avatarFallback}
+                                style={{
+                                  backgroundColor: generateColorFromUsername(result.username || result.name)
+                                }}
+                              >
+                                <span>
+                                  {result.username
+                                    ? result.username.charAt(0).toUpperCase()
+                                    : (result.name ? result.name.charAt(0).toUpperCase() : 'U')}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className={styles.searchResultInfo}>
+                            <div className={styles.searchResultTitle}>{result.name}</div>
+                            <div className={styles.searchResultSubtitle}>
+                              @{result.username || (result._id && result._id.slice(-8)) || 'user'}
+                            </div>
+                          </div>
+                          <div className={styles.searchResultType}>Profile</div>
+                        </div>
+                      )}
 
                       {result.type === 'post' && (
                         <div className={styles.searchResultPost}>
