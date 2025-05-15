@@ -273,7 +273,7 @@ export default function NotificationsPage() {
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               counts={counts}
-            // Remove the onMarkAllRead prop
+              onMarkAllRead={handleMarkAllAsRead}
             >
               {error && (
                 <div className={styles.errorMessage}>
@@ -294,7 +294,7 @@ export default function NotificationsPage() {
                   notifications={notifications}
                   activeTab={activeTab}
                   onNotificationUpdate={fetchNotifications}
-                  currentUser={user} // Add this line to pass the user prop
+                  currentUser={user}
                 />
               )}
             </NotificationsContainer>

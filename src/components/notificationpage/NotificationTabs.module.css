@@ -40,8 +40,18 @@
   color: white;
 }
 
+.tab[data-tab="all"] {
+  /* This adds the data attribute for better targeting */
+}
+
 .active.all {
-  background-color: #6b7280; /* Gray color for the All tab */
+  background-color: #6b7280;
+  /* Gray color for the All tab */
+}
+
+/* If you want to add a specific color for the All tab indicator/border */
+.all-indicator {
+  border-color: #6b7280;
 }
 
 .tabIcon {
@@ -121,7 +131,7 @@
     font-size: 12px;
   }
 
-  .tabsContainer{
+  .tabsContainer {
     border-left: 3px solid #4169e1;
     border-right: 3px solid #4169e1;
   }

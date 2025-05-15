@@ -87,8 +87,9 @@ const NotificationTabs = ({ activeTab, setActiveTab, counts }) => {
         return (
           <button
             key={tab.id}
-            className={`${styles.tab} ${activeTab === tab.id ? styles.active : ''}`}
+            className={`${styles.tab} ${activeTab === tab.id ? styles.active : ''} ${tab.id === 'all' ? styles.all : ''}`}
             onClick={() => handleTabClick(tab.id)}
+            data-tab={tab.id} // Add this data attribute
           >
             <span className={styles.tabIcon}>{tab.icon}</span>
             <span className={styles.tabName}>{tab.label}</span>

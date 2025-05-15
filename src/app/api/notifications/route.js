@@ -38,17 +38,36 @@ export async function GET(request) {
     try {
       decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET);
     } catch (error) {
+      console.error('JWT verification error:', error);
       return NextResponse.json(
-        { message: 'Invalid or expired token' },
+        { message: 'Invalid or expired token', error: error.message },
         { status: 401 }
       );
     }
 
-    // Connect to database
-    await dbConnect();
+    // Connect to database with enhanced error handling
+    try {
+      await dbConnect();
+      console.log('Connected to MongoDB for notifications');
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
+      return NextResponse.json(
+        { 
+          message: 'Database connection error', 
+          error: dbError.message 
+        },
+        { status: 500 }
+      );
+    }
     
     // Get user settings
-    const userSettings = await UserSettings.findOne({ userId: decoded.id });
+    let userSettings;
+    try {
+      userSettings = await UserSettings.findOne({ userId: decoded.id });
+    } catch (settingsError) {
+      console.error('Error fetching user settings:', settingsError);
+      // Continue without settings rather than failing entirely
+    }
     
     // Check notification settings
     const communityNotificationsEnabled = userSettings?.notificationSettings?.communityNotifications !== false;
@@ -229,26 +248,45 @@ export async function GET(request) {
 
     console.log('Notification query:', JSON.stringify(query, null, 2));
 
-    // Fetch notifications with pagination
-    const notifications = await Notification.find(query)
-      .sort({ createdAt: -1 }) // Most recent first
-      .skip(skip)
-      .limit(limit)
-      .populate('sender', 'username name profilePicture')
-      .lean(); // Use lean for better performance
-
-    console.log(`Found ${notifications.length} notifications`);
-    
-    // Debug: Print out the first few notifications to see what's included
-    if (notifications.length > 0) {
-      console.log('Sample notifications:');
-      notifications.slice(0, 3).forEach((notification, index) => {
-        console.log(`[${index}] ${notification.content.substring(0, 100)}...`);
-      });
+    // Fetch notifications with pagination and error handling
+    let notifications = [];
+    try {
+      notifications = await Notification.find(query)
+        .sort({ createdAt: -1 }) // Most recent first
+        .skip(skip)
+        .limit(limit)
+        .populate('sender', 'username name profilePicture')
+        .lean(); // Use lean for better performance
+      
+      console.log(`Found ${notifications.length} notifications`);
+      
+      // Debug: Print out the first few notifications to see what's included
+      if (notifications.length > 0) {
+        console.log('Sample notifications:');
+        notifications.slice(0, 3).forEach((notification, index) => {
+          console.log(`[${index}] ${notification.content.substring(0, 100)}...`);
+        });
+      }
+    } catch (queryError) {
+      console.error('Error querying notifications:', queryError);
+      return NextResponse.json(
+        { 
+          message: 'Error fetching notifications', 
+          error: queryError.message,
+          query: JSON.stringify(query)
+        },
+        { status: 500 }
+      );
     }
 
     // Get total count for pagination
-    const total = await Notification.countDocuments(query);
+    let total = 0;
+    try {
+      total = await Notification.countDocuments(query);
+    } catch (countError) {
+      console.error('Error counting notifications:', countError);
+      // Continue with total=0 rather than failing completely
+    }
 
     // Calculate counts based on the same filters
     // (Simplified here, but should follow the same logic as the main query)
@@ -259,44 +297,62 @@ export async function GET(request) {
     
     const unreadCountQuery = { ...countQuery, read: false };
     
-    // Calculate counts for different notification types
-    const counts = {
-      all: await Notification.countDocuments(countQuery),
-      unread: await Notification.countDocuments(unreadCountQuery),
-      comments: await Notification.countDocuments({ 
-        ...countQuery,
-        type: 'reply' 
-      }),
-      likes: await Notification.countDocuments({ 
-        ...countQuery,
-        type: 'like' 
-      }),
-      posts: await Notification.countDocuments({ 
-        ...countQuery, 
-        type: { $in: ['new_post', 'follow'] } 
-      }),
-      contributions: await Notification.countDocuments({ 
-        ...countQuery,
-        type: 'contribution' 
-      }),
-      // Update unread counts similarly
-      commentsUnread: await Notification.countDocuments({ 
-        ...unreadCountQuery,
-        type: 'reply'
-      }),
-      likesUnread: await Notification.countDocuments({ 
-        ...unreadCountQuery,
-        type: 'like'
-      }),
-      postsUnread: await Notification.countDocuments({ 
-        ...unreadCountQuery, 
-        type: { $in: ['new_post', 'follow'] }
-      }),
-      contributionsUnread: await Notification.countDocuments({ 
-        ...unreadCountQuery,
-        type: 'contribution'
-      })
+    // Calculate counts for different notification types with error handling
+    let counts = {
+      all: 0,
+      unread: 0,
+      comments: 0,
+      likes: 0,
+      posts: 0,
+      contributions: 0,
+      commentsUnread: 0,
+      likesUnread: 0,
+      postsUnread: 0,
+      contributionsUnread: 0
     };
+    
+    try {
+      counts = {
+        all: await Notification.countDocuments(countQuery),
+        unread: await Notification.countDocuments(unreadCountQuery),
+        comments: await Notification.countDocuments({ 
+          ...countQuery,
+          type: 'reply' 
+        }),
+        likes: await Notification.countDocuments({ 
+          ...countQuery,
+          type: 'like' 
+        }),
+        posts: await Notification.countDocuments({ 
+          ...countQuery, 
+          type: { $in: ['new_post', 'follow'] } 
+        }),
+        contributions: await Notification.countDocuments({ 
+          ...countQuery,
+          type: 'contribution' 
+        }),
+        // Update unread counts similarly
+        commentsUnread: await Notification.countDocuments({ 
+          ...unreadCountQuery,
+          type: 'reply'
+        }),
+        likesUnread: await Notification.countDocuments({ 
+          ...unreadCountQuery,
+          type: 'like'
+        }),
+        postsUnread: await Notification.countDocuments({ 
+          ...unreadCountQuery, 
+          type: { $in: ['new_post', 'follow'] }
+        }),
+        contributionsUnread: await Notification.countDocuments({ 
+          ...unreadCountQuery,
+          type: 'contribution'
+        })
+      };
+    } catch (countsError) {
+      console.error('Error calculating notification counts:', countsError);
+      // Continue with default counts rather than failing completely
+    }
 
     console.log('Notification counts:', counts);
 
@@ -313,8 +369,13 @@ export async function GET(request) {
 
   } catch (error) {
     console.error('Fetch notifications error:', error);
+    // Return more detailed error information
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { 
+        message: 'Internal server error', 
+        error: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     );
   }
