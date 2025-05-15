@@ -15,7 +15,7 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('posts');
+  const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [counts, setCounts] = useState({
     all: 0,
@@ -159,9 +159,9 @@ export default function NotificationsPage() {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-    
+
       console.log('Marking all notifications as read, type:', type);
-    
+
       const response = await fetch('/api/notifications/read-all', {
         method: 'PATCH',
         headers: {
@@ -171,13 +171,13 @@ export default function NotificationsPage() {
         body: JSON.stringify({ type: type === 'all' ? undefined : type })
         // When type is 'all', we pass undefined to the API which will mark ALL notifications as read
       });
-    
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Error marking notifications as read:', errorData);
         throw new Error(errorData.message || 'Failed to mark notifications as read');
       }
-    
+
       console.log('Notifications marked as read, refreshing...');
       // Refresh notifications
       fetchNotifications(); // This will update the counts as well

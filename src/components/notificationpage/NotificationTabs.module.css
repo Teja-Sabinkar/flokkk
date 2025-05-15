@@ -40,6 +40,10 @@
   color: white;
 }
 
+.active.all {
+  background-color: #6b7280; /* Gray color for the All tab */
+}
+
 .tabIcon {
   margin-right: 0.5rem;
   display: flex;
