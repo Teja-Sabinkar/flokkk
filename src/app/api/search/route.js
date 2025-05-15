@@ -65,7 +65,7 @@ export async function GET(request) {
           }
         } catch (jwtError) {
           console.log('JWT verification failed, trying token lookup');
-
+          
           // If JWT fails, try direct lookup
           const user = await db.collection('users').findOne({
             $or: [
@@ -126,8 +126,8 @@ export async function GET(request) {
         try {
           const idToCompare = typeof currentUserId === 'string' ?
             new ObjectId(currentUserId) : currentUserId;
-
-          profileQuery.$and.push({
+            
+          profileQuery.$and.push({ 
             $and: [
               { _id: { $ne: idToCompare } },
               { _id: { $ne: currentUserId.toString() } }
@@ -173,7 +173,7 @@ export async function GET(request) {
           name: profile.name || 'User',
           username: profile.username || '',
           usertag: profile.username ? `@${profile.username}` : `@${lastEightDigits}`,
-          avatar: profile.profilePicture || null, // Make sure this is set from profilePicture
+          avatar: profile.profilePicture || profile.avatar || null,
           bio: profile.bio || '',
           followers,
           discussionCount,
@@ -194,7 +194,7 @@ export async function GET(request) {
           { hashtags: { $regex: query, $options: 'i' } }
         ]
       };
-
+    
       // If user is authenticated, filter out hidden posts
       if (currentUserId) {
         try {
@@ -202,14 +202,14 @@ export async function GET(request) {
           const hiddenPosts = await db.collection('hiddenposts').find({
             userId: new ObjectId(currentUserId)
           }).toArray();
-
+          
           // Extract post IDs and convert to ObjectId if needed
-          const hiddenPostIds = hiddenPosts.map(hp =>
+          const hiddenPostIds = hiddenPosts.map(hp => 
             typeof hp.postId === 'string' ? new ObjectId(hp.postId) : hp.postId
           );
-
+          
           console.log(`Found ${hiddenPostIds.length} hidden posts for user ${currentUserId}`);
-
+          
           // Add the filter to exclude hidden posts
           if (hiddenPostIds.length > 0) {
             if (!postsQuery.$and) postsQuery.$and = [];
@@ -220,23 +220,23 @@ export async function GET(request) {
           // Continue with unfiltered results if there's an error
         }
       }
-
+    
       const postsResults = await db.collection('posts').find(postsQuery).limit(10).toArray();
-
+    
       console.log(`Found ${postsResults.length} matching posts`);
-
+    
       // Get user profile pictures for all posts
       const userIds = [...new Set(postsResults.map(post => post.userId))];
       const users = await db.collection('users').find({
         _id: { $in: userIds.map(id => new ObjectId(id)) }
       }).toArray();
-
+    
       // Create a map of userId to profilePicture
       const userProfilePictures = {};
       users.forEach(user => {
         userProfilePictures[user._id.toString()] = user.profilePicture || null;
       });
-
+    
       // Map posts to the right format with profile pictures
       const mappedPosts = postsResults.map(post => ({
         _id: post._id.toString(),
@@ -250,7 +250,7 @@ export async function GET(request) {
         discussions: post.discussions,
         createdAt: post.createdAt
       }));
-
+    
       results = [...results, ...mappedPosts];
     }
 
