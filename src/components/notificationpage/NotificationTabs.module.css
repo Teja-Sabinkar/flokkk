@@ -40,18 +40,28 @@
   color: white;
 }
 
-.tab[data-tab="all"] {
-  /* This adds the data attribute for better targeting */
+.all {
+  background-color: #6b7280 !important;
+  /* Gray color for the All tab */
 }
 
 .active.all {
   background-color: #6b7280;
-  /* Gray color for the All tab */
+  /* Gray color for the active All tab */
 }
 
-/* If you want to add a specific color for the All tab indicator/border */
 .all-indicator {
   border-color: #6b7280;
+}
+
+/* Fix for tab alignment */
+.tabsContainer {
+  display: flex;
+  justify-content: flex-start;
+  overflow-x: auto;
+  padding: 0.5rem;
+  /* Add more spacing between tabs */
+  gap: 0.25rem;
 }
 
 .tabIcon {

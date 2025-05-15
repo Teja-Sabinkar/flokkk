@@ -264,7 +264,7 @@ export default function NotificationsPage() {
           />
         )}
 
-        {/* Content area */}
+        {/* ONLY ONE content container */}
         <div className={styles.contentContainer}>
           <div className={styles.contentScrollable}>
             <NotificationsContainer
@@ -300,48 +300,7 @@ export default function NotificationsPage() {
             </NotificationsContainer>
           </div>
         </div>
-
-
-
-
-        {/* Content area */}
-        <div className={styles.contentContainer}>
-          <div className={styles.contentScrollable}>
-            <NotificationsContainer
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              counts={counts}
-              onMarkAllRead={handleMarkAllAsRead} // Pass the function here
-            >
-              {error && (
-                <div className={styles.errorMessage}>
-                  <p>{error}</p>
-                  <button onClick={fetchNotifications} className={styles.retryButton}>
-                    Retry
-                  </button>
-                </div>
-              )}
-
-              {isLoading ? (
-                <div className={styles.loadingContainer}>
-                  <div className={styles.spinner}></div>
-                  <p>Loading notifications...</p>
-                </div>
-              ) : (
-                <NotificationsList
-                  notifications={notifications}
-                  activeTab={activeTab}
-                  onNotificationUpdate={fetchNotifications}
-                  currentUser={user} // Add this line to pass the user prop
-                />
-              )}
-            </NotificationsContainer>
-          </div>
-        </div>
-
-
+        {/* REMOVED the duplicate content container that was here */}
       </div>
     </div>
   );
