@@ -572,40 +572,41 @@ export default function Header({ user, onMenuToggle, isMobileMenuOpen }) {
                       {result.type === 'profile' && (
                         <div className={styles.searchResultProfile}>
                           <div className={styles.searchResultAvatar}>
-                            {result.profilePicture ? (
-                              // If profilePicture exists and is not the default placeholder
+                            {/* Check for either profilePicture or avatar */}
+                            {((result.profilePicture || result.avatar) &&
+                              (result.profilePicture || result.avatar) !== '/profile-placeholder.jpg') ? (
                               <Image
-                                src={result.profilePicture}
+                                src={result.profilePicture || result.avatar}
                                 alt={`${result.name}'s profile`}
                                 width={32}
                                 height={32}
                                 className={styles.avatar}
                                 priority
                                 unoptimized
-                              />
-                            ) : (
-                              <div
-                                className={styles.avatarFallback}
-                                style={{
-                                  backgroundColor: generateColorFromUsername(result.username || result.name),
-                                  width: '32px',
-                                  height: '32px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  borderRadius: '50%',
-                                  color: 'white',
-                                  fontWeight: 'bold'
+                                onError={(e) => {
+                                  // Fallback to initial if image fails to load
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'flex';
                                 }}
-                              >
-                                <span>
-                                  {result.username
-                                    ? result.username.charAt(0).toUpperCase()
-                                    : (result.name ? result.name.charAt(0).toUpperCase() : 'U')}
-                                </span>
-                              </div>
-                            )}
+                              />
+                            ) : null}
+                            <div
+                              className={styles.avatarFallback}
+                              style={{
+                                backgroundColor: generateColorFromUsername(result.username || result.name),
+                                display: ((result.profilePicture || result.avatar) &&
+                                  (result.profilePicture || result.avatar) !== '/profile-placeholder.jpg') ? 'none' : 'flex'
+                              }}
+                            >
+                              <span>
+                                {result.username
+                                  ? result.username.charAt(0).toUpperCase()
+                                  : (result.name ? result.name.charAt(0).toUpperCase() : 'U')}
+                              </span>
+                            </div>
                           </div>
+
+
                           <div className={styles.searchResultInfo}>
                             <div className={styles.searchResultTitle}>{result.name}</div>
                             <div className={styles.searchResultSubtitle}>
