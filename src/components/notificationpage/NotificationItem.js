@@ -118,40 +118,27 @@ const NotificationItem = ({ notification, activeTab, onUpdate, currentUser }) =>
       return 'transparent';
     }
 
-    // If "all" tab is active, use type-based colors
-    if (activeTab === 'all') {
-      switch (notification.type) {
-        case 'new_post': return '#10b981'; // Green
-        case 'follow': return '#8b5cf6'; // Purple
-        case 'reply': return '#f97316'; // Orange
-        case 'message': return '#3b82f6'; // Blue
-        case 'mention': return '#f43f5e'; // Red
-        case 'like': return '#3b82f6'; // Blue
-        case 'contribution': return '#b91c1c'; // Brick Red
-        default: return '#6b7280'; // Gray fallback
-      }
-    }
-
-    // For other active tabs, use tab-specific colors
+    // If a specific tab is active, use its color
     if (activeTab === 'unread') return '#ec4899'; // Pink
     if (activeTab === 'comments') return '#f97316'; // Orange
     if (activeTab === 'messages') return '#3b82f6'; // Blue
     if (activeTab === 'posts') return '#10b981'; // Green
     if (activeTab === 'contributions') return '#b91c1c'; // Brick Red 
-    if (activeTab === 'likes') return '#3b82f6'; // Blue
+    if (activeTab === 'likes') return '#3b82f6'; // Blue - Added for likes/votings tab
 
-    // Otherwise use type-based colors (existing switch statement)
+    // Otherwise use type-based colors
     switch (notification.type) {
       case 'reply': return '#f97316'; // Orange
       case 'message': return '#3b82f6'; // Blue
       case 'mention': return '#f43f5e'; // Red
       case 'like': return '#3b82f6'; // Blue
-      case 'follow': return '#8b5cf6'; // Purple
+      case 'follow': return '#8b5cf6'; // Purple - Add color for follow
       case 'new_post': return '#10b981'; // Green
       case 'contribution': return '#b91c1c'; // Brick Red
       default: return 'transparent';
     }
   };
+
   const borderColor = getBorderColor();
 
   const borderStyle = {

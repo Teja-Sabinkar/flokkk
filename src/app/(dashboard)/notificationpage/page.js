@@ -15,7 +15,7 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('posts');
   const [searchTerm, setSearchTerm] = useState('');
   const [counts, setCounts] = useState({
     all: 0,
@@ -159,9 +159,9 @@ export default function NotificationsPage() {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-
+    
       console.log('Marking all notifications as read, type:', type);
-
+    
       const response = await fetch('/api/notifications/read-all', {
         method: 'PATCH',
         headers: {
@@ -171,13 +171,13 @@ export default function NotificationsPage() {
         body: JSON.stringify({ type: type === 'all' ? undefined : type })
         // When type is 'all', we pass undefined to the API which will mark ALL notifications as read
       });
-
+    
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Error marking notifications as read:', errorData);
         throw new Error(errorData.message || 'Failed to mark notifications as read');
       }
-
+    
       console.log('Notifications marked as read, refreshing...');
       // Refresh notifications
       fetchNotifications(); // This will update the counts as well
@@ -264,7 +264,7 @@ export default function NotificationsPage() {
           />
         )}
 
-        {/* ONLY ONE content container */}
+        {/* Content area */}
         <div className={styles.contentContainer}>
           <div className={styles.contentScrollable}>
             <NotificationsContainer
@@ -273,7 +273,7 @@ export default function NotificationsPage() {
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               counts={counts}
-              onMarkAllRead={handleMarkAllAsRead}
+            // Remove the onMarkAllRead prop
             >
               {error && (
                 <div className={styles.errorMessage}>
@@ -294,13 +294,54 @@ export default function NotificationsPage() {
                   notifications={notifications}
                   activeTab={activeTab}
                   onNotificationUpdate={fetchNotifications}
-                  currentUser={user}
+                  currentUser={user} // Add this line to pass the user prop
                 />
               )}
             </NotificationsContainer>
           </div>
         </div>
-        {/* REMOVED the duplicate content container that was here */}
+
+
+
+
+        {/* Content area */}
+        <div className={styles.contentContainer}>
+          <div className={styles.contentScrollable}>
+            <NotificationsContainer
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              counts={counts}
+              onMarkAllRead={handleMarkAllAsRead} // Pass the function here
+            >
+              {error && (
+                <div className={styles.errorMessage}>
+                  <p>{error}</p>
+                  <button onClick={fetchNotifications} className={styles.retryButton}>
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {isLoading ? (
+                <div className={styles.loadingContainer}>
+                  <div className={styles.spinner}></div>
+                  <p>Loading notifications...</p>
+                </div>
+              ) : (
+                <NotificationsList
+                  notifications={notifications}
+                  activeTab={activeTab}
+                  onNotificationUpdate={fetchNotifications}
+                  currentUser={user} // Add this line to pass the user prop
+                />
+              )}
+            </NotificationsContainer>
+          </div>
+        </div>
+
+
       </div>
     </div>
   );

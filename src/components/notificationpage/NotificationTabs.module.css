@@ -40,30 +40,6 @@
   color: white;
 }
 
-.all {
-  background-color: #6b7280 !important;
-  /* Gray color for the All tab */
-}
-
-.active.all {
-  background-color: #6b7280;
-  /* Gray color for the active All tab */
-}
-
-.all-indicator {
-  border-color: #6b7280;
-}
-
-/* Fix for tab alignment */
-.tabsContainer {
-  display: flex;
-  justify-content: flex-start;
-  overflow-x: auto;
-  padding: 0.5rem;
-  /* Add more spacing between tabs */
-  gap: 0.25rem;
-}
-
 .tabIcon {
   margin-right: 0.5rem;
   display: flex;
@@ -141,7 +117,7 @@
     font-size: 12px;
   }
 
-  .tabsContainer {
+  .tabsContainer{
     border-left: 3px solid #4169e1;
     border-right: 3px solid #4169e1;
   }
