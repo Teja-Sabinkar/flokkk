@@ -9,7 +9,6 @@ import '../messages.css';
 function SignupContent() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',
     username: '',
     email: '',
     password: '',
@@ -46,12 +45,12 @@ function SignupContent() {
     }
 
     try {
-      // Call API to create account
+      // Call API to create account - use username as name as well
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.name,
+          name: formData.username, // Use username as the name
           username: formData.username,
           email: formData.email,
           password: formData.password
@@ -70,7 +69,6 @@ function SignupContent() {
       
       // Clear form
       setFormData({
-        name: '',
         username: '',
         email: '',
         password: '',
@@ -126,20 +124,6 @@ function SignupContent() {
         
         <form onSubmit={handleSubmit} className="signup-form">
           <div className="input-group">
-            <label htmlFor="name">Full Name</label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              value={formData.name}
-              onChange={handleChange}
-              className="signup-input"
-              required
-            />
-            <div className="input-rules">Required field</div>
-          </div>
-          
-          <div className="input-group">
             <label htmlFor="username">Username</label>
             <input
               id="username"
@@ -154,7 +138,8 @@ function SignupContent() {
               maxLength={30}
             />
             <div className="input-rules">
-              Maximum 30 characters
+              Maximum 30 characters. Only letters, numbers, and underscores. 
+              Will be stored as lowercase.
             </div>
           </div>
           

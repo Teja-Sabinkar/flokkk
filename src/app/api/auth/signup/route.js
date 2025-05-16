@@ -13,12 +13,15 @@ export async function POST(request) {
     const { name, username, email, password } = await request.json();
 
     // Validate input
-    if (!name || !username || !email || !password) {
+    if (!username || !email || !password) {
       return NextResponse.json(
-        { message: 'Name, username, email, and password are required' },
+        { message: 'Username, email, and password are required' },
         { status: 400 }
       );
     }
+    
+    // Use username as name if not provided
+    const displayName = name || username;
     
     // Check if username is valid
     const usernameRegex = /^[a-zA-Z0-9_]+$/;
@@ -60,7 +63,7 @@ export async function POST(request) {
 
     // Create new user with verification token
     const user = await User.create({
-      name,
+      name: displayName,
       username: username.toLowerCase(), // Store username in lowercase
       email,
       password: hashedPassword,
