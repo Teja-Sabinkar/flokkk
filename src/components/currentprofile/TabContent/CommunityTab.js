@@ -1,3 +1,5 @@
+// CommunityTab.js - Modified with delete functionality
+
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import styles from './CommunityTab.module.css';
@@ -6,15 +8,48 @@ import { createCommunityPost, voteCommunityPost } from '@/lib/communityPosts';
 import { ReportModal } from '@/components/report';
 import { submitReport } from '@/components/report/reportService';
 import { fetchUserProfile } from '@/lib/profile';
+import CommunityPostDeleteModal from './CommunityPostDeleteModal';
 
-const CommunityPost = ({ post, onVote }) => {
+const CommunityPost = ({ post, onVote, onDelete }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentVoteCount, setCurrentVoteCount] = useState(post.voteCount || 0);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false); // New state for text expansion
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isCurrentUserAuthor, setIsCurrentUserAuthor] = useState(false);
   const menuRef = useRef(null);
-  const textRef = useRef(null); // Reference to measure text height
+  const textRef = useRef(null);
+
+  // Check if current user is the author of the post
+  useEffect(() => {
+    const checkCurrentUser = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          // Check if current user is the author
+          setIsCurrentUserAuthor(
+            userData.id === post.userId ||
+            userData._id === post.userId ||
+            userData.username === post.username
+          );
+        }
+      } catch (error) {
+        console.error('Error checking current user:', error);
+      }
+    };
+
+    checkCurrentUser();
+  }, [post.userId, post.username]);
 
   // Function to toggle expanded state
   const toggleExpanded = () => {
@@ -54,6 +89,12 @@ const CommunityPost = ({ post, onVote }) => {
     setIsMenuOpen(false);
     // Open the report modal
     setIsReportModalOpen(true);
+  };
+
+  // Open delete modal
+  const handleDeleteClick = () => {
+    setIsMenuOpen(false);
+    setIsDeleteModalOpen(true);
   };
 
   // Handle voting
@@ -155,6 +196,21 @@ const CommunityPost = ({ post, onVote }) => {
 
           {isMenuOpen && (
             <div className={styles.dropdown}>
+              {/* Add Delete button only if current user is the author */}
+              {isCurrentUserAuthor && (
+                <button
+                  className={styles.actionButton}
+                  onClick={handleDeleteClick}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                  <span>Delete</span>
+                </button>
+              )}
               <button
                 className={styles.actionButton}
                 onClick={handleReport}
@@ -187,6 +243,14 @@ const CommunityPost = ({ post, onVote }) => {
             }}
           />
         )}
+
+        {/* Add the DeleteModal component */}
+        <CommunityPostDeleteModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          post={post}
+          onDelete={onDelete}
+        />
       </div>
 
       <div className={styles.postContent}>
@@ -520,6 +584,12 @@ const CommunityTab = ({ username }) => {
     }
   };
 
+  // Handle deleting a post
+  const handleDeletePost = (postId) => {
+    // Remove the post from the UI
+    setPosts(prevPosts => prevPosts.filter(post => (post.id || post._id) !== postId));
+  };
+
   // Inline styles for elements that might not have corresponding CSS classes
   const errorMessageStyle = {
     backgroundColor: 'rgba(255, 59, 48, 0.9)',
@@ -614,6 +684,7 @@ const CommunityTab = ({ username }) => {
               key={post.id || post._id}
               post={post}
               onVote={handleVote}
+              onDelete={handleDeletePost}
             />
           ))
         ) : loading ? (
