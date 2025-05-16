@@ -10,6 +10,22 @@ import Comment from '@/models/Comment';
 import { ObjectId } from 'mongodb';
 import { createNotification } from '@/lib/notifications';
 
+// Clean comment content before saving to database
+const sanitizeCommentContent = (content) => {
+  if (!content) return '';
+  
+  // Convert visible &nbsp; text to spaces
+  let cleaned = content.replace(/&nbsp;/g, ' ');
+  
+  // Convert actual HTML entity non-breaking spaces to regular spaces
+  cleaned = cleaned.replace(/\u00A0/g, ' ');
+  
+  // Trim trailing and leading spaces
+  cleaned = cleaned.trim();
+  
+  return cleaned;
+};
+
 // POST endpoint to create a comment
 export async function POST(request, { params }) {
   try {
@@ -79,12 +95,15 @@ export async function POST(request, { params }) {
       );
     }
     
+    // Sanitize the content
+    const sanitizedContent = sanitizeCommentContent(data.content);
+    
     // Prepare the comment data
     const commentData = {
       postId: post._id,
       userId: user._id,
       username: user.username || user.name.toLowerCase().replace(/\s+/g, '_'),
-      content: data.content,
+      content: sanitizedContent, // Use sanitized content
       likes: 1, // Start with 1 like (user's own)
       isEdited: false,
       votes: [{
@@ -275,10 +294,13 @@ export async function GET(request, { params }) {
       // Log the comment to debug
       console.log(`Processing comment ID: ${comment._id}, parentId: ${comment.parentId || 'null'}`);
       
+      // Clean content when returning it too
+      const cleanedContent = sanitizeCommentContent(comment.content);
+      
       return {
         id: comment._id.toString(),
         parentId: comment.parentId ? comment.parentId.toString() : null,
-        text: comment.content,
+        text: cleanedContent, // Use cleaned content
         user: {
           username: comment.username,
           avatar: userProfilePicture, // UPDATED: Use the real profile picture

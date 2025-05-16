@@ -1,6 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './NestedCommentBoxPreview.module.css';
 
+// Clean HTML entities and trailing spaces from content
+const cleanContentForSubmission = (content) => {
+  if (!content) return '';
+  
+  // Replace visible &nbsp; text with spaces
+  let cleaned = content.replace(/&nbsp;/g, ' ');
+  
+  // Replace actual HTML entity non-breaking spaces with regular spaces
+  cleaned = cleaned.replace(/\u00A0/g, ' ');
+  
+  // Trim trailing spaces
+  cleaned = cleaned.trim();
+  
+  return cleaned;
+};
+
 const NestedCommentBoxPreview = ({ onChange, onSubmit, parentCommentId }) => {
   // Track whether editor has content
   const [hasContent, setHasContent] = useState(false);
@@ -51,8 +67,11 @@ const NestedCommentBoxPreview = ({ onChange, onSubmit, parentCommentId }) => {
   
     if (onSubmit) {
       try {
-        // Pass the content and parent comment ID to place the reply in the nested thread
-        onSubmit(editorContent, parentCommentId);
+        // Clean content before submitting
+        const cleanedContent = cleanContentForSubmission(editorContent);
+        
+        // Pass the cleaned content and parent comment ID
+        onSubmit(cleanedContent, parentCommentId);
   
         // Clear editor
         if (editorRef.current) {

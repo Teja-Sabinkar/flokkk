@@ -38,7 +38,7 @@ export default function Post({ post, onHidePost }) {
   // Use hashtags from post or fallback to defaults
   const hashtags = post.hashtags && post.hashtags.length > 0
     ? post.hashtags
-    : ['#example', '#trending', '#today'];
+    : [];
 
   // Number of visible hashtags before "Show more" button
   const visibleHashtagCount = showAllHashtags ? hashtags.length : calculateVisibleCount();
@@ -454,57 +454,59 @@ export default function Post({ post, onHidePost }) {
       </div>
 
       {/* Hashtags Section with inline Show More button */}
-      <div className={styles.hashtagsWrapper}>
-        <div
-          className={`${styles.hashtagsContainer} ${showAllHashtags ? styles.expanded : styles.collapsed}`}
-          ref={hashtagsContainerRef}
-        >
-          {/* Render visible hashtags */}
-          {hashtags.slice(0, visibleHashtagCount).map((tag, index) => (
-            <button
-              key={index}
-              className={styles.hashtag}
-              onClick={() => handleHashtagClick(tag)}
-            >
-              {tag}
-            </button>
-          ))}
-
-          {/* Show "Show more" button inline if there's overflow */}
-          {hashtagsOverflow && !showAllHashtags && (
-            <div className={styles.showMoreContainer}>
-              <button
-                className={styles.showMoreHashtags}
-                onClick={toggleShowAllHashtags}
-              >
-                Show more
-              </button>
-            </div>
-          )}
-
-          {/* Render remaining hashtags when expanded */}
-          {showAllHashtags && hashtags.slice(visibleHashtagCount).map((tag, index) => (
-            <button
-              key={index + visibleHashtagCount}
-              className={styles.hashtag}
-              onClick={() => handleHashtagClick(tag)}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-
-        {/* Show "Show less" button at the end when expanded */}
-        {hashtagsOverflow && showAllHashtags && (
-          <button
-            className={styles.showMoreHashtags}
-            onClick={toggleShowAllHashtags}
-            style={{ marginTop: '8px' }}
+      {hashtags.length > 0 && (
+        <div className={styles.hashtagsWrapper}>
+          <div
+            className={`${styles.hashtagsContainer} ${showAllHashtags ? styles.expanded : styles.collapsed}`}
+            ref={hashtagsContainerRef}
           >
-            Show less
-          </button>
-        )}
-      </div>
+            {/* Render visible hashtags */}
+            {hashtags.slice(0, visibleHashtagCount).map((tag, index) => (
+              <button
+                key={index}
+                className={styles.hashtag}
+                onClick={() => handleHashtagClick(tag)}
+              >
+                {tag}
+              </button>
+            ))}
+
+            {/* Show "Show more" button inline if there's overflow */}
+            {hashtagsOverflow && !showAllHashtags && (
+              <div className={styles.showMoreContainer}>
+                <button
+                  className={styles.showMoreHashtags}
+                  onClick={toggleShowAllHashtags}
+                >
+                  Show more
+                </button>
+              </div>
+            )}
+
+            {/* Render remaining hashtags when expanded */}
+            {showAllHashtags && hashtags.slice(visibleHashtagCount).map((tag, index) => (
+              <button
+                key={index + visibleHashtagCount}
+                className={styles.hashtag}
+                onClick={() => handleHashtagClick(tag)}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+
+          {/* Show "Show less" button at the end when expanded */}
+          {hashtagsOverflow && showAllHashtags && (
+            <button
+              className={styles.showMoreHashtags}
+              onClick={toggleShowAllHashtags}
+              style={{ marginTop: '8px' }}
+            >
+              Show less
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Post Engagement */}
       <div className={styles.postEngagement}>

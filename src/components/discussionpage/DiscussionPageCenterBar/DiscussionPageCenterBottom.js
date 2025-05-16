@@ -10,6 +10,41 @@ import Link from 'next/link';
 // Maximum nesting level for comments before showing "Continue this thread"
 const MAX_NESTING_LEVEL = 6;
 
+// Safely handle HTML in comments
+const sanitizeHtml = (html) => {
+  if (!html) return '';
+  
+  // If it's not actually HTML content (no tags), just clean up entities
+  if (!/<\/?[a-z][\s\S]*>/i.test(html)) {
+    return html
+      .replace(/&nbsp;/g, ' ')  // Replace &nbsp; text with spaces
+      .replace(/\u00A0/g, ' '); // Replace actual non-breaking spaces
+  }
+  
+  // Otherwise, it's real HTML that needs to be rendered with dangerouslySetInnerHTML
+  return html;
+};
+
+// Generate a consistent color based on username
+const generateColorFromUsername = (username) => {
+  if (!username) return '#3b5fe2'; // Default color
+
+  // Simple hash function to get consistent colors
+  let hash = 0;
+  for (let i = 0; i < username.length; i++) {
+    hash = username.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  // Convert to hex color
+  let color = '#';
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xFF;
+    color += ('00' + value.toString(16)).substr(-2);
+  }
+
+  return color;
+};
+
 export default function DiscussionPageCenterBottom({
   comments,
   setComments,
@@ -651,11 +686,11 @@ export default function DiscussionPageCenterBottom({
     const hasHTML = containsHTML(comment.text);
 
     // Prepare content based on search highlighting and HTML content
-    let commentContent = comment.text;
+    let commentContent = sanitizeHtml(comment.text);
 
     // Apply search highlighting if this comment is in search results
     if (searchText && highlightedComments[comment.id]?.isHighlighted && !hasHTML) {
-      commentContent = highlightText(comment.text, searchText);
+      commentContent = highlightText(commentContent, searchText);
     }
 
     return (
@@ -680,7 +715,24 @@ export default function DiscussionPageCenterBottom({
 
             <div className={styles.commentHeader}>
               <div className={styles.avatar}>
-                <img src={comment.user.avatar} alt="user avatar" />
+                {comment.user.avatar && comment.user.avatar !== '/profile-placeholder.jpg' ? (
+                  // Display user profile image if available and not the default placeholder
+                  <img
+                    src={comment.user.avatar}
+                    alt={comment.user.username}
+                    className={styles.avatarImage}
+                  />
+                ) : (
+                  // Fallback to placeholder with initial
+                  <div
+                    className={styles.avatarPlaceholder}
+                    style={{ backgroundColor: generateColorFromUsername(comment.user.username) }}
+                  >
+                    <span className={styles.avatarInitial}>
+                      {comment.user.username ? comment.user.username.charAt(0).toUpperCase() : 'U'}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Add a debug output to inspect username comparison */}
