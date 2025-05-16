@@ -10,7 +10,7 @@ export async function GET(request, { params }) {
   try {
     // Get tab name from route params
     const { tab } = params;
-    
+
     // Validate tab name
     const validTabs = ['privacy', 'content', 'notification', 'display', 'account'];
     if (!validTabs.includes(tab)) {
@@ -19,20 +19,20 @@ export async function GET(request, { params }) {
         { status: 400 }
       );
     }
-    
+
     // Get auth token from header
     const headersList = headers();
     const authHeader = headersList.get('Authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
       );
     }
-    
+
     const token = authHeader.split(' ')[1];
-    
+
     // Verify JWT token
     let decoded;
     try {
@@ -43,23 +43,23 @@ export async function GET(request, { params }) {
         { status: 401 }
       );
     }
-    
+
     // Connect to database
     await dbConnect();
-    
+
     // Find user by id from token
     const user = await User.findById(decoded.id);
-    
+
     if (!user) {
       return NextResponse.json(
         { message: 'User not found' },
         { status: 404 }
       );
     }
-    
+
     // Find or create user settings
     let userSettings = await UserSettings.findOne({ userId: user._id });
-    
+
     // If no settings exist yet, create default settings
     if (!userSettings) {
       userSettings = await UserSettings.create({
@@ -67,10 +67,10 @@ export async function GET(request, { params }) {
         // Default settings will be applied from the schema
       });
     }
-    
+
     // Return specific settings section based on tab
     let responseData = {};
-    
+
     if (tab === 'privacy') {
       responseData = {
         privacySettings: userSettings.privacySettings
@@ -98,9 +98,9 @@ export async function GET(request, { params }) {
         }
       };
     }
-    
+
     return NextResponse.json(responseData, { status: 200 });
-    
+
   } catch (error) {
     console.error('Fetch settings tab error:', error);
     return NextResponse.json(
@@ -114,7 +114,7 @@ export async function PATCH(request, { params }) {
   try {
     // Get tab name from route params
     const { tab } = params;
-    
+
     // Validate tab name
     const validTabs = ['privacy', 'content', 'notification', 'display'];
     if (!validTabs.includes(tab)) {
@@ -123,20 +123,20 @@ export async function PATCH(request, { params }) {
         { status: 400 }
       );
     }
-    
+
     // Get auth token from header
     const headersList = headers();
     const authHeader = headersList.get('Authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
       );
     }
-    
+
     const token = authHeader.split(' ')[1];
-    
+
     // Verify JWT token
     let decoded;
     try {
@@ -147,23 +147,23 @@ export async function PATCH(request, { params }) {
         { status: 401 }
       );
     }
-    
+
     // Connect to database
     await dbConnect();
-    
+
     // Find user by id from token
     const user = await User.findById(decoded.id);
-    
+
     if (!user) {
       return NextResponse.json(
         { message: 'User not found' },
         { status: 404 }
       );
     }
-    
+
     // Parse request body
     const updateData = await request.json();
-    
+
     // Validate update data
     if (!updateData || Object.keys(updateData).length === 0) {
       return NextResponse.json(
@@ -171,10 +171,10 @@ export async function PATCH(request, { params }) {
         { status: 400 }
       );
     }
-    
+
     // Find user settings
     let userSettings = await UserSettings.findOne({ userId: user._id });
-    
+
     // If no settings exist yet, create default settings
     if (!userSettings) {
       userSettings = new UserSettings({
@@ -182,7 +182,7 @@ export async function PATCH(request, { params }) {
         // Default settings will be applied from the schema
       });
     }
-    
+
     // Update specific settings section based on tab
     if (tab === 'privacy' && updateData.privacySettings) {
       userSettings.privacySettings = {
@@ -195,64 +195,54 @@ export async function PATCH(request, { params }) {
         ...updateData.contentSettings
       };
     } else if (tab === 'notification' && updateData.notificationSettings) {
-      // Special handling for community notifications timestamps
-      if ('communityNotifications' in updateData.notificationSettings) {
-        // (existing code for community notifications timestamps)
-      }
-      
-      // Special handling for post activity notifications timestamps
-      if ('postComments' in updateData.notificationSettings) {
-        // (existing code for post activity timestamps)
-      }
-      
-      // Special handling for new followers notifications timestamps
-      if ('newFollowers' in updateData.notificationSettings) {
-        const isEnabling = updateData.notificationSettings.newFollowers === true;
-        const isDisabling = updateData.notificationSettings.newFollowers === false;
-        
-        // Log the action for debugging
-        console.log(`New followers notifications: ${isEnabling ? 'enabling' : isDisabling ? 'disabling' : 'unchanged'}`);
-        
-        if (isDisabling) {
-          // When turning OFF, set the disabled timestamp
-          updateData.notificationSettings.newFollowersDisabledAt = new Date();
-          // Clear the re-enabled timestamp
-          updateData.notificationSettings.newFollowersReenabledAt = null;
-          
-          console.log('Setting newFollowersDisabledAt:', updateData.notificationSettings.newFollowersDisabledAt);
-        } else if (isEnabling) {
-          // When turning ON, set the re-enabled timestamp
-          updateData.notificationSettings.newFollowersReenabledAt = new Date();
-          // Keep the disabled timestamp for filtering
-          
-          console.log('Setting newFollowersReenabledAt:', updateData.notificationSettings.newFollowersReenabledAt);
-        }
-      }
-      
       // Special handling for post activity notifications timestamps
       if ('postComments' in updateData.notificationSettings) {
         const isEnabling = updateData.notificationSettings.postComments === true;
         const isDisabling = updateData.notificationSettings.postComments === false;
-        
+
         // Log the action for debugging
         console.log(`Post activity notifications: ${isEnabling ? 'enabling' : isDisabling ? 'disabling' : 'unchanged'}`);
-        
+
         if (isDisabling) {
           // When turning OFF, set the disabled timestamp
           updateData.notificationSettings.postActivityDisabledAt = new Date();
           // Clear the re-enabled timestamp
           updateData.notificationSettings.postActivityReenabledAt = null;
-          
+
           console.log('Setting postActivityDisabledAt:', updateData.notificationSettings.postActivityDisabledAt);
         } else if (isEnabling) {
           // When turning ON, set the re-enabled timestamp
           updateData.notificationSettings.postActivityReenabledAt = new Date();
           // Keep the disabled timestamp for filtering
-          
+
           console.log('Setting postActivityReenabledAt:', updateData.notificationSettings.postActivityReenabledAt);
         }
       }
-      
+
+      // Special handling for new followers notifications timestamps
+      if ('newFollowers' in updateData.notificationSettings) {
+        const isEnabling = updateData.notificationSettings.newFollowers === true;
+        const isDisabling = updateData.notificationSettings.newFollowers === false;
+
+        // Log the action for debugging
+        console.log(`New followers notifications: ${isEnabling ? 'enabling' : isDisabling ? 'disabling' : 'unchanged'}`);
+
+        if (isDisabling) {
+          // When turning OFF, set the disabled timestamp
+          updateData.notificationSettings.newFollowersDisabledAt = new Date();
+          // Clear the re-enabled timestamp
+          updateData.notificationSettings.newFollowersReenabledAt = null;
+
+          console.log('Setting newFollowersDisabledAt:', updateData.notificationSettings.newFollowersDisabledAt);
+        } else if (isEnabling) {
+          // When turning ON, set the re-enabled timestamp
+          updateData.notificationSettings.newFollowersReenabledAt = new Date();
+          // Keep the disabled timestamp for filtering
+
+          console.log('Setting newFollowersReenabledAt:', updateData.notificationSettings.newFollowersReenabledAt);
+        }
+      }
+
       // Apply all notification settings updates
       userSettings.notificationSettings = {
         ...userSettings.notificationSettings,
@@ -269,19 +259,19 @@ export async function PATCH(request, { params }) {
         { status: 400 }
       );
     }
-    
+
     // Save updated settings
     await userSettings.save();
-    
+
     // Return updated section
     const responseData = {};
     responseData[tab + 'Settings'] = userSettings[tab + 'Settings'];
-    
+
     return NextResponse.json({
       message: 'Settings updated successfully',
       ...responseData
     }, { status: 200 });
-    
+
   } catch (error) {
     console.error('Update settings tab error:', error);
     return NextResponse.json(

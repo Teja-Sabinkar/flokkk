@@ -51,23 +51,17 @@ export async function GET(request) {
     const userSettings = await UserSettings.findOne({ userId: decoded.id });
     
     // Check notification settings
-    const communityNotificationsEnabled = userSettings?.notificationSettings?.communityNotifications !== false;
     const postActivityEnabled = userSettings?.notificationSettings?.postComments !== false;
     const newFollowersEnabled = userSettings?.notificationSettings?.newFollowers !== false;
     
     // Get timestamps
-    const communityDisabledAt = userSettings?.notificationSettings?.communityNotificationsDisabledAt;
-    const communityReenabledAt = userSettings?.notificationSettings?.communityNotificationsReenabledAt;
     const postActivityDisabledAt = userSettings?.notificationSettings?.postActivityDisabledAt;
     const postActivityReenabledAt = userSettings?.notificationSettings?.postActivityReenabledAt;
     const newFollowersDisabledAt = userSettings?.notificationSettings?.newFollowersDisabledAt;
     const newFollowersReenabledAt = userSettings?.notificationSettings?.newFollowersReenabledAt;
     
-    console.log('Community notifications enabled:', communityNotificationsEnabled);
     console.log('Post activity enabled:', postActivityEnabled);
     console.log('New followers enabled:', newFollowersEnabled);
-    console.log('Community disabled at:', communityDisabledAt);
-    console.log('Community re-enabled at:', communityReenabledAt);
     console.log('Post activity disabled at:', postActivityDisabledAt);
     console.log('Post activity re-enabled at:', postActivityReenabledAt);
     console.log('New followers disabled at:', newFollowersDisabledAt);
@@ -81,14 +75,59 @@ export async function GET(request) {
     // Create a list of conditions for the main $and clause
     const andConditions = [];
     
-    // Filter out community notifications if disabled
-    if (communityDisabledAt) {
-      // (existing community notifications filtering code)
-    }
-    
     // Filter out post activity notifications if activity setting is OFF or has been toggled
     if (!postActivityEnabled || postActivityDisabledAt) {
-      // (existing post activity filtering code)
+      console.log('Applying post activity filtering logic');
+      
+      // When Activity on Post is OFF, hide all notifications except follow notifications
+      // This includes posts, comments, votes, contributions, etc.
+      
+      // Define all types that should be excluded when post activity is off
+      const excludedTypes = ['new_post', 'reply', 'like', 'contribution'];
+      
+      // Time filter condition for post activity notifications
+      let postActivityTimeFilter;
+      
+      if (postActivityDisabledAt) {
+        if (postActivityReenabledAt) {
+          // If setting was toggled OFF and then back ON
+          postActivityTimeFilter = {
+            $or: [
+              { createdAt: { $lt: postActivityDisabledAt } },  // Before turning OFF
+              { createdAt: { $gt: postActivityReenabledAt } }  // After turning back ON
+            ]
+          };
+          console.log('Post activity filter: Using before-disabled OR after-reenabled filter');
+        } else if (!postActivityEnabled) {
+          // If currently OFF
+          postActivityTimeFilter = { createdAt: { $lt: postActivityDisabledAt } };
+          console.log('Post activity filter: Using before-disabled filter only');
+        }
+      } else if (!postActivityEnabled) {
+        // If setting is disabled but no timestamp (legacy data)
+        // In this case, hide all post activity notifications
+        postActivityTimeFilter = { createdAt: { $lt: new Date(0) } }; // Filter out everything
+        console.log('Post activity filter: Setting is OFF but no timestamp, hiding all');
+      }
+      
+      // Add to AND conditions if we have a time filter
+      if (postActivityTimeFilter) {
+        andConditions.push({
+          $or: [
+            // Either it's a follower notification (we allow these)
+            { type: 'follow' },
+            // OR it's a post activity notification that meets the time conditions
+            {
+              $and: [
+                // It IS a post activity notification by type
+                { type: { $in: excludedTypes } },
+                // AND it meets the time filter
+                postActivityTimeFilter
+              ]
+            }
+          ]
+        });
+      }
     }
     
     // Filter out new follower notifications if setting is OFF or has been toggled
@@ -103,9 +142,6 @@ export async function GET(request) {
         /started to follow you/i,
         /has followed you/i
       ];
-      
-      // Additionally, use the type field to identify follow notifications
-      const typeCondition = { type: 'follow' };
       
       // Time filter condition for new follower notifications
       let newFollowerTimeFilter;
@@ -183,13 +219,12 @@ export async function GET(request) {
         typeCondition.read = false;
       } else if (type === 'posts') {
         // Include both 'new_post' and 'follow' types in the posts tab
-        // Note: We still need to respect the new followers setting for 'follow' type
         typeCondition.type = { $in: ['new_post', 'follow'] };
         
-        // If we're filtering by posts and new followers is off, we need special handling
-        if (!newFollowersEnabled && type === 'posts') {
-          console.log('Special handling for posts tab with new followers off');
-          // If new followers is off, then filter out follow notifications from posts tab
+        // If we're filtering by posts and either new followers or post activity is off, 
+        // handle with special logic
+        if ((!newFollowersEnabled || !postActivityEnabled) && type === 'posts') {
+          console.log('Special handling for posts tab with notification settings off');
           // This is handled by the above filtering logic
         }
       } else if (type === 'comments') {
@@ -251,7 +286,6 @@ export async function GET(request) {
     const total = await Notification.countDocuments(query);
 
     // Calculate counts based on the same filters
-    // (Simplified here, but should follow the same logic as the main query)
     const countQuery = { userId: decoded.id };
     if (query.$and) {
       countQuery.$and = query.$and;

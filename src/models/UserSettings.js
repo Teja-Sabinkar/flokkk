@@ -102,20 +102,8 @@ const UserSettingsSchema = new mongoose.Schema(
       emailNotifications: {
         type: Boolean,
         default: true
-      },
-      // Add this field:
-      communityNotifications: {
-        type: Boolean,
-        default: true
-      },
-      communityNotificationsDisabledAt: {
-        type: Date,
-        default: null
-      },
-      communityNotificationsReenabledAt: {
-        type: Date,
-        default: null
       }
+      // Removed communityNotifications fields
     },
     displaySettings: {
       language: {
