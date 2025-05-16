@@ -175,7 +175,7 @@ export default function RecentlyViewed({ initialItemCount = 3 }) {
                   <div className={styles.itemMeta}>
                     <div className={styles.authorDate}>
                       <Link href={`/otheruserprofile/${username}`} className={styles.itemAuthor}>
-                        u/{username}
+                        {username}
                       </Link>
                       <span className={styles.itemDate}>{item.postedTime}</span>
                     </div>

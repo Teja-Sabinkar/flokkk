@@ -1,8 +1,10 @@
 .recentlyViewedContainer {
-  padding: 0 0 0 16px; /* Added left padding to prevent text being cut off */
+  padding: 0 0 0 16px;
+  /* Added left padding to prevent text being cut off */
   max-width: 300px;
   background-color: transparent;
-  width: 100%; /* Ensure full width of container */
+  width: 100%;
+  /* Ensure full width of container */
 }
 
 .sectionTitle {
@@ -10,9 +12,12 @@
   font-weight: 600;
   color: #fff;
   margin: 0 0 16px 10px;
-  width: 100%; /* Ensure title takes full width */
-  white-space: nowrap; /* Prevent wrapping */
-  overflow: visible; /* Allow content to be visible even if it overflows */
+  width: 100%;
+  /* Ensure title takes full width */
+  white-space: nowrap;
+  /* Prevent wrapping */
+  overflow: visible;
+  /* Allow content to be visible even if it overflows */
 }
 
 .itemsList {
@@ -48,7 +53,8 @@
   justify-content: center;
   color: white;
   font-weight: bold;
-  overflow: hidden; /* Add this to contain profile image within circle */
+  overflow: hidden;
+  /* Add this to contain profile image within circle */
   background-color: #1e1e1e;
 }
 
@@ -66,7 +72,8 @@
 
 .itemDetails {
   flex: 1;
-  min-width: 0; /* Allows text truncation to work */
+  min-width: 0;
+  /* Allows text truncation to work */
   display: flex;
   flex-direction: column;
 }
@@ -100,6 +107,11 @@
   font-size: 12px;
   color: #aaa;
   text-decoration: none;
+  max-width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
 }
 
 .itemDate {
@@ -207,7 +219,8 @@
 }
 
 .errorState {
-  color: #e57373; /* Light red color for errors */
+  color: #e57373;
+  /* Light red color for errors */
 }
 
 /* Responsive adjustments */
