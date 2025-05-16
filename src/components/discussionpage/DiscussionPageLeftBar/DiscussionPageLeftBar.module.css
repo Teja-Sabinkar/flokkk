@@ -123,7 +123,8 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #3498db; /* Blue background */
+  background-color: #3498db;
+  /* Blue background */
   color: white;
   display: flex;
   align-items: center;
@@ -134,9 +135,10 @@
 
 /* Update profileDetails to take up remaining width */
 .profileDetails {
+  display: flex;
   flex-grow: 1;
   min-width: 0;
-  /* Ensures text truncation works properly */
+  flex-direction: column;
 }
 
 .channelName {
@@ -719,6 +721,11 @@
 .clickableChannelName {
   cursor: pointer;
   transition: color 0.2s ease;
+  width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
 }
 
 .clickableChannelName:hover {

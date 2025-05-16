@@ -10,21 +10,39 @@ export async function POST(request) {
     // Connect to database
     await dbConnect();
     
-    const { name, email, password } = await request.json();
+    const { name, username, email, password } = await request.json();
 
     // Validate input
-    if (!name || !email || !password) {
+    if (!name || !username || !email || !password) {
       return NextResponse.json(
-        { message: 'Name, email, and password are required' },
+        { message: 'Name, username, email, and password are required' },
+        { status: 400 }
+      );
+    }
+    
+    // Check if username is valid
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+    if (!usernameRegex.test(username)) {
+      return NextResponse.json(
+        { message: 'Username can only contain letters, numbers, and underscores' },
         { status: 400 }
       );
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    // Check if user with this email already exists
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
       return NextResponse.json(
         { message: 'Email already in use' },
+        { status: 409 }
+      );
+    }
+    
+    // Check if user with this username already exists
+    const existingUsername = await User.findOne({ username: username.toLowerCase() });
+    if (existingUsername) {
+      return NextResponse.json(
+        { message: 'Username already taken. Please choose a different username.' },
         { status: 409 }
       );
     }
@@ -43,6 +61,7 @@ export async function POST(request) {
     // Create new user with verification token
     const user = await User.create({
       name,
+      username: username.toLowerCase(), // Store username in lowercase
       email,
       password: hashedPassword,
       isEmailVerified: false,
@@ -72,6 +91,7 @@ export async function POST(request) {
         user: {
           id: user._id,
           name: user.name,
+          username: user.username,
           email: user.email,
           isEmailVerified: user.isEmailVerified,
         }

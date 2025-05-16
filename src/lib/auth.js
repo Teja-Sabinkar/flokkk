@@ -31,14 +31,14 @@ export async function login(email, password) {
 }
 
 // Register function - calls the signup API
-export async function register(name, email, password) {
+export async function register(name, username, email, password) {
   try {
     const response = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, username, email, password }),
     });
 
     const data = await response.json();
@@ -82,13 +82,13 @@ export async function getCurrentUser() {
     if (typeof window === 'undefined') {
       throw new Error('Not in browser environment');
     }
-    
+
     const token = localStorage.getItem('token');
-    
+
     if (!token) {
       throw new Error('Not authenticated');
     }
-    
+
     const response = await fetch('/api/auth/me', {
       headers: {
         Authorization: `Bearer ${token}`,

@@ -23,8 +23,8 @@ const UserSchema = new mongoose.Schema(
     },
     username: {
       type: String,
+      required: [true, 'Please provide a username'],
       unique: true,
-      sparse: true, // Allow multiple null values (for users who haven't set a username yet)
       lowercase: true,
       trim: true,
       maxlength: [30, 'Username cannot be more than 30 characters'],
@@ -105,14 +105,14 @@ const UserSchema = new mongoose.Schema(
 );
 
 // Virtual for usertag
-UserSchema.virtual('usertag').get(function() {
+UserSchema.virtual('usertag').get(function () {
   return this.username ? `@${this.username}` : `@${this._id.toString().slice(-8)}`;
 });
 
 // Virtual for joinDate (formatted date)
-UserSchema.virtual('joinDate').get(function() {
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
-                'August', 'September', 'October', 'November', 'December'];
+UserSchema.virtual('joinDate').get(function () {
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+    'August', 'September', 'October', 'November', 'December'];
   const date = this.createdAt || new Date();
   return `${months[date.getMonth()]} ${date.getFullYear()}`;
 });

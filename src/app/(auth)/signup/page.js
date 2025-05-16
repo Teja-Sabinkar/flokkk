@@ -9,6 +9,7 @@ import '../messages.css';
 function SignupContent() {
   const router = useRouter();
   const [formData, setFormData] = useState({
+    name: '',  // Added a separate name field
     username: '',
     email: '',
     password: '',
@@ -50,7 +51,8 @@ function SignupContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.username,
+          name: formData.name, // Use the separate name field
+          username: formData.username, // Send username separately
           email: formData.email,
           password: formData.password
         }),
@@ -68,6 +70,7 @@ function SignupContent() {
       
       // Clear form
       setFormData({
+        name: '',
         username: '',
         email: '',
         password: '',
@@ -123,6 +126,19 @@ function SignupContent() {
         
         <form onSubmit={handleSubmit} className="signup-form">
           <div>
+            <label htmlFor="name">Full Name</label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleChange}
+              className="signup-input"
+              required
+            />
+          </div>
+          
+          <div>
             <label htmlFor="username">Username</label>
             <input
               id="username"
@@ -132,6 +148,8 @@ function SignupContent() {
               onChange={handleChange}
               className="signup-input"
               required
+              pattern="^[a-zA-Z0-9_]+$"
+              title="Username can only contain letters, numbers, and underscores"
             />
           </div>
           
