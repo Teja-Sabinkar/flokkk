@@ -9,7 +9,7 @@ import '../messages.css';
 function SignupContent() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',  // Added a separate name field
+    name: '',
     username: '',
     email: '',
     password: '',
@@ -51,8 +51,8 @@ function SignupContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.name, // Use the separate name field
-          username: formData.username, // Send username separately
+          name: formData.name,
+          username: formData.username,
           email: formData.email,
           password: formData.password
         }),
@@ -125,7 +125,7 @@ function SignupContent() {
         )}
         
         <form onSubmit={handleSubmit} className="signup-form">
-          <div>
+          <div className="input-group">
             <label htmlFor="name">Full Name</label>
             <input
               id="name"
@@ -136,9 +136,10 @@ function SignupContent() {
               className="signup-input"
               required
             />
+            <div className="input-rules">Required field</div>
           </div>
           
-          <div>
+          <div className="input-group">
             <label htmlFor="username">Username</label>
             <input
               id="username"
@@ -150,10 +151,14 @@ function SignupContent() {
               required
               pattern="^[a-zA-Z0-9_]+$"
               title="Username can only contain letters, numbers, and underscores"
+              maxLength={30}
             />
+            <div className="input-rules">
+              Maximum 30 characters
+            </div>
           </div>
           
-          <div>
+          <div className="input-group">
             <label htmlFor="email">Email</label>
             <input
               id="email"
@@ -164,9 +169,10 @@ function SignupContent() {
               className="signup-input"
               required
             />
+            <div className="input-rules">Must be a valid email address</div>
           </div>
           
-          <div>
+          <div className="input-group">
             <label htmlFor="password">Password</label>
             <input
               id="password"
@@ -178,9 +184,10 @@ function SignupContent() {
               required
               minLength={8}
             />
+            <div className="input-rules">Minimum 8 characters</div>
           </div>
           
-          <div>
+          <div className="input-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
             <input
               id="confirmPassword"
@@ -191,6 +198,7 @@ function SignupContent() {
               className="signup-input"
               required
             />
+            <div className="input-rules">Must match the password above</div>
           </div>
           
           <div className="terms-checkbox">
