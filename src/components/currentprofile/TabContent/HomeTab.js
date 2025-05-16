@@ -517,8 +517,8 @@ const HomeTab = ({ username }) => {
 
   if (posts.length === 0) {
     return (
-      <div className={styles.emptyContainer}>
-        <p>No posts found for this user</p>
+      <div className={styles.emptyState}>
+        <p>No posts created yet. Lets create your first discussion to view posts here.</p>
       </div>
     );
   }

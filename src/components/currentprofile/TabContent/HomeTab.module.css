@@ -8,6 +8,15 @@
   padding: 0 16px;
 }
 
+.emptyState {
+  background-color: #171717;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  color: #aaa;
+
+}
+
 
 .postCard {
   width: 100%;

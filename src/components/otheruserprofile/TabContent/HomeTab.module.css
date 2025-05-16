@@ -8,6 +8,15 @@
   padding: 0 16px;
 }
 
+.emptyContainer {
+  background-color: #171717;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  color: #aaa;
+  grid-column: 1 / -1;
+}
+
 
 .postCard {
   width: 100%;
