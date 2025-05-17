@@ -7,6 +7,7 @@ import CommunityPost from '@/models/CommunityPost';
 import Follow from '@/models/Follow';
 import { createNotification } from '@/lib/notifications';
 import { connectToDatabase } from '@/lib/mongodb';
+import { trackPostCreated } from '@/lib/analytics';
 
 // GET community posts with pagination
 export async function GET(request) {
@@ -247,6 +248,9 @@ export async function POST(request) {
       console.log('Creating community post in database...');
       const newPost = await CommunityPost.create(postData);
       console.log('Community post created successfully with ID:', newPost._id);
+
+      // Track post creation
+      trackPostCreated('community');
 
       // Format the timeAgo for the response
       const timeAgo = getTimeAgo(newPost.createdAt);

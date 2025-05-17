@@ -9,6 +9,7 @@ import Post from '@/models/Post';
 import Comment from '@/models/Comment';
 import { ObjectId } from 'mongodb';
 import { createNotification } from '@/lib/notifications';
+import { trackCommentAdded } from '@/lib/analytics';
 
 // Clean comment content before saving to database
 const sanitizeCommentContent = (content) => {
@@ -180,6 +181,9 @@ export async function POST(request, { params }) {
     // Create the comment
     const newComment = await Comment.create(commentData);
     console.log('New comment created:', newComment._id.toString());
+    
+    // Track comment added
+    trackCommentAdded(postId);
     
     // Increment post discussion count
     await Post.findByIdAndUpdate(post._id, { $inc: { discussions: 1 } });
