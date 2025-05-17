@@ -6,7 +6,8 @@ import { connectToDatabase } from '@/lib/mongodb';
 import dbConnect from '@/lib/mongoose';
 import User from '@/models/User';
 import Post from '@/models/Post';
-import CommunityPost from '@/models/CommunityPost'; // Add this import
+import CommunityPost from '@/models/CommunityPost';
+import Playlist from '@/models/Playlist'; // Add this import
 import UserSettings from '@/models/UserSettings';
 import Follow from '@/models/Follow';
 import Notification from '@/models/Notification';
