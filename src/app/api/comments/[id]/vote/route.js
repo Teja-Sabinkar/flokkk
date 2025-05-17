@@ -8,7 +8,6 @@ import User from '@/models/User';
 import Comment from '@/models/Comment';
 import { createNotification } from '@/lib/notifications';
 import Post from '@/models/Post';
-import { trackPostVoted } from '@/lib/analytics';
 
 export async function POST(request, { params }) {
   try {
@@ -112,13 +111,12 @@ export async function POST(request, { params }) {
     await comment.save();
     console.log(`Updated comment likes to ${comment.likes}`);
 
-    // Track the vote
-    const voteType = data.vote === 1 ? 'upvote' : data.vote === -1 ? 'downvote' : 'remove';
-    trackPostVoted(comment.postId.toString(), voteType);
-
-    // Create notification for the comment creator if voter is not the creator and vote is not 0 (removing vote)
+    // NEW CODE: Create notification for the comment creator if voter is not the creator and vote is not 0 (removing vote)
     if (comment.userId.toString() !== user._id.toString() && data.vote !== 0) {
       try {
+        // Import createNotification function at the top of the file
+        // import { createNotification } from '@/lib/notifications';
+
         // Fetch the post to get its title
         const post = await Post.findById(comment.postId);
         const postTitle = post ? post.title : 'a discussion';

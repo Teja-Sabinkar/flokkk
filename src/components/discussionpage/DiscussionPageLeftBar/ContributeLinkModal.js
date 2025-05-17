@@ -3,7 +3,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import styles from './ContributeLinkModal.module.css'; // Update to use dedicated CSS
-import { trackLinkContributed } from '@/lib/analytics';
 
 export default function ContributeLinkModal({ postId, postCreatorId, onClose, onSubmit }) {
   const [title, setTitle] = useState('');
@@ -112,10 +111,6 @@ export default function ContributeLinkModal({ postId, postCreatorId, onClose, on
         }
         
         const result = await response.json();
-        
-        // Track link contribution
-        trackLinkContributed(postId);
-        
         onSubmit(result);
         onClose();
       } catch (error) {

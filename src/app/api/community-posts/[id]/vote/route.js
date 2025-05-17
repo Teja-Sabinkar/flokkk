@@ -6,8 +6,7 @@ import jwt from 'jsonwebtoken';
 import dbConnect from '@/lib/mongoose';
 import User from '@/models/User';
 import CommunityPost from '@/models/CommunityPost';
-import { createNotification } from '@/lib/notifications';
-import { trackPostVoted } from '@/lib/analytics';
+import { createNotification } from '@/lib/notifications'; // Add this import
 
 // POST to vote on a community post
 export async function POST(request, { params }) {
@@ -119,10 +118,6 @@ export async function POST(request, { params }) {
     
     // Save the updated post
     await post.save();
-    
-    // Track vote
-    const voteType = voteValue === 1 ? 'upvote' : voteValue === -1 ? 'downvote' : 'remove';
-    trackPostVoted(id, voteType);
     
     // Don't send notification if user is voting on their own post
     if (shouldSendNotification && post.userId.toString() !== user._id.toString()) {

@@ -1,6 +1,6 @@
 import './globals.css';
 import './fonts.css';
-import { Analytics } from '@vercel/analytics/react';
+
 
 export const metadata = {
   title: 'Turtle2.0',
@@ -20,7 +20,6 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         {children}
-        <Analytics />
       </body>
     </html>
   )

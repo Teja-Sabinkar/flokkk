@@ -4,7 +4,6 @@ import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { sendEmail, generateVerificationEmail } from '@/lib/email';
-import { trackSignupCompleted } from '@/lib/analytics';
 
 export async function POST(request) {
   try {
@@ -72,9 +71,6 @@ export async function POST(request) {
       verificationToken,
       verificationTokenExpires,
     });
-
-    // Track signup completion
-    trackSignupCompleted();
 
     // Send verification email
     try {
