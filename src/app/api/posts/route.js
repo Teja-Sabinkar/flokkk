@@ -6,6 +6,7 @@ import dbConnect from '@/lib/mongoose';
 import User from '@/models/User';
 import Follow from '@/models/Follow';
 import { createNotification } from '@/lib/notifications';
+import { trackPostCreated } from '@/lib/analytics';
 
 export async function POST(request) {
   try {
@@ -145,6 +146,9 @@ export async function POST(request) {
     }
     
     console.log('Post created with ID:', result.insertedId);
+    
+    // Track post creation event
+    trackPostCreated(rawData.videoUrl ? 'video' : 'standard');
     
     // Verify creator links were saved
     const savedPost = await db.collection('posts').findOne(

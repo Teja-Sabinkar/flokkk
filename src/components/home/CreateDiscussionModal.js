@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import Image from 'next/image';
 import styles from './CreateDiscussionModal.module.css';
+import { trackPostCreated } from '@/lib/analytics';
 
 // Image compression function
 const compressImage = (file, maxWidth = 1200, maxHeight = 800, quality = 0.8) => {
@@ -368,6 +369,10 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
     };
 
     console.log('Submitting discussion with creator links:', discussionData.creatorLinks);
+
+    // Track post creation event
+    const postType = videoUrl ? 'video' : 'standard';
+    trackPostCreated(postType);
 
     // Call the onSubmit function passed from the parent component
     if (onSubmit) {

@@ -3,6 +3,7 @@ import dbConnect from '@/lib/mongoose';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { trackLogin } from '@/lib/analytics';
 
 export async function POST(request) {
   try {
@@ -57,6 +58,9 @@ export async function POST(request) {
       process.env.NEXTAUTH_SECRET,
       { expiresIn: '7d' }
     );
+    
+    // Track successful login
+    trackLogin('email');
     
     // Create response with cookie
     const response = NextResponse.json(

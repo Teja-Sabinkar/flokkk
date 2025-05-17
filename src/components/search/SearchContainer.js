@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SearchResultItem from './SearchResultItem';
 import ProfileResultItem from './ProfileResultItem';
 import styles from './SearchContainer.module.css';
+import { trackSearchPerformed } from '@/lib/analytics';
 
 const SearchContainer = ({ 
   results, 
@@ -9,10 +10,19 @@ const SearchContainer = ({
   error,
   viewMode,
   onRetry,
-  user
+  user,
+  searchTerm // Add searchTerm prop to track search queries
 }) => {
   // Add state to track hidden posts
   const [hiddenPostIds, setHiddenPostIds] = useState([]);
+  
+  // Use useEffect to track search when results change
+  useEffect(() => {
+    // Only track search when we have results and a search term
+    if (results?.length > 0 && searchTerm) {
+      trackSearchPerformed(searchTerm);
+    }
+  }, [results, searchTerm]);
   
   // No filtering - show all results including current user
   const filteredResults = results.filter(item => !hiddenPostIds.includes(item._id));

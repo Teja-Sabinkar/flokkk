@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
+import { trackPostVoted } from '@/lib/analytics';
 
 export async function POST(request, { params }) {
   try {
@@ -139,6 +140,10 @@ export async function POST(request, { params }) {
       { _id: postObjectId },
       updateOperation
     );
+    
+    // Track the vote
+    const voteType = vote === 1 ? 'upvote' : vote === -1 ? 'downvote' : 'remove';
+    trackPostVoted(id, voteType);
     
     // Get updated post
     const updatedPost = await db.collection('posts').findOne({ _id: postObjectId });
