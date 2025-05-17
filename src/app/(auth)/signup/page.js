@@ -138,8 +138,7 @@ function SignupContent() {
               maxLength={30}
             />
             <div className="input-rules">
-              Maximum 30 characters. Only letters, numbers, and underscores. 
-              Will be stored as lowercase.
+              Maximum 30 characters
             </div>
           </div>
           
