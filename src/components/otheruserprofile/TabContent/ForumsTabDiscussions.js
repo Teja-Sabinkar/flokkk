@@ -217,7 +217,29 @@ const DiscussionPost = ({ post, onHidePost }) => {
     <div className={styles.postCard}>
       <div className={styles.postHeader}>
         <div className={styles.userInfo}>
-          {/* User info content remains the same */}
+          <div className={styles.avatarContainer}>
+            {/* Updated avatar handling */}
+            {(post.profilePicture && post.profilePicture !== '/profile-placeholder.jpg') ? (
+              <Image
+                src={post.profilePicture}
+                alt={`${post.username}'s profile picture`}
+                width={40}
+                height={40}
+                className={styles.avatarImage}
+                priority
+                unoptimized
+                key={post.profilePicture} // Force re-render when URL changes
+              />
+            ) : (
+              <UserAvatar username={post.username} />
+            )}
+          </div>
+          <div className={styles.nameDate}>
+            <Link href={`/otheruserprofile/${post.username}`} className={styles.username}>
+              {post.username}
+            </Link>
+            <span className={styles.postDate}>{post.timeAgo || 'recently'}</span>
+          </div>
         </div>
 
         <div className={styles.menuContainer} ref={menuRef}>
