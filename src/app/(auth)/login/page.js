@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import './login.css';
 import '../messages.css';
+import { trackButtonClick } from '@/lib/analytics';
 
 function LoginContent() {
   const router = useRouter();
@@ -56,6 +57,12 @@ function LoginContent() {
     setError('');
     setSuccess('');
 
+    // Track login button click
+    trackButtonClick('login-button', { 
+      method: 'email',
+      has_error: false
+    });
+
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -70,8 +77,20 @@ function LoginContent() {
           setError('Email not verified. Please check your inbox or request a new verification link.');
           setShowResendVerification(true);
           setResendEmail(email);
+          // Track error
+          trackButtonClick('login-button', { 
+            method: 'email',
+            has_error: true,
+            error_type: 'verification_required'
+          });
           throw new Error(data.message);
         }
+        // Track error
+        trackButtonClick('login-button', { 
+          method: 'email',
+          has_error: true,
+          error_type: 'authentication_failed'
+        });
         throw new Error(data.message || 'Login failed');
       }
 
@@ -91,6 +110,9 @@ function LoginContent() {
     e.preventDefault();
     setResendLoading(true);
     setResendMessage('');
+    
+    // Track resend verification click
+    trackButtonClick('resend-verification-button', { email: resendEmail });
     
     try {
       const response = await fetch('/api/auth/resend-verification', {
@@ -175,11 +197,11 @@ function LoginContent() {
         </form>
         
         <div className="forgot-password">
-          <Link href="/forgot-password">Forgot password?</Link>
+          <Link href="/forgot-password" onClick={() => trackButtonClick('forgot-password-link')}>Forgot password?</Link>
         </div>
         
         <div className="signup-prompt">
-          Don&apos;t have an account? <Link href="/signup">Sign up</Link>
+          Don&apos;t have an account? <Link href="/signup" onClick={() => trackButtonClick('signup-link')}>Sign up</Link>
         </div>
         
         {showResendVerification && (

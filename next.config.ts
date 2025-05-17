@@ -16,7 +16,13 @@ const nextConfig: NextConfig = {
       'i.vimeocdn.com'     // Vimeo thumbnails (optional)
     ],
   },
-  /* any other config options you might have */
+  /* Analytics configuration */
+  analytics: {
+    // Enable Vercel Web Analytics
+    vercelAnalytics: {
+      enabled: true,
+    },
+  },
 };
 
 export default nextConfig;

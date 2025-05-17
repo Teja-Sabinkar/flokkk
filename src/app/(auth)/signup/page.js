@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import './signup.css';
 import '../messages.css';
+import { trackButtonClick } from '@/lib/analytics';
 
 function SignupContent() {
   const router = useRouter();
@@ -30,10 +31,22 @@ function SignupContent() {
     setIsLoading(true);
     setError('');
 
+    // Track signup button click
+    trackButtonClick('signup-button', { 
+      has_error: false 
+    });
+
     // Validate terms agreement
     if (!agreeToTerms) {
       setError('You must agree to the Terms and Conditions');
       setIsLoading(false);
+      
+      // Track validation error
+      trackButtonClick('signup-button', { 
+        has_error: true,
+        error_type: 'terms_not_accepted'
+      });
+      
       return;
     }
 
@@ -41,6 +54,13 @@ function SignupContent() {
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setIsLoading(false);
+      
+      // Track validation error
+      trackButtonClick('signup-button', { 
+        has_error: true,
+        error_type: 'passwords_mismatch'
+      });
+      
       return;
     }
 
@@ -60,8 +80,21 @@ function SignupContent() {
       const data = await response.json();
 
       if (!response.ok) {
+        // Track API error
+        trackButtonClick('signup-button', { 
+          has_error: true,
+          error_type: 'api_error',
+          status_code: response.status
+        });
+        
         throw new Error(data.message || 'Signup failed');
       }
+
+      // Track successful signup
+      trackButtonClick('signup-button', { 
+        has_error: false,
+        success: true
+      });
 
       // Show success state with verification instructions
       setIsSubmitted(true);
@@ -104,7 +137,13 @@ function SignupContent() {
           </div>
           
           <div className="action-buttons">
-            <Link href="/login" className="login-button">Go to Login</Link>
+            <Link 
+              href="/login" 
+              className="login-button"
+              onClick={() => trackButtonClick('signup-success-to-login')}
+            >
+              Go to Login
+            </Link>
           </div>
         </div>
       </div>
@@ -194,7 +233,11 @@ function SignupContent() {
               required
             />
             <label htmlFor="terms">
-              I agree to the <a href="/terms">Terms and Conditions</a>
+              I agree to the <a href="/terms" onClick={(e) => {
+                e.preventDefault();
+                trackButtonClick('terms-link');
+                window.open('/terms', '_blank');
+              }}>Terms and Conditions</a>
             </label>
           </div>
           
@@ -208,7 +251,7 @@ function SignupContent() {
         </form>
         
         <div className="login-prompt">
-          Already have an account? <Link href="/login">Log in</Link>
+          Already have an account? <Link href="/login" onClick={() => trackButtonClick('login-link-from-signup')}>Log in</Link>
         </div>
       </div>
     </div>
