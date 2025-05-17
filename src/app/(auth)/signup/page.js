@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import './signup.css';
 import '../messages.css';
-import { trackButtonClick } from '@/lib/analytics';
 
 function SignupContent() {
   const router = useRouter();
@@ -31,35 +30,10 @@ function SignupContent() {
     setIsLoading(true);
     setError('');
 
-    // Track signup button click - non-blocking
-    try {
-      if (typeof window !== 'undefined' && window.va) {
-        window.va.event('button_click', {
-          button_name: 'signup-button',
-          has_error: false
-        });
-      }
-    } catch (analyticsError) {
-      // Silently catch analytics errors
-      console.error('Analytics error:', analyticsError);
-    }
-
     // Validate terms agreement
     if (!agreeToTerms) {
       setError('You must agree to the Terms and Conditions');
       setIsLoading(false);
-
-      // Track validation error - non-blocking
-      try {
-        if (typeof window !== 'undefined' && window.va) {
-          window.va.event('button_click', {
-            button_name: 'signup-button',
-            has_error: true,
-            error_type: 'terms_not_accepted'
-          });
-        }
-      } catch (e) { } // Silent catch
-
       return;
     }
 
@@ -67,28 +41,16 @@ function SignupContent() {
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setIsLoading(false);
-
-      // Track validation error - non-blocking
-      try {
-        if (typeof window !== 'undefined' && window.va) {
-          window.va.event('button_click', {
-            button_name: 'signup-button',
-            has_error: true,
-            error_type: 'passwords_mismatch'
-          });
-        }
-      } catch (e) { } // Silent catch
-
       return;
     }
 
     try {
-      // Call API to create account
+      // Call API to create account - use username as name as well
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.username,
+          name: formData.username, // Use username as the name
           username: formData.username,
           email: formData.email,
           password: formData.password
@@ -98,36 +60,13 @@ function SignupContent() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Track API error - non-blocking
-        try {
-          if (typeof window !== 'undefined' && window.va) {
-            window.va.event('button_click', {
-              button_name: 'signup-button',
-              has_error: true,
-              error_type: 'api_error',
-              status_code: response.status
-            });
-          }
-        } catch (e) { } // Silent catch
-
         throw new Error(data.message || 'Signup failed');
       }
 
-      // Track successful signup - non-blocking
-      try {
-        if (typeof window !== 'undefined' && window.va) {
-          window.va.event('button_click', {
-            button_name: 'signup-button',
-            has_error: false,
-            success: true
-          });
-        }
-      } catch (e) { } // Silent catch
-
-      // Show success state
+      // Show success state with verification instructions
       setIsSubmitted(true);
       setEmailSent(formData.email);
-
+      
       // Clear form
       setFormData({
         username: '',
@@ -135,10 +74,12 @@ function SignupContent() {
         password: '',
         confirmPassword: ''
       });
+      
+      // Don't redirect to login immediately, show verification instructions
     } catch (err) {
       setError(err.message || 'An error occurred during signup');
     } finally {
-      setIsLoading(false); // Always reset loading state
+      setIsLoading(false);
     }
   };
 
@@ -152,7 +93,7 @@ function SignupContent() {
               We&apos;ve sent a verification link to <strong>{emailSent}</strong>
             </p>
           </div>
-
+          
           <div className="next-steps">
             <h2>Next Steps:</h2>
             <ol>
@@ -161,15 +102,9 @@ function SignupContent() {
               <li>Return to login once verified</li>
             </ol>
           </div>
-
+          
           <div className="action-buttons">
-            <Link
-              href="/login"
-              className="login-button"
-              onClick={() => trackButtonClick('signup-success-to-login')}
-            >
-              Go to Login
-            </Link>
+            <Link href="/login" className="login-button">Go to Login</Link>
           </div>
         </div>
       </div>
@@ -180,13 +115,13 @@ function SignupContent() {
     <div className="signup-container">
       <div className="signup-card">
         <h1 className="signup-title">Create Account</h1>
-
+        
         {error && (
           <div className="error-message">
             {error}
           </div>
         )}
-
+        
         <form onSubmit={handleSubmit} className="signup-form">
           <div className="input-group">
             <label htmlFor="username">Username</label>
@@ -206,7 +141,7 @@ function SignupContent() {
               Maximum 30 characters
             </div>
           </div>
-
+          
           <div className="input-group">
             <label htmlFor="email">Email</label>
             <input
@@ -220,7 +155,7 @@ function SignupContent() {
             />
             <div className="input-rules">Must be a valid email address</div>
           </div>
-
+          
           <div className="input-group">
             <label htmlFor="password">Password</label>
             <input
@@ -235,7 +170,7 @@ function SignupContent() {
             />
             <div className="input-rules">Minimum 8 characters</div>
           </div>
-
+          
           <div className="input-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
             <input
@@ -249,7 +184,7 @@ function SignupContent() {
             />
             <div className="input-rules">Must match the password above</div>
           </div>
-
+          
           <div className="terms-checkbox">
             <input
               id="terms"
@@ -259,14 +194,10 @@ function SignupContent() {
               required
             />
             <label htmlFor="terms">
-              I agree to the <a href="/terms" onClick={(e) => {
-                e.preventDefault();
-                trackButtonClick('terms-link');
-                window.open('/terms', '_blank');
-              }}>Terms and Conditions</a>
+              I agree to the <a href="/terms">Terms and Conditions</a>
             </label>
           </div>
-
+          
           <button
             type="submit"
             disabled={isLoading}
@@ -275,9 +206,9 @@ function SignupContent() {
             {isLoading ? 'Creating account...' : 'Sign Up'}
           </button>
         </form>
-
+        
         <div className="login-prompt">
-          Already have an account? <Link href="/login" onClick={() => trackButtonClick('login-link-from-signup')}>Log in</Link>
+          Already have an account? <Link href="/login">Log in</Link>
         </div>
       </div>
     </div>

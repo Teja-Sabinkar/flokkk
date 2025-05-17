@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import './login.css';
 import '../messages.css';
-import { trackButtonClick } from '@/lib/analytics';
 
 function LoginContent() {
   const router = useRouter();
@@ -27,17 +26,17 @@ function LoginContent() {
     if (searchParams.get('verified') === 'true') {
       setSuccess('Email verified successfully! You can now log in.');
     }
-
+    
     // Handle registration success
     if (searchParams.get('registered') === 'true') {
       setSuccess('Account created! Please check your email to verify your account before logging in.');
     }
-
+    
     // Handle password reset success
     if (searchParams.get('reset') === 'true') {
       setSuccess('Password reset successful! You can now log in with your new password.');
     }
-
+    
     // Handle verification errors
     const error = searchParams.get('error');
     if (error === 'invalid-token') {
@@ -57,21 +56,6 @@ function LoginContent() {
     setError('');
     setSuccess('');
 
-    // Track login button click - make sure this doesn't block the main flow
-    try {
-      // Non-blocking analytics call
-      if (typeof window !== 'undefined' && window.va) {
-        window.va.event('button_click', {
-          button_name: 'login-button',
-          method: 'email',
-          has_error: false
-        });
-      }
-    } catch (analyticsError) {
-      // Silently catch analytics errors - don't let them affect login flow
-      console.error('Analytics error:', analyticsError);
-    }
-
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -86,46 +70,20 @@ function LoginContent() {
           setError('Email not verified. Please check your inbox or request a new verification link.');
           setShowResendVerification(true);
           setResendEmail(email);
-
-          // Track error - non-blocking
-          try {
-            if (typeof window !== 'undefined' && window.va) {
-              window.va.event('button_click', {
-                button_name: 'login-button',
-                method: 'email',
-                has_error: true,
-                error_type: 'verification_required'
-              });
-            }
-          } catch (e) { } // Silent catch
-
           throw new Error(data.message);
         }
-
-        // Track error - non-blocking
-        try {
-          if (typeof window !== 'undefined' && window.va) {
-            window.va.event('button_click', {
-              button_name: 'login-button',
-              method: 'email',
-              has_error: true,
-              error_type: 'authentication_failed'
-            });
-          }
-        } catch (e) { } // Silent catch
-
         throw new Error(data.message || 'Login failed');
       }
 
       // Store token in localStorage
       localStorage.setItem('token', data.token);
-
+      
       // Redirect to dashboard home
       router.push('/home');
     } catch (err) {
       setError(err.message || 'An error occurred during login');
     } finally {
-      setIsLoading(false); // Always reset loading state, even if analytics or auth fails
+      setIsLoading(false);
     }
   };
 
@@ -133,10 +91,7 @@ function LoginContent() {
     e.preventDefault();
     setResendLoading(true);
     setResendMessage('');
-
-    // Track resend verification click
-    trackButtonClick('resend-verification-button', { email: resendEmail });
-
+    
     try {
       const response = await fetch('/api/auth/resend-verification', {
         method: 'POST',
@@ -162,19 +117,19 @@ function LoginContent() {
     <div className="login-container">
       <div className="login-card">
         <h1 className="login-title">flock</h1>
-
+        
         {success && (
           <div className="success-message">
             {success}
           </div>
         )}
-
+        
         {error && (
           <div className="error-message">
             {error}
           </div>
         )}
-
+        
         <form onSubmit={handleSubmit} className="login-form">
           <div>
             <label htmlFor="email">Email</label>
@@ -187,7 +142,7 @@ function LoginContent() {
               required
             />
           </div>
-
+          
           <div>
             <label htmlFor="password">Password</label>
             <input
@@ -199,7 +154,7 @@ function LoginContent() {
               required
             />
           </div>
-
+          
           <div className="remember-me">
             <input
               id="remember-me"
@@ -209,7 +164,7 @@ function LoginContent() {
             />
             <label htmlFor="remember-me">Remember me</label>
           </div>
-
+          
           <button
             type="submit"
             disabled={isLoading}
@@ -218,15 +173,15 @@ function LoginContent() {
             {isLoading ? 'Signing in...' : 'Log In'}
           </button>
         </form>
-
+        
         <div className="forgot-password">
-          <Link href="/forgot-password" onClick={() => trackButtonClick('forgot-password-link')}>Forgot password?</Link>
+          <Link href="/forgot-password">Forgot password?</Link>
         </div>
-
+        
         <div className="signup-prompt">
-          Don&apos;t have an account? <Link href="/signup" onClick={() => trackButtonClick('signup-link')}>Sign up</Link>
+          Don&apos;t have an account? <Link href="/signup">Sign up</Link>
         </div>
-
+        
         {showResendVerification && (
           <div className="resend-verification">
             <form onSubmit={handleResendVerification}>
@@ -243,7 +198,7 @@ function LoginContent() {
               >
                 {resendLoading ? 'Sending...' : 'Resend Verification Email'}
               </button>
-
+              
               {resendMessage && (
                 <p className="resend-message">
                   {resendMessage}
