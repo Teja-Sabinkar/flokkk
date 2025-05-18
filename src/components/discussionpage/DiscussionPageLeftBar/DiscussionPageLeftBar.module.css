@@ -753,6 +753,102 @@
   text-decoration: underline;
 }
 
+/* Common styles for disabled contribution indicators */
+.contributionsDisabled {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #888;
+  font-size: 12px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: not-allowed;
+}
+
+.contributionsDisabled svg {
+  color: #888;
+  flex-shrink: 0;
+}
+
+.contributionsDisabled span {
+  white-space: nowrap;
+}
+
+/* Additional style for the follow-to-contribute message */
+.followToContribute {
+  composes: contributionsDisabled;
+  background-color: #f0f7ff; /* Subtle blue background */
+  color: #3b5fe2; /* Blue text color */
+  border: 1px solid #e0ebff;
+}
+
+.followToContribute svg {
+  color: #3b5fe2;
+}
+
+/* Interactive style for follow message on hover */
+.followToContribute:hover {
+  background-color: #e0ebff;
+  cursor: pointer;
+}
+
+.emptyStateWithAction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.followCreatorButton {
+  padding: 8px 16px;
+  background-color: #3b5fe2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.followCreatorButton:hover {
+  background-color: #2a4bc7;
+}
+
+.followCreatorButton:disabled {
+  background-color: #a0a0a0;
+  cursor: not-allowed;
+}
+
+.emptyStateHelp {
+  color: #666;
+  font-size: 13px;
+  margin: 0;
+}
+
+/* Small loader for buttons */
+.smallLoader {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 
 
 /* Responsive adjustments */

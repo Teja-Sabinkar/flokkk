@@ -15,6 +15,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
   const [isSubscribeLoading, setIsSubscribeLoading] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [creatorProfilePic, setCreatorProfilePic] = useState(null);
+  const [isFollowingCreator, setIsFollowingCreator] = useState(false);
 
   // Constants for link visibility
   const INITIAL_VISIBLE_COUNT = 3;
@@ -62,7 +63,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
   const isPostCreator = currentUser && postData &&
     (currentUser.username === postData.username ||
       currentUser.id === postData.userId);
-      
+
   // Check if contributions are allowed
   // FIXED: More explicit checking - handle both undefined and boolean values correctly
   // Convert to explicit boolean value to handle edge cases
@@ -303,9 +304,10 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
           const data = await response.json();
           console.log('Subscription check response:', data);
 
-          // Update state based on API response
+          // Update both isSubscribed and isFollowingCreator states
           setIsSubscribed(!!data.isFollowing);
-          console.log('Set isSubscribed to:', !!data.isFollowing);
+          setIsFollowingCreator(!!data.isFollowing); // <-- Add this line
+          console.log('Set isSubscribed and isFollowingCreator to:', !!data.isFollowing);
         } else {
           console.error('Error response from subscription check:', await response.text());
         }
@@ -1023,6 +1025,119 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
     return color;
   };
 
+
+  // Component for "Follow to contribute" message that can be clicked to follow
+  const FollowToContributeButton = ({ onClick, isLoading }) => {
+    return (
+      <div
+        className={`${styles.contributionsDisabled} ${styles.followToContribute}`}
+        onClick={onClick}
+      >
+        {isLoading ? (
+          <>
+            <div className={styles.smallLoader}></div>
+            <span>Following...</span>
+          </>
+        ) : (
+          <>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M19 8v6"></path>
+              <path d="M22 11h-6"></path>
+            </svg>
+            <span>Follow creator to contribute</span>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  // Add a function to handle the follow action
+  const handleFollowCreator = async () => {
+    if (!currentUser) {
+      window.location.href = '/login';
+      return;
+    }
+
+    if (!postData || !postData.userId) {
+      console.error('Missing post creator data');
+      return;
+    }
+
+    try {
+      setSubscribeLoading(true); // Reuse the existing loading state
+
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // Make the API call to follow the creator
+      const response = await fetch('/api/users/follow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userId: postData.userId,
+          action: 'follow'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Follow creator response:', data);
+
+        // Update subscription status and count
+        setIsSubscribed(true);
+        setIsFollowingCreator(true);
+        if (data.followerCount !== undefined) {
+          setSubscriberCount(data.followerCount);
+        }
+
+        // Show success feedback
+        setFeedbackMessage({
+          type: 'success',
+          text: `You are now following ${postData.username}. You can now contribute links.`
+        });
+
+        // Clear feedback message after 5 seconds
+        setTimeout(() => {
+          setFeedbackMessage(null);
+        }, 5000);
+      } else {
+        console.error('Error response from follow API:', await response.text());
+
+        // Show error feedback
+        setFeedbackMessage({
+          type: 'error',
+          text: 'Failed to follow creator. Please try again.'
+        });
+
+        // Clear feedback message after 5 seconds
+        setTimeout(() => {
+          setFeedbackMessage(null);
+        }, 5000);
+      }
+    } catch (error) {
+      console.error('Error following creator:', error);
+
+      // Show error feedback
+      setFeedbackMessage({
+        type: 'error',
+        text: 'An error occurred. Please try again.'
+      });
+
+      // Clear feedback message after 5 seconds
+      setTimeout(() => {
+        setFeedbackMessage(null);
+      }, 5000);
+    } finally {
+      setSubscribeLoading(false);
+    }
+  };
+
+
   return (
     <div className={styles.leftBarContainer}>
       {/* Video Container - Modified to handle YouTube videos */}
@@ -1224,34 +1339,57 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
         <div className={styles.sectionHeader}>
           <div
             className={styles.sectionTitleContainer}
-            onClick={() => setCreatorLinksExpanded(!creatorLinksExpanded)}
+            onClick={() => setCommunityLinksExpanded(!communityLinksExpanded)}
           >
-            <h3 className={styles.sectionTitle}>Creator Links</h3>
+            <h3 className={styles.sectionTitle}>Community Links</h3>
             <div className={styles.sectionToggle}>
-              {creatorLinksExpanded ? '▼' : '▶'}
+              {communityLinksExpanded ? '▼' : '▶'}
             </div>
           </div>
 
-          {/* Only show Add Link button if current user is the post creator */}
-          {isPostCreator && (
-            <button
-              className={styles.addLinkButton}
-              onClick={(e) => openAddLinkModal('creator', e)}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              Add Link
-            </button>
-          )}
+          {/* Display contribute button or appropriate message based on conditions */}
+          {currentUser && !isPostCreator ? (
+            isContributionsAllowed ? (
+              isFollowingCreator ? (
+                <button
+                  className={styles.addLinkButton}
+                  onClick={openContributeModal}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Contribute
+                </button>
+              ) : (
+                <FollowToContributeButton
+                  onClick={handleFollowCreator}
+                  isLoading={subscribeLoading}
+                />
+              )
+            ) : (
+              <div className={styles.contributionsDisabled}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="5" y1="5" x2="19" y2="19"></line>
+                </svg>
+                <span>Contributions disabled</span>
+              </div>
+            )
+          ) : null}
         </div>
 
-        {creatorLinksExpanded && (
+        {communityLinksExpanded && (
           <div className={styles.linksList}>
-            {creatorLinksData.length === 0 ? (
+            {communityLinksData.length === 0 ? (
               <div className={styles.noLinksMessage}>
-                No creator links available for this post.
+                {isContributionsAllowed ? (
+                  isFollowingCreator ?
+                    "No community links yet. Be the first to contribute!" :
+                    "No community links yet. Follow the creator to contribute."
+                ) : (
+                  "No community links available. The creator has disabled contributions."
+                )}
               </div>
             ) : (
               filterLinks(creatorLinksData).slice(0, visibleCreatorLinks).map((link) => (
@@ -1302,29 +1440,47 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
               ))
             )}
 
+            {/* Empty state with Follow button when no contributions but following is required */}
+            {communityLinksData.length === 0 && isContributionsAllowed && !isFollowingCreator && (
+              <div className={styles.emptyStateWithAction}>
+                <button
+                  className={styles.followCreatorButton}
+                  onClick={handleFollowCreator}
+                  disabled={subscribeLoading}
+                >
+                  {subscribeLoading ? 'Following...' : 'Follow Creator'}
+                </button>
+                <p className={styles.emptyStateHelp}>
+                  You need to follow {postData?.username || 'the creator'} to contribute links.
+                </p>
+              </div>
+            )}
+
+
             {/* Show message when no matches found */}
-            {creatorLinksData.length > 0 && filterLinks(creatorLinksData).length === 0 && (
+            {communityLinksData.length > 0 && filterLinks(communityLinksData).length === 0 && (
               <div className={styles.noResultsMessage}>
                 No matches found for "{searchQuery}"
               </div>
             )}
 
+
             {/* Buttons for showing more/less */}
-            {filterLinks(creatorLinksData).length > 0 && (
+            {filterLinks(communityLinksData).length > 0 && (
               <div className={styles.buttonContainer}>
-                {visibleCreatorLinks < filterLinks(creatorLinksData).length && (
+                {visibleCommunityLinks < filterLinks(communityLinksData).length && (
                   <button
                     className={styles.showMoreButton}
-                    onClick={handleShowMoreCreator}
+                    onClick={handleShowMoreCommunity}
                   >
                     Show More
                   </button>
                 )}
 
-                {visibleCreatorLinks > INITIAL_VISIBLE_COUNT && filterLinks(creatorLinksData).length > INITIAL_VISIBLE_COUNT && (
+                {visibleCommunityLinks > INITIAL_VISIBLE_COUNT && filterLinks(communityLinksData).length > INITIAL_VISIBLE_COUNT && (
                   <button
                     className={styles.showLessButton}
-                    onClick={handleShowLessCreator}
+                    onClick={handleShowLessCommunity}
                   >
                     Show Less
                   </button>
@@ -1348,26 +1504,38 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
             </div>
           </div>
 
-          {/* Only show Contribute button to users who are NOT the post creator AND if contributions are allowed */}
+          {/* Display contribute button or appropriate message based on conditions */}
           {currentUser && !isPostCreator ? (
             isContributionsAllowed ? (
-              <button
-                className={styles.addLinkButton}
-                onClick={openContributeModal}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                Contribute
-              </button>
+              isFollowingCreator ? (
+                <button
+                  className={styles.addLinkButton}
+                  onClick={openContributeModal}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Contribute
+                </button>
+              ) : (
+                <div className={styles.contributionsDisabled}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M19 8v6"></path>
+                    <path d="M22 11h-6"></path>
+                  </svg>
+                  <span>Follow creator to contribute</span>
+                </div>
+              )
             ) : (
               <div className={styles.contributionsDisabled}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="5" y1="5" x2="19" y2="19"></line>
                 </svg>
-                <span>Disabled</span>
+                <span>Contributions disabled</span>
               </div>
             )
           ) : null}
@@ -1377,10 +1545,13 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
           <div className={styles.linksList}>
             {communityLinksData.length === 0 ? (
               <div className={styles.noLinksMessage}>
-                {isContributionsAllowed ? 
-                  "No community links yet. Be the first to contribute!" :
+                {isContributionsAllowed ? (
+                  isFollowingCreator ?
+                    "No community links yet. Be the first to contribute!" :
+                    "No community links yet. Follow the creator to contribute."
+                ) : (
                   "No community links available. The creator has disabled contributions."
-                }
+                )}
               </div>
             ) : (
               filterLinks(communityLinksData).slice(0, visibleCommunityLinks).map((link) => (

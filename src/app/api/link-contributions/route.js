@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import dbConnect from '@/lib/mongoose';
 import User from '@/models/User';
 import Post from '@/models/Post';
+import Follow from '@/models/Follow'; // Import Follow model to check follow status
 import LinkContribution from '@/models/LinkContribution';
 import { createNotification } from '@/lib/notifications';
 
@@ -13,16 +14,16 @@ export async function POST(request) {
     // Get auth token from header
     const headersList = headers();
     const authHeader = headersList.get('Authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
       );
     }
-    
+
     const token = authHeader.split(' ')[1];
-    
+
     // Verify JWT token
     let decoded;
     try {
@@ -34,23 +35,23 @@ export async function POST(request) {
         { status: 401 }
       );
     }
-    
+
     // Connect to database
     await dbConnect();
-    
+
     // Find user by id from token
     const user = await User.findById(decoded.id);
-    
+
     if (!user) {
       return NextResponse.json(
         { message: 'User not found' },
         { status: 404 }
       );
     }
-    
+
     // Parse request body
     const data = await request.json();
-    
+
     // Validate required fields
     if (!data.postId || !data.title || !data.url || !data.creatorId) {
       return NextResponse.json(
@@ -58,7 +59,7 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-    
+
     // Check if the post exists
     const post = await Post.findById(data.postId);
     if (!post) {
@@ -67,7 +68,28 @@ export async function POST(request) {
         { status: 404 }
       );
     }
-    
+
+    // Check if contributions are allowed for this post
+    if (post.allowContributions === false) {
+      return NextResponse.json(
+        { message: 'Contributions are not allowed for this post' },
+        { status: 403 }
+      );
+    }
+
+    // NEW: Check if the user is following the post creator
+    const isFollowing = await Follow.findOne({
+      follower: user._id,
+      following: data.creatorId
+    });
+
+    if (!isFollowing) {
+      return NextResponse.json(
+        { message: 'You must follow the post creator to contribute links' },
+        { status: 403 }
+      );
+    }
+
     // Create the contribution
     const contribution = await LinkContribution.create({
       postId: data.postId,
@@ -80,12 +102,12 @@ export async function POST(request) {
       status: 'pending',
       postTitle: data.postTitle || post.title || 'Post'
     });
-    
+
     // Create notification for the post creator if contributor is not the creator
     if (post.userId.toString() !== user._id.toString()) {
       try {
         console.log(`Creating contribution notification for post creator: ${post.userId}`);
-        
+
         await createNotification({
           userId: post.userId, // The post creator gets the notification
           type: 'contribution', // New notification type
@@ -96,19 +118,19 @@ export async function POST(request) {
           onModel: 'Post',
           thumbnail: post.image || null
         });
-        
+
         console.log('Contribution notification created successfully');
       } catch (notifyError) {
         // Log the error but don't fail the request
         console.error('Error creating contribution notification:', notifyError);
       }
     }
-    
+
     return NextResponse.json({
       message: 'Link contribution submitted successfully',
       contribution
     }, { status: 201 });
-    
+
   } catch (error) {
     console.error('Error creating link contribution:', error);
     return NextResponse.json(
@@ -122,27 +144,27 @@ export async function POST(request) {
 export async function GET(request) {
   try {
     console.log('GET /api/link-contributions - Fetching contributions');
-    
+
     // Get query params
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'pending';
     const type = searchParams.get('type') || 'received';
-    
+
     console.log(`Query params: status=${status}, type=${type}`);
-    
+
     // Get auth token from header
     const headersList = headers();
     const authHeader = headersList.get('Authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
       );
     }
-    
+
     const token = authHeader.split(' ')[1];
-    
+
     // Verify JWT token
     let decoded;
     try {
@@ -154,13 +176,13 @@ export async function GET(request) {
         { status: 401 }
       );
     }
-    
+
     // Connect to database
     await dbConnect();
-    
+
     // Find user by id from token
     const user = await User.findById(decoded.id);
-    
+
     if (!user) {
       console.error('User not found with ID:', decoded.id);
       return NextResponse.json(
@@ -168,12 +190,12 @@ export async function GET(request) {
         { status: 404 }
       );
     }
-    
+
     console.log(`User ${user.username || user._id} fetching contributions as ${type}`);
-    
+
     // Build query based on type
     let query = {};
-    
+
     if (type === 'received') {
       query.creatorId = user._id;
     } else if (type === 'sent') {
@@ -182,27 +204,27 @@ export async function GET(request) {
       console.warn(`Invalid type parameter: ${type}, defaulting to 'received'`);
       query.creatorId = user._id;
     }
-    
+
     // Add status filter if not 'all'
     if (status !== 'all') {
       query.status = status;
     }
-    
+
     console.log('Query:', JSON.stringify(query));
-    
+
     // Get contributions
     const contributions = await LinkContribution.find(query)
       .sort({ createdAt: -1 })
       .populate('postId', 'title')
       .lean();
-    
+
     console.log(`Found ${contributions.length} contributions`);
-    
+
     // Format response data with time ago
     const formattedContributions = contributions.map(contrib => ({
       id: contrib._id.toString(),
-      postId: contrib.postId ? 
-        (typeof contrib.postId === 'object' ? contrib.postId._id?.toString() : contrib.postId.toString()) 
+      postId: contrib.postId ?
+        (typeof contrib.postId === 'object' ? contrib.postId._id?.toString() : contrib.postId.toString())
         : null,
       postTitle: contrib.postTitle || (contrib.postId && typeof contrib.postId === 'object' ? contrib.postId.title : 'Unknown Post'),
       title: contrib.title || 'Untitled Link',
@@ -213,11 +235,11 @@ export async function GET(request) {
       createdAt: contrib.createdAt,
       timeAgo: getTimeAgo(contrib.createdAt)
     }));
-    
+
     return NextResponse.json({
       contributions: formattedContributions
     }, { status: 200 });
-    
+
   } catch (error) {
     console.error('Error fetching link contributions:', error);
     return NextResponse.json(
@@ -232,36 +254,36 @@ function getTimeAgo(timestamp) {
   const now = new Date();
   const past = new Date(timestamp);
   const diffInSeconds = Math.floor((now - past) / 1000);
-  
+
   if (diffInSeconds < 60) {
     return `${diffInSeconds} seconds ago`;
   }
-  
+
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
     return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
   }
-  
+
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
     return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
   }
-  
+
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) {
     return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
   }
-  
+
   const diffInWeeks = Math.floor(diffInDays / 7);
   if (diffInWeeks < 4) {
     return `${diffInWeeks} week${diffInWeeks > 1 ? 's' : ''} ago`;
   }
-  
+
   const diffInMonths = Math.floor(diffInDays / 30);
   if (diffInMonths < 12) {
     return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
   }
-  
+
   const diffInYears = Math.floor(diffInDays / 365);
   return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
 }
