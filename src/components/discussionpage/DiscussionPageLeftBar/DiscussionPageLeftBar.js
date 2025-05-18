@@ -1367,7 +1367,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="5" y1="5" x2="19" y2="19"></line>
                 </svg>
-                <span>Contributions disabled</span>
+                <span>Disabled</span>
               </div>
             )
           ) : null}
