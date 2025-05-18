@@ -97,7 +97,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
               <path d="M19 8v6"></path>
               <path d="M22 11h-6"></path>
             </svg>
-            <span>Follow creator to contribute</span>
+            <span>Follow to contribute</span>
           </>
         )}
       </div>
