@@ -162,7 +162,15 @@ export default function HomeFeed() {
 
       console.log('Creator links prepared:', JSON.stringify(creatorLinks, null, 2));
 
-      // Prepare post data with explicit creator links
+      // Check if allowContributions setting is provided, default to true if not specified
+      // IMPORTANT: Convert to boolean explicitly to avoid any type issues
+      const allowContributions = newPostData.allowContributions === false ? false : true;
+
+      console.log('Community contributions setting type:', typeof newPostData.allowContributions);
+      console.log('Raw community contributions setting:', newPostData.allowContributions);
+      console.log('Final community contributions setting:', allowContributions);
+
+      // Prepare post data with explicit creator links and allowContributions setting
       const postData = {
         title: newPostData.title,
         content: newPostData.description || '',
@@ -171,7 +179,9 @@ export default function HomeFeed() {
         hashtags: newPostData.hashtags || [],
         isDiscussion: true,
         // Explicitly include creator links
-        creatorLinks: creatorLinks
+        creatorLinks: creatorLinks,
+        // Add the allowContributions setting
+        allowContributions: allowContributions
       };
 
       console.log('Sending post data to API:', JSON.stringify(postData, null, 2));
@@ -208,12 +218,14 @@ export default function HomeFeed() {
       const createdPost = await response.json();
       console.log('Post created successfully:', createdPost);
 
-      // Verify the creator links were saved
+      // Verify the creator links and allowContributions setting were saved
       if (createdPost.creatorLinks) {
         console.log('Creator links saved:', createdPost.creatorLinks.length);
       } else {
         console.warn('Creator links not present in response');
       }
+
+      console.log('Allow contributions setting saved:', createdPost.allowContributions);
 
       // Add the new post to the top of the posts list
       setPosts(prevPosts => [createdPost, ...prevPosts]);

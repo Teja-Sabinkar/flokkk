@@ -1,3 +1,6 @@
+// Modified version of route.js for handling post creation
+// This would be in your /api/posts/route.js file
+
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
@@ -38,8 +41,9 @@ export async function POST(request) {
     const rawData = await request.json();
     console.log('POST request to /api/posts');
     console.log('Received raw data:', JSON.stringify(rawData, null, 2));
-    console.log('Creator links in request:', JSON.stringify(rawData.creatorLinks, null, 2));
-    console.log('Video URL received:', rawData.videoUrl);
+    
+    // ***IMPORTANT***: Explicitly log the allowContributions value to debug the issue
+    console.log('allowContributions setting received:', rawData.allowContributions);
     
     // Connect to MongoDB using the direct client
     const { db } = await connectToDatabase();
@@ -118,7 +122,12 @@ export async function POST(request) {
       }
     }
     
-    // Prepare post data with all fields including creatorLinks
+    // ***IMPORTANT***: Handle the allowContributions setting correctly
+    // Make sure we explicitly convert to boolean to handle undefined/null cases
+    const allowContributions = rawData.allowContributions === false ? false : true;
+    console.log('Processed allowContributions value:', allowContributions);
+    
+    // Prepare post data with all fields including creatorLinks and allowContributions
     const postData = {
       userId: user._id,
       username: user.username || user.name.toLowerCase().replace(/\s+/g, '_'),
@@ -132,7 +141,9 @@ export async function POST(request) {
       createdAt: new Date(),
       updatedAt: new Date(),
       // Explicitly add creator links
-      creatorLinks: creatorLinks
+      creatorLinks: creatorLinks,
+      // ***IMPORTANT***: Explicitly add allowContributions setting with correct type
+      allowContributions: allowContributions
     };
     
     console.log('Final post data to save:', JSON.stringify(postData, null, 2));
@@ -146,13 +157,17 @@ export async function POST(request) {
     
     console.log('Post created with ID:', result.insertedId);
     
-    // Verify creator links were saved
+    // Verify creator links and allowContributions were saved
     const savedPost = await db.collection('posts').findOne(
-      { _id: result.insertedId },
-      { projection: { creatorLinks: 1, videoUrl: 1 } }
+      { _id: result.insertedId }
     );
-    console.log('Verified saved creator links:', JSON.stringify(savedPost.creatorLinks, null, 2));
-    console.log('Verified saved video URL:', savedPost.videoUrl);
+    
+    console.log('Saved post:', JSON.stringify({
+      _id: savedPost._id,
+      title: savedPost.title,
+      creatorLinks: savedPost.creatorLinks ? savedPost.creatorLinks.length : 0,
+      allowContributions: savedPost.allowContributions
+    }, null, 2));
     
     // Increment user's discussion count
     await User.findByIdAndUpdate(user._id, { $inc: { discussions: 1 } });

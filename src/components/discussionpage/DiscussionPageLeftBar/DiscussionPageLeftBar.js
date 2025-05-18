@@ -62,6 +62,28 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
   const isPostCreator = currentUser && postData &&
     (currentUser.username === postData.username ||
       currentUser.id === postData.userId);
+      
+  // Check if contributions are allowed
+  // FIXED: More explicit checking - handle both undefined and boolean values correctly
+  // Convert to explicit boolean value to handle edge cases
+  const isContributionsAllowed = postData?.allowContributions !== false;
+
+  // Add detailed debugging to track the issue
+  console.log('Post data with ID:', postData?.id || postData?._id);
+  console.log('Raw allowContributions value:', postData?.allowContributions);
+  console.log('allowContributions type:', typeof postData?.allowContributions);
+  console.log('Is contributions allowed?', isContributionsAllowed);
+
+  // Update community links section
+  useEffect(() => {
+    if (postData) {
+      // Log the allowContributions value to help debug
+      console.log('Post data loaded with allowContributions:', {
+        value: postData.allowContributions,
+        type: typeof postData.allowContributions
+      });
+    }
+  }, [postData]);
 
   // NEW: Extract YouTube video ID when postData changes
   useEffect(() => {
@@ -1313,7 +1335,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
         )}
       </div>
 
-      {/* Community Links Section */}
+      {/* Community Links Section - UPDATED to check allowContributions */}
       <div className={styles.linksSection}>
         <div className={styles.sectionHeader}>
           <div
@@ -1326,23 +1348,39 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
             </div>
           </div>
 
-          {/* Only show Contribute button to users who are NOT the post creator */}
-          {currentUser && !isPostCreator && (
-            <button className={styles.addLinkButton} onClick={openContributeModal}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              Contribute
-            </button>
-          )}
+          {/* Only show Contribute button to users who are NOT the post creator AND if contributions are allowed */}
+          {currentUser && !isPostCreator ? (
+            isContributionsAllowed ? (
+              <button
+                className={styles.addLinkButton}
+                onClick={openContributeModal}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Contribute
+              </button>
+            ) : (
+              <div className={styles.contributionsDisabled}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="5" y1="5" x2="19" y2="19"></line>
+                </svg>
+                <span>Contributions disabled</span>
+              </div>
+            )
+          ) : null}
         </div>
 
         {communityLinksExpanded && (
           <div className={styles.linksList}>
             {communityLinksData.length === 0 ? (
               <div className={styles.noLinksMessage}>
-                No community links available for this post.
+                {isContributionsAllowed ? 
+                  "No community links yet. Be the first to contribute!" :
+                  "No community links available. The creator has disabled contributions."
+                }
               </div>
             ) : (
               filterLinks(communityLinksData).slice(0, visibleCommunityLinks).map((link) => (
@@ -1454,8 +1492,8 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
         />
       )}
 
-      {/* Contribute modal */}
-      {isContributeModalOpen && (
+      {/* Contribute modal - only show if contributions are allowed */}
+      {isContributeModalOpen && isContributionsAllowed && (
         <ContributeLinkModal
           postId={postData?._id || postData?.id}
           postCreatorId={postData?.userId}

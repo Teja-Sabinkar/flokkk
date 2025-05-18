@@ -1,0 +1,193 @@
+.postsListContainer {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #2a2a2a;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #888;
+}
+
+.loadingSpinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: #4169e1;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.errorContainer {
+  background-color: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  color: #ff4d4d;
+  text-align: center;
+}
+
+.errorMessage {
+  margin: 0;
+  font-size: 14px;
+}
+
+.emptyContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: #888;
+  text-align: center;
+}
+
+.emptyContainer svg {
+  color: #4169e1;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.emptyContainer h3 {
+  margin: 0 0 8px 0;
+  color: #fff;
+  font-size: 18px;
+}
+
+.emptyContainer p {
+  margin: 0;
+  font-size: 14px;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.listControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.sortControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #888;
+  font-size: 14px;
+}
+
+.sortSelect {
+  background-color: #252525;
+  color: #fff;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 32px;
+}
+
+.sortSelect:focus {
+  outline: none;
+  border-color: #4169e1;
+}
+
+.sortOrderButton {
+  background-color: #252525;
+  border: 1px solid #3a3a3a;
+  color: #888;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sortOrderButton:hover {
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
+.totalCount {
+  color: #888;
+  font-size: 14px;
+  margin: 0;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 1fr repeat(3, 80px) 120px;
+  padding: 12px 24px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #aaa;
+  border-bottom: 1px solid #2a2a2a;
+  background-color: #1f1f1f;
+}
+
+.postTitleHeader,
+.postDateHeader,
+.postStatsHeader,
+.postActionsHeader {
+  display: flex;
+  align-items: center;
+}
+
+.postsList {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+  .tableHeader {
+    grid-template-columns: 2fr 1fr repeat(3, 60px) 80px;
+    padding: 12px 16px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tableHeader {
+    display: none;
+  }
+  
+  .listControls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .sortControls {
+    width: 100%;
+  }
+  
+  .sortSelect {
+    flex: 1;
+  }
+}

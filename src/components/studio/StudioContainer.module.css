@@ -1,0 +1,140 @@
+.studioContent {
+  flex: 1;
+  width: 100%;
+  overflow-y: auto; /* Added to make content vertically scrollable */
+  height: 100%; /* Ensure it takes full height of parent */
+  scrollbar-width: none;
+}
+
+.studioHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  position: sticky; /* Optional: Make header sticky */
+  z-index: 10; /* Optional: Ensure it stays above other content */
+  background-color: #0f0f0f; /* Optional: Match page background */
+  padding-top: 8px; /* Optional: Add some spacing at top */
+}
+
+.studioTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.createPostButton {
+  background-color: #4169e1;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.createPostButton:hover {
+  background-color: #3451b2;
+}
+
+.createPostButton svg {
+  margin-right: 8px;
+}
+
+.statsContainer {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.statCard {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  padding: 20px;
+  flex: 1;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #2a2a2a;
+}
+
+.statCard h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #888;
+  font-weight: 500;
+}
+
+.statNumber {
+  font-size: 28px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.tabsContainer {
+  display: flex;
+  border-bottom: 1px solid #2a2a2a;
+  margin-bottom: 24px;
+  position: sticky; /* Optional: Make tabs sticky */
+  background-color: #0f0f0f; /* Optional: Match page background */
+  z-index: 9; /* Optional: Lower than header z-index */
+}
+
+.tabButton {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.tabButton:hover {
+  color: #ffffff;
+}
+
+.activeTab {
+  color: #4169e1;
+}
+
+.activeTab::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #4169e1;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .statsContainer {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .studioHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .tabsContainer {
+    width: 100%;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .studioContent {
+    padding: 0 8px;
+  }
+}

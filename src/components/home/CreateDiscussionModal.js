@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import styles from './CreateDiscussionModal.module.css';
 
@@ -58,6 +58,8 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [standardizedVideoUrl, setStandardizedVideoUrl] = useState('');
   const [error, setError] = useState(null);
+  // Add new state for community links setting
+  const [allowContributions, setAllowContributions] = useState(true);
 
   // Creator Links state
   const [creatorLinks, setCreatorLinks] = useState([]);
@@ -336,6 +338,7 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
     setCurrentLinkTitle('');
     setCurrentLinkUrl('');
     setCurrentLinkDescription('');
+    setAllowContributions(true);
     setError(null);
     setLinkError(null);
   };
@@ -364,10 +367,12 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
       thumbnailFile,
       thumbnailPreview,
       hashtags,
-      creatorLinks  // Add creator links to the submission data
+      creatorLinks,  // Add creator links to the submission data
+      allowContributions  // Add the new community links setting
     };
 
     console.log('Submitting discussion with creator links:', discussionData.creatorLinks);
+    console.log('Community contributions setting:', discussionData.allowContributions);
 
     // Call the onSubmit function passed from the parent component
     if (onSubmit) {
@@ -616,6 +621,53 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Community Links Section - NEW */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Community Links</label>
+            <div className={styles.creatorLinksHelp}>
+              Choose whether you want to allow other users to contribute links to this discussion.
+            </div>
+
+            <div className={styles.optionsContainer}>
+              <div className={styles.optionItem}>
+                <input
+                  type="radio"
+                  id="allowContributions"
+                  name="contributionsOption"
+                  className={styles.radioInput}
+                  checked={allowContributions}
+                  onChange={() => setAllowContributions(true)}
+                  disabled={isProcessing}
+                />
+                <label htmlFor="allowContributions" className={styles.radioLabel}>
+                  Allow Contributions
+                </label>
+                <p className={styles.optionDescription}>
+                  Other users can suggest links related to this discussion.
+                  You'll be able to review and approve them before they appear.
+                </p>
+              </div>
+
+              <div className={styles.optionItem}>
+                <input
+                  type="radio"
+                  id="disallowContributions"
+                  name="contributionsOption"
+                  className={styles.radioInput}
+                  checked={!allowContributions}
+                  onChange={() => setAllowContributions(false)}
+                  disabled={isProcessing}
+                />
+                <label htmlFor="disallowContributions" className={styles.radioLabel}>
+                  Don't Allow Contributions
+                </label>
+                <p className={styles.optionDescription}>
+                  Only you can add links to this discussion.
+                </p>
+              </div>
+            </div>
           </div>
 
           <button
