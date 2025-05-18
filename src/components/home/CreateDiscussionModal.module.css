@@ -282,50 +282,40 @@
     margin-top: 12px;
 }
 
-/* Individual radio option item */
+/* Individual option item */
 .optionItem {
     display: flex;
     flex-direction: column;
     padding: 14px;
     border-radius: 8px;
-    background-color: #f9f9f9;
-    border: 1px solid #eaeaea;
+    border: 1px solid #333;
     transition: all 0.2s ease;
 }
 
 .optionItem:hover {
-    border-color: #ddd;
-    background-color: #f5f5f5;
+    border: 1px solid #333;
+    background-color: #2325385e;
 }
 
 /* Style for the selected option */
 .optionItem:has(.radioInput:checked) {
     border-color: #3b5fe2;
-    background-color: rgba(59, 95, 226, 0.05);
-    box-shadow: 0 2px 8px rgba(59, 95, 226, 0.1);
+    background-color: rgba(59, 95, 226, 0.1);
 }
 
-/* Radio button and label container */
-.optionItem .radioLabel {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 4px;
-    cursor: pointer;
-}
-
-/* Radio input styling */
+/* Radio input to the left of the label text */
 .radioInput {
     appearance: none;
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    border: 2px solid #ccc;
+    border: 2px solid #6c6f85;
     margin: 0;
+    margin-right: 10px;
+    /* Space between radio and label */
     cursor: pointer;
     position: relative;
+    flex-shrink: 0;
 }
 
 .radioInput:checked {
@@ -343,11 +333,24 @@
     background-color: #3b5fe2;
 }
 
-/* Description text for each option */
+/* Label text for the radio input */
+.radioLabel {
+    font-weight: 600;
+    font-size: 14px;
+    color: #ffffff;
+    /* White text to match your image */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+/* Description text below the option item */
 .optionDescription {
     font-size: 13px;
-    color: #666;
-    margin-left: 26px;
+    color: #9a9cb0;
+    /* Light gray text to match your image */
+    margin-top: 6px;
+    margin-left: 28px;
     /* Aligns with the label text */
     line-height: 1.4;
 }

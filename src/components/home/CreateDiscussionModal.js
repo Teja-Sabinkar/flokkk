@@ -632,16 +632,16 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
 
             <div className={styles.optionsContainer}>
               <div className={styles.optionItem}>
-                <input
-                  type="radio"
-                  id="allowContributions"
-                  name="contributionsOption"
-                  className={styles.radioInput}
-                  checked={allowContributions}
-                  onChange={() => setAllowContributions(true)}
-                  disabled={isProcessing}
-                />
                 <label htmlFor="allowContributions" className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    id="allowContributions"
+                    name="contributionsOption"
+                    className={styles.radioInput}
+                    checked={allowContributions}
+                    onChange={() => setAllowContributions(true)}
+                    disabled={isProcessing}
+                  />
                   Allow Contributions
                 </label>
                 <p className={styles.optionDescription}>
@@ -651,16 +651,16 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
               </div>
 
               <div className={styles.optionItem}>
-                <input
-                  type="radio"
-                  id="disallowContributions"
-                  name="contributionsOption"
-                  className={styles.radioInput}
-                  checked={!allowContributions}
-                  onChange={() => setAllowContributions(false)}
-                  disabled={isProcessing}
-                />
                 <label htmlFor="disallowContributions" className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    id="disallowContributions"
+                    name="contributionsOption"
+                    className={styles.radioInput}
+                    checked={!allowContributions}
+                    onChange={() => setAllowContributions(false)}
+                    disabled={isProcessing}
+                  />
                   Don't Allow Contributions
                 </label>
                 <p className={styles.optionDescription}>
