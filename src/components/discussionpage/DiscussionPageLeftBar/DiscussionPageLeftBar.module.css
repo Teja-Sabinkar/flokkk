@@ -777,10 +777,8 @@
 
 /* Additional style for the follow-to-contribute message */
 .followToContribute {
-  composes: contributionsDisabled;
-  background-color: #f0f7ff; /* Subtle blue background */
-  color: #3b5fe2; /* Blue text color */
-  border: 1px solid #e0ebff;
+  color: #3b5fe2;
+  border: 1px solid #4169e1;
 }
 
 .followToContribute svg {
@@ -789,7 +787,7 @@
 
 /* Interactive style for follow message on hover */
 .followToContribute:hover {
-  background-color: #e0ebff;
+  background-color: #3b5fe236;
   cursor: pointer;
 }
 
@@ -799,7 +797,7 @@
   align-items: center;
   padding: 24px 16px;
   text-align: center;
-  background-color: #f8f9fa;
+  background-color: #1e1e1e;
   border-radius: 8px;
   margin-top: 12px;
 }
@@ -846,7 +844,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 
