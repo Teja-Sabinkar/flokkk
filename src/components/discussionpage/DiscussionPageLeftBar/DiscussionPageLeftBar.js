@@ -1379,17 +1379,11 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
           ) : null}
         </div>
 
-        {communityLinksExpanded && (
+        {creatorLinksExpanded && (
           <div className={styles.linksList}>
-            {communityLinksData.length === 0 ? (
+            {creatorLinksData.length === 0 ? (
               <div className={styles.noLinksMessage}>
-                {isContributionsAllowed ? (
-                  isFollowingCreator ?
-                    "No community links yet. Be the first to contribute!" :
-                    "No community links yet. Follow the creator to contribute."
-                ) : (
-                  "No community links available. The creator has disabled contributions."
-                )}
+                No creator links available for this post.
               </div>
             ) : (
               filterLinks(creatorLinksData).slice(0, visibleCreatorLinks).map((link) => (
@@ -1440,47 +1434,29 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
               ))
             )}
 
-            {/* Empty state with Follow button when no contributions but following is required */}
-            {communityLinksData.length === 0 && isContributionsAllowed && !isFollowingCreator && (
-              <div className={styles.emptyStateWithAction}>
-                <button
-                  className={styles.followCreatorButton}
-                  onClick={handleFollowCreator}
-                  disabled={subscribeLoading}
-                >
-                  {subscribeLoading ? 'Following...' : 'Follow Creator'}
-                </button>
-                <p className={styles.emptyStateHelp}>
-                  You need to follow {postData?.username || 'the creator'} to contribute links.
-                </p>
-              </div>
-            )}
-
-
             {/* Show message when no matches found */}
-            {communityLinksData.length > 0 && filterLinks(communityLinksData).length === 0 && (
+            {creatorLinksData.length > 0 && filterLinks(creatorLinksData).length === 0 && (
               <div className={styles.noResultsMessage}>
                 No matches found for "{searchQuery}"
               </div>
             )}
 
-
             {/* Buttons for showing more/less */}
-            {filterLinks(communityLinksData).length > 0 && (
+            {filterLinks(creatorLinksData).length > 0 && (
               <div className={styles.buttonContainer}>
-                {visibleCommunityLinks < filterLinks(communityLinksData).length && (
+                {visibleCreatorLinks < filterLinks(creatorLinksData).length && (
                   <button
                     className={styles.showMoreButton}
-                    onClick={handleShowMoreCommunity}
+                    onClick={handleShowMoreCreator}
                   >
                     Show More
                   </button>
                 )}
 
-                {visibleCommunityLinks > INITIAL_VISIBLE_COUNT && filterLinks(communityLinksData).length > INITIAL_VISIBLE_COUNT && (
+                {visibleCreatorLinks > INITIAL_VISIBLE_COUNT && filterLinks(creatorLinksData).length > INITIAL_VISIBLE_COUNT && (
                   <button
                     className={styles.showLessButton}
-                    onClick={handleShowLessCommunity}
+                    onClick={handleShowLessCreator}
                   >
                     Show Less
                   </button>
@@ -1491,7 +1467,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
         )}
       </div>
 
-      {/* Community Links Section - UPDATED to check allowContributions */}
+      {/* Community Links Section - FINAL VERSION with Follow To Contribute Button */}
       <div className={styles.linksSection}>
         <div className={styles.sectionHeader}>
           <div
@@ -1519,15 +1495,10 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
                   Contribute
                 </button>
               ) : (
-                <div className={styles.contributionsDisabled}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M19 8v6"></path>
-                    <path d="M22 11h-6"></path>
-                  </svg>
-                  <span>Follow creator to contribute</span>
-                </div>
+                <FollowToContributeButton
+                  onClick={handleFollowCreator}
+                  isLoading={subscribeLoading}
+                />
               )
             ) : (
               <div className={styles.contributionsDisabled}>
@@ -1603,6 +1574,24 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
                 </div>
               ))
             )}
+
+
+            {/* Empty state with Follow button when no contributions but following is required */}
+            {communityLinksData.length === 0 && isContributionsAllowed && !isFollowingCreator && (
+              <div className={styles.emptyStateWithAction}>
+                <button
+                  className={styles.followCreatorButton}
+                  onClick={handleFollowCreator}
+                  disabled={subscribeLoading}
+                >
+                  {subscribeLoading ? 'Following...' : 'Follow Creator'}
+                </button>
+                <p className={styles.emptyStateHelp}>
+                  You need to follow {postData?.username || 'the creator'} to contribute links.
+                </p>
+              </div>
+            )}
+
 
             {/* Show message when no matches found */}
             {communityLinksData.length > 0 && filterLinks(communityLinksData).length === 0 && (
