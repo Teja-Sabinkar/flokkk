@@ -203,6 +203,7 @@
   width: 100%;
   box-sizing: border-box;
   /* Ensure padding is included in width calculation */
+  scrollbar-width: none;
 }
 
 .recentlyViewedWrapper {
