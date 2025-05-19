@@ -165,11 +165,8 @@
   margin-bottom: 16px;
   line-height: 1.5;
   overflow-wrap: break-word;
-  /* Add this to wrap long words */
   word-break: break-word;
-  /* Add this to break long words without spaces */
   max-width: 100%;
-  /* Ensure content doesn't exceed container width */
 }
 
 .readMoreBtn {
@@ -186,18 +183,9 @@
   text-decoration: underline;
 }
 
-.readMoreBtn[aria-expanded="true"]::before {
-  font-size: 10px;
-}
-
-.readMoreBtn[aria-expanded="false"]::before {
-  font-size: 10px;
-}
-
-/* Post Image */
+/* Post Image/Video Container */
 .postImageContainer {
   margin-bottom: 12px;
-  /* Reduced from 16px to bring hashtags closer */
   border-radius: 8px;
   overflow: hidden;
 }
@@ -207,7 +195,6 @@
   width: 100%;
   height: 0;
   padding-bottom: 50%;
-  /* Aspect ratio 2:1 */
   background-color: #222;
 }
 
@@ -218,6 +205,92 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+/* Play Button Overlay */
+.playButton {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.playButton:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.playButtonCircle {
+  width: 80px;
+  height: 80px;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.playButton:hover .playButtonCircle {
+  background-color: rgba(255, 0, 0, 0.9);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+}
+
+.playIcon {
+  width: 32px;
+  height: 32px;
+  color: white;
+  margin-left: 3px; /* Slightly offset to center the triangle visually */
+}
+
+/* Video Player Wrapper */
+.videoPlayerWrapper {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  background-color: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.youtubeEmbed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Close Video Button */
+.closeVideoButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  transition: background-color 0.2s ease;
+}
+
+.closeVideoButton:hover {
+  background-color: rgba(0, 0, 0, 0.9);
 }
 
 /* Hashtags Section - With Show More Functionality */
@@ -237,20 +310,16 @@
 
 .hashtagsContainer.expanded {
   max-height: 500px !important;
-  /* Large enough to show all hashtags */
 }
 
 .hashtagsContainer.collapsed {
   max-height: 20px;
-  /* Height of one line of hashtags */
 }
 
 .hashtag {
   background-color: transparent;
-  /* Almost black background matching the image */
   border: none;
   color: #4169e1;
-  /* Vibrant blue text */
   font-size: 11px;
   border-radius: 16px;
   transition: background-color 0.2s;
@@ -333,7 +402,6 @@
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }
@@ -357,8 +425,17 @@
   .showMoreHashtags {
     font-size: 12px;
   }
-}
 
+  .playButtonCircle {
+    width: 60px;
+    height: 60px;
+  }
+
+  .playIcon {
+    width: 24px;
+    height: 24px;
+  }
+}
 
 @media (max-width: 480px) {
   .postTitle {
@@ -414,4 +491,20 @@
     justify-content: space-between;
   }
 
+  .playButtonCircle {
+    width: 50px;
+    height: 50px;
+  }
+
+  .playIcon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .closeVideoButton {
+    width: 28px;
+    height: 28px;
+    top: 8px;
+    right: 8px;
+  }
 }
