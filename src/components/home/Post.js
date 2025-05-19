@@ -24,6 +24,11 @@ export default function Post({ post, onHidePost }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [isCurrentUser, setIsCurrentUser] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  
+  // Video playback states
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [videoId, setVideoId] = useState(null);
+  const [videoError, setVideoError] = useState(false);
 
   const menuRef = useRef(null);
   const hashtagsContainerRef = useRef(null);
@@ -43,17 +48,54 @@ export default function Post({ post, onHidePost }) {
   // Number of visible hashtags before "Show more" button
   const visibleHashtagCount = showAllHashtags ? hashtags.length : calculateVisibleCount();
 
-  // Check if post has video URL
-  const hasVideoUrl = post.videoUrl && post.videoUrl.trim() !== '';
+  // Extract YouTube video ID from URL
+  const extractYouTubeVideoId = useCallback((url) => {
+    if (!url || typeof url !== 'string') return null;
+    
+    try {
+      // Comprehensive regex that handles all YouTube URL formats
+      const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+      const match = url.match(youtubeRegex);
+      return match && match[1] ? match[1] : null;
+    } catch (error) {
+      console.error('Error extracting video ID:', error);
+      return null;
+    }
+  }, []);
 
-  console.log('Post component received:', JSON.stringify({
-    hasId: !!post.id,
-    has_Id: !!post._id,
-    title: post.title,
-    hasVideoUrl: hasVideoUrl,
-    videoUrl: post.videoUrl,
-    isEmpty: Object.keys(post).length === 0
-  }));
+  // Extract video ID when component mounts or videoUrl changes
+  useEffect(() => {
+    if (post.videoUrl) {
+      const id = extractYouTubeVideoId(post.videoUrl);
+      setVideoId(id);
+    } else {
+      setVideoId(null);
+    }
+  }, [post.videoUrl, extractYouTubeVideoId]);
+
+  // Handle play button click
+  const handlePlayClick = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (videoId) {
+      setIsVideoPlaying(true);
+      setVideoError(false);
+    }
+  }, [videoId]);
+
+  // Handle closing video (return to thumbnail)
+  const handleCloseVideo = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsVideoPlaying(false);
+    setVideoError(false);
+  }, []);
+
+  // Handle video embedding error
+  const handleVideoError = useCallback(() => {
+    setVideoError(true);
+  }, []);
 
   // Fetch current user data when component mounts
   useEffect(() => {
@@ -81,14 +123,6 @@ export default function Post({ post, onHidePost }) {
             (currentUserId && postUserId && currentUserId === postUserId) ||
             (userData.username && post.username && userData.username === post.username);
 
-          console.log('User comparison:', {
-            currentUserId,
-            postUserId,
-            currentUsername: userData.username,
-            postUsername: post.username,
-            isCreator
-          });
-
           setIsCurrentUser(isCreator);
         }
       } catch (error) {
@@ -101,14 +135,11 @@ export default function Post({ post, onHidePost }) {
 
   // Calculate number of hashtags visible in first line
   function calculateVisibleCount() {
-    // This is a simplified calculation for a first pass
-    // We'll show at least 3 hashtags or more depending on screen size
     return Math.min(3, hashtags.length);
   }
 
   // Check if hashtags overflow one line
   useEffect(() => {
-    // Only check for overflow if we have more than calculated visible count
     setHashtagsOverflow(hashtags.length > calculateVisibleCount());
   }, [hashtags]);
 
@@ -129,19 +160,6 @@ export default function Post({ post, onHidePost }) {
     };
   }, [isMenuOpen]);
 
-  // Debug output for post and hashtags
-  useEffect(() => {
-    console.log("Post received with image:", post.image);
-    console.log("Post user data:", {
-      username: post.username,
-      userImage: post.userImage
-    });
-  }, [post]);
-
-  useEffect(() => {
-    console.log('Post data received:', post);
-  }, [post]);
-
   // Menu option handlers
   const handleSave = () => {
     setIsMenuOpen(false);
@@ -150,7 +168,6 @@ export default function Post({ post, onHidePost }) {
 
   // Handle saving post to playlist
   const handleSaveToPlaylist = (saveData) => {
-    console.log(`Post saved to ${saveData.isNewPlaylist ? 'new' : 'existing'} playlist: ${saveData.playlistTitle}`);
     setSaveSuccess(true);
     setSavedPlaylistName(saveData.playlistTitle);
 
@@ -236,7 +253,7 @@ export default function Post({ post, onHidePost }) {
     setShowAllHashtags(!showAllHashtags);
   };
 
-  // Add handler for discussion button click (regular discussion navigation)
+  // Add handler for discussion button click
   const handleDiscussionClick = useCallback(() => {
     // Directly check if post is empty
     if (!post || Object.keys(post).length === 0) {
@@ -248,42 +265,11 @@ export default function Post({ post, onHidePost }) {
     const postId = post.id || post._id;
 
     if (!postId) {
-      console.error('No post ID available in post data:', {
-        postKeys: Object.keys(post),
-        postIdType: typeof post.id,
-        post_IdType: typeof post._id
-      });
+      console.error('No post ID available');
       return;
     }
 
-    console.log('Navigating to discussion with ID:', postId);
     router.push(`/discussion?id=${postId}`);
-  }, [post, router]);
-
-  // NEW: Handler for play button click (video autoplay navigation)
-  const handlePlayButtonClick = useCallback((e) => {
-    e.stopPropagation(); // Prevent any parent click handlers
-
-    // Directly check if post is empty
-    if (!post || Object.keys(post).length === 0) {
-      console.error('Empty post object received');
-      return;
-    }
-
-    // Try multiple ID formats with detailed logging
-    const postId = post.id || post._id;
-
-    if (!postId) {
-      console.error('No post ID available in post data:', {
-        postKeys: Object.keys(post),
-        postIdType: typeof post.id,
-        post_IdType: typeof post._id
-      });
-      return;
-    }
-
-    console.log('Navigating to discussion with autoplay, ID:', postId);
-    router.push(`/discussion?id=${postId}&autoplay=true`);
   }, [post, router]);
 
   // Handler for username click
@@ -300,13 +286,13 @@ export default function Post({ post, onHidePost }) {
   };
 
   const handleShareClick = (e) => {
-    e.preventDefault(); // Prevent any default navigation
-    e.stopPropagation(); // Prevent card click when share button is clicked
+    e.preventDefault();
+    e.stopPropagation();
     setIsShareModalOpen(true);
   };
 
   const generateColorFromUsername = (username) => {
-    if (!username) return '#3b5fe2'; // Default color
+    if (!username) return '#3b5fe2';
 
     // Simple hash function to get consistent colors
     let hash = 0;
@@ -331,7 +317,6 @@ export default function Post({ post, onHidePost }) {
         <div className={styles.userInfo}>
           <div className={styles.avatarContainer}>
             {post.userImage && post.userImage !== '/profile-placeholder.jpg' ? (
-              // Display user profile image if available and not the default placeholder
               <Image
                 src={post.userImage}
                 alt={post.username}
@@ -340,10 +325,9 @@ export default function Post({ post, onHidePost }) {
                 className={styles.avatarImage}
                 priority
                 unoptimized
-                key={post.userImage} // Force re-render when URL changes
+                key={post.userImage}
               />
             ) : post.userId?.profilePicture && post.userId.profilePicture !== '/profile-placeholder.jpg' ? (
-              // If post has userId object with non-default profilePicture, use that
               <Image
                 src={post.userId.profilePicture}
                 alt={post.username}
@@ -352,10 +336,9 @@ export default function Post({ post, onHidePost }) {
                 className={styles.avatarImage}
                 priority
                 unoptimized
-                key={post.userId.profilePicture} // Force re-render when URL changes
+                key={post.userId.profilePicture}
               />
             ) : (
-              // Fallback to placeholder with initial
               <div
                 className={styles.avatarPlaceholder}
                 style={{ backgroundColor: generateColorFromUsername(post.username) }}
@@ -468,43 +451,102 @@ export default function Post({ post, onHidePost }) {
         )}
       </p>
 
-      {/* Post Image - Modified to include play button overlay for videos */}
+      {/* Post Image/Video Container */}
       <div className={styles.postImageContainer}>
-        <div 
-          className={styles.postImageWrapper} 
-          onClick={hasVideoUrl ? handlePlayButtonClick : handleDiscussionClick}
-          style={{ cursor: 'pointer' }}
-        >
-          <Image
-            src={post.image || "/api/placeholder/600/300"}
-            alt={post.title}
-            width={600}
-            height={300}
-            className={styles.postImage}
-            priority
-            unoptimized
-            key={`post-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
-          />
-          
-          {/* Play Button Overlay - Only show if post has video URL */}
-          {hasVideoUrl && (
-            <div className={styles.playButtonOverlay}>
-              <div className={styles.playButton}>
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="64" 
-                  height="64" 
-                  viewBox="0 0 24 24" 
-                  fill="none"
-                  className={styles.playIcon}
-                >
-                  <circle cx="12" cy="12" r="10" fill="rgba(0, 0, 0, 0.7)" stroke="rgba(255, 255, 255, 0.8)" strokeWidth="1"/>
-                  <polygon points="10 8 16 12 10 16 10 8" fill="white" stroke="none"/>
+        {isVideoPlaying && videoId && !videoError ? (
+          // YouTube video player
+          <div className={styles.videoPlayerWrapper}>
+            <button 
+              className={styles.closeVideoButton}
+              onClick={handleCloseVideo}
+              aria-label="Close video"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <iframe
+              className={styles.youtubeEmbed}
+              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+              title={post.title}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              onError={handleVideoError}
+            ></iframe>
+          </div>
+        ) : isVideoPlaying && videoError ? (
+          // Error fallback when embedding fails
+          <div className={styles.videoErrorContainer}>
+            <button 
+              className={styles.closeVideoButton}
+              onClick={handleCloseVideo}
+              aria-label="Close video"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <div className={styles.videoErrorContent}>
+              <div className={styles.errorIcon}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
               </div>
+              <h3>Video cannot be embedded</h3>
+              <p>This video cannot be played directly. Click below to watch on YouTube.</p>
+              <a 
+                href={post.videoUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className={styles.watchOnYoutubeBtn}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Watch on YouTube
+              </a>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          // Thumbnail with optional play button
+          <div className={styles.postImageWrapper}>
+            <Image
+              src={post.image || "/api/placeholder/600/300"}
+              alt={post.title}
+              width={600}
+              height={300}
+              className={styles.postImage}
+              priority
+              unoptimized
+              key={`post-image-${post.id || post._id}-${post.image}`}
+            />
+            
+            {/* Play button overlay for videos */}
+            {post.videoUrl && videoId && (
+              <button 
+                className={styles.playButton}
+                onClick={handlePlayClick}
+                aria-label="Play video"
+              >
+                <div className={styles.playButtonCircle}>
+                  <svg 
+                    className={styles.playIcon}
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="currentColor"
+                  >
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </div>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Hashtags Section with inline Show More button */}
@@ -607,7 +649,6 @@ export default function Post({ post, onHidePost }) {
             userId: post.userId,
             username: post.username,
             title: post.title || 'Untitled',
-            // Ensure content is never undefined before substring is called
             content: (post.content || post.description || '').toString(),
             hashtags: post.hashtags || [],
             image: post.image

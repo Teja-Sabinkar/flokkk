@@ -46,13 +46,12 @@ export default function DiscussionPage() {
     };
   }, []);
 
-  // Get post ID and autoplay parameter from URL
+
+  // Get post ID from URL
   const searchParams = useSearchParams();
   const postId = searchParams.get('id');
-  const shouldAutoplay = searchParams.get('autoplay') === 'true';
   console.log('URL parameters:', Object.fromEntries(searchParams.entries()));
   console.log('Post ID from URL:', postId);
-  console.log('Should autoplay:', shouldAutoplay);
 
   // IMPORTANT: Add tracking functionality - this is new
   useEffect(() => {
@@ -126,8 +125,7 @@ export default function DiscussionPage() {
         console.log('DiscussionPage: Post data fetched successfully:', {
           id: postData._id,
           title: postData.title,
-          hasContent: !!postData.content,
-          hasVideoUrl: !!postData.videoUrl
+          hasContent: !!postData.content
         });
 
         // Set the post state
@@ -271,7 +269,7 @@ export default function DiscussionPage() {
             </svg>
           </button>
 
-          {/* Left sidebar with video and links - Pass autoplay parameter */}
+          {/* Left sidebar with video and links */}
           <div className={`${styles.leftBarWrapper} ${isLeftSidebarVisible ? styles.visible : ''}`}>
             <div className={styles.leftBarContent}>
               <DiscussionPageLeftBar
@@ -279,7 +277,6 @@ export default function DiscussionPage() {
                 loading={loading}
                 error={error}
                 currentUser={currentUser}
-                shouldAutoplay={shouldAutoplay}
               />
             </div>
           </div>

@@ -6,18 +6,13 @@ import jwt from 'jsonwebtoken';
 
 export async function GET(request, { params }) {
   try {
-    console.log('Attempting to connect to MongoDB...');
     const { db } = await connectToDatabase();
-    console.log('MongoDB connection successful');
-    
     const { id } = params;
-    console.log('API Route - Fetching post with ID:', id);
     
     // Create a valid ObjectId
     let postId;
     try {
       postId = new ObjectId(id);
-      console.log('Valid ObjectId created');
     } catch (error) {
       console.error('Invalid ObjectId:', id, error.message);
       return NextResponse.json(
@@ -26,28 +21,37 @@ export async function GET(request, { params }) {
       );
     }
     
-    // Log auth info
-    const headersList = headers();
-    const authHeader = headersList.get('Authorization');
-    console.log('Authorization header present:', !!authHeader);
-    
     // Find post by ID using direct MongoDB query
-    console.log('Querying database for post:', id);
     const post = await db.collection('posts').findOne({ _id: postId });
     
     if (!post) {
-      console.log('Post not found with ID:', id);
       return NextResponse.json(
         { message: 'Post not found' },
         { status: 404 }
       );
     }
     
-    console.log('Post found:', post._id.toString());
-    console.log('Fields present:', Object.keys(post));
+    // Ensure all fields are properly included in the response
+    const responsePost = {
+      _id: post._id,
+      id: post._id, // Include both formats
+      userId: post.userId,
+      username: post.username,
+      title: post.title,
+      content: post.content,
+      image: post.image,
+      videoUrl: post.videoUrl, // Explicitly include videoUrl
+      hashtags: post.hashtags || [],
+      discussions: post.discussions || 0,
+      shares: post.shares || 0,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+      creatorLinks: post.creatorLinks || [],
+      allowContributions: post.allowContributions
+    };
     
     // Return post data
-    return NextResponse.json(post, { status: 200 });
+    return NextResponse.json(responsePost, { status: 200 });
   } catch (error) {
     console.error('Error fetching post:', error);
     return NextResponse.json(

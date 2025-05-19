@@ -112,7 +112,6 @@ export default function HomeFeed() {
   const addNewPost = async (newPostData) => {
     try {
       setLoading(true);
-      console.log('Received data from modal:', JSON.stringify(newPostData, null, 2));
 
       // Get the token from localStorage
       const token = localStorage.getItem('token');
@@ -160,15 +159,9 @@ export default function HomeFeed() {
           }));
       }
 
-      console.log('Creator links prepared:', JSON.stringify(creatorLinks, null, 2));
-
       // Check if allowContributions setting is provided, default to true if not specified
       // IMPORTANT: Convert to boolean explicitly to avoid any type issues
       const allowContributions = newPostData.allowContributions === false ? false : true;
-
-      console.log('Community contributions setting type:', typeof newPostData.allowContributions);
-      console.log('Raw community contributions setting:', newPostData.allowContributions);
-      console.log('Final community contributions setting:', allowContributions);
 
       // Prepare post data with explicit creator links and allowContributions setting
       const postData = {
@@ -183,8 +176,6 @@ export default function HomeFeed() {
         // Add the allowContributions setting
         allowContributions: allowContributions
       };
-
-      console.log('Sending post data to API:', JSON.stringify(postData, null, 2));
 
       // Send post data to API with a longer timeout
       const controller = new AbortController();
@@ -216,16 +207,6 @@ export default function HomeFeed() {
       }
 
       const createdPost = await response.json();
-      console.log('Post created successfully:', createdPost);
-
-      // Verify the creator links and allowContributions setting were saved
-      if (createdPost.creatorLinks) {
-        console.log('Creator links saved:', createdPost.creatorLinks.length);
-      } else {
-        console.warn('Creator links not present in response');
-      }
-
-      console.log('Allow contributions setting saved:', createdPost.allowContributions);
 
       // Add the new post to the top of the posts list
       setPosts(prevPosts => [createdPost, ...prevPosts]);
@@ -297,6 +278,7 @@ export default function HomeFeed() {
                   title: post.title || 'Untitled Post',
                   content: post.content || '',
                   image: post.image || '/api/placeholder/600/300',
+                  videoUrl: post.videoUrl, // IMPORTANT: Pass the videoUrl
                   discussions: post.discussions?.toString() || '0',
                   shares: post.shares || 0,
                   hashtags: post.hashtags || []

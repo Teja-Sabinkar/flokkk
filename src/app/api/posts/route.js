@@ -1,6 +1,3 @@
-// Modified version of route.js for handling post creation
-// This would be in your /api/posts/route.js file
-
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
@@ -39,11 +36,6 @@ export async function POST(request) {
     
     // Get the raw data from the request
     const rawData = await request.json();
-    console.log('POST request to /api/posts');
-    console.log('Received raw data:', JSON.stringify(rawData, null, 2));
-    
-    // ***IMPORTANT***: Explicitly log the allowContributions value to debug the issue
-    console.log('allowContributions setting received:', rawData.allowContributions);
     
     // Connect to MongoDB using the direct client
     const { db } = await connectToDatabase();
@@ -65,14 +57,11 @@ export async function POST(request) {
     let creatorLinks = [];
     if (rawData.creatorLinks && Array.isArray(rawData.creatorLinks)) {
       creatorLinks = rawData.creatorLinks.map(link => {
-        console.log('Processing link:', link);
         // Extra validation to ensure URL exists and is properly formatted
         let url = link.url;
         if (!url) {
-          console.warn('Link missing URL, using placeholder');
           url = '#';
         } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          console.log('Adding https:// prefix to URL:', url);
           url = `https://${url}`;
         }
         
@@ -82,9 +71,6 @@ export async function POST(request) {
           description: link.description?.trim() || ''
         };
       });
-      console.log('Final processed creator links:', JSON.stringify(creatorLinks, null, 2));
-    } else {
-      console.log('No creator links provided in the request');
     }
     
     // Validate videoUrl if present
@@ -109,11 +95,9 @@ export async function POST(request) {
         if (videoId) {
           // Valid YouTube URL, standardize it
           validatedVideoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-          console.log('Validated YouTube URL:', validatedVideoUrl);
         } else {
           // Not a YouTube URL, but still a URL - keep as is
           validatedVideoUrl = rawData.videoUrl;
-          console.log('Non-YouTube video URL:', validatedVideoUrl);
         }
       } catch (error) {
         console.warn('Invalid video URL provided:', error);
@@ -122,10 +106,9 @@ export async function POST(request) {
       }
     }
     
-    // ***IMPORTANT***: Handle the allowContributions setting correctly
+    // Handle the allowContributions setting correctly
     // Make sure we explicitly convert to boolean to handle undefined/null cases
     const allowContributions = rawData.allowContributions === false ? false : true;
-    console.log('Processed allowContributions value:', allowContributions);
     
     // Prepare post data with all fields including creatorLinks and allowContributions
     const postData = {
@@ -142,11 +125,9 @@ export async function POST(request) {
       updatedAt: new Date(),
       // Explicitly add creator links
       creatorLinks: creatorLinks,
-      // ***IMPORTANT***: Explicitly add allowContributions setting with correct type
+      // Explicitly add allowContributions setting with correct type
       allowContributions: allowContributions
     };
-    
-    console.log('Final post data to save:', JSON.stringify(postData, null, 2));
     
     // Insert directly using MongoDB driver
     const result = await db.collection('posts').insertOne(postData);
@@ -155,36 +136,17 @@ export async function POST(request) {
       throw new Error('Failed to insert post');
     }
     
-    console.log('Post created with ID:', result.insertedId);
-    
-    // Verify creator links and allowContributions were saved
-    const savedPost = await db.collection('posts').findOne(
-      { _id: result.insertedId }
-    );
-    
-    console.log('Saved post:', JSON.stringify({
-      _id: savedPost._id,
-      title: savedPost.title,
-      creatorLinks: savedPost.creatorLinks ? savedPost.creatorLinks.length : 0,
-      allowContributions: savedPost.allowContributions
-    }, null, 2));
-    
     // Increment user's discussion count
     await User.findByIdAndUpdate(user._id, { $inc: { discussions: 1 } });
     
     // Notify followers of the new post
     try {
-      console.log('Finding followers to notify about new post...');
       // Find all followers of the post creator
       const follows = await Follow.find({ following: user._id });
-      
-      console.log(`Found ${follows.length} followers for user ${user._id}`);
       
       // Create notifications for each follower
       if (follows && follows.length > 0) {
         for (const follow of follows) {
-          console.log(`Creating notification for follower: ${follow.follower}`);
-          
           try {
             await createNotification({
               userId: follow.follower,
@@ -200,10 +162,6 @@ export async function POST(request) {
             console.error(`Error creating notification for follower ${follow.follower}:`, notifyError);
           }
         }
-        
-        console.log('All follower notifications created');
-      } else {
-        console.log('No followers to notify');
       }
     } catch (notifyError) {
       // Log the error but don't fail the request

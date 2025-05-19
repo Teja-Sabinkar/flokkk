@@ -8,7 +8,7 @@ import LinkItemModal from './LinkItemModal';
 import AddLinkModal from './AddLinkModal';
 import ContributeLinkModal from './ContributeLinkModal';
 
-export default function DiscussionPageLeftBar({ postData, loading, error, currentUser, shouldAutoplay }) {
+export default function DiscussionPageLeftBar({ postData, loading, error, currentUser }) {
 
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriberCount, setSubscriberCount] = useState(0);
@@ -64,7 +64,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
   const isPostCreator = currentUser && postData &&
     (currentUser.username === postData.username ||
       currentUser.id === postData.userId);
-
+      
   // Check if contributions are allowed
   // FIXED: More explicit checking - handle both undefined and boolean values correctly
   // Convert to explicit boolean value to handle edge cases
@@ -80,7 +80,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
   // Component for "Follow to contribute" message that can be clicked to follow
   const FollowToContributeButton = ({ onClick, isLoading }) => {
     return (
-      <div
+      <div 
         className={`${styles.contributionsDisabled} ${styles.followToContribute}`}
         onClick={onClick}
       >
@@ -158,7 +158,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
         }, 5000);
       } else {
         console.error('Error response from follow API:', await response.text());
-
+        
         // Show error feedback
         setFeedbackMessage({
           type: 'error',
@@ -172,7 +172,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
       }
     } catch (error) {
       console.error('Error following creator:', error);
-
+      
       // Show error feedback
       setFeedbackMessage({
         type: 'error',
@@ -552,14 +552,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
 
     fetchCreatorProfile();
   }, [postData]);
-
-  // NEW: Auto-start video playback if autoplay parameter is present
-  useEffect(() => {
-    if (shouldAutoplay && videoId && !isVideoPlaying) {
-      console.log('Autoplay triggered for video:', videoId);
-      setIsVideoPlaying(true);
-    }
-  }, [shouldAutoplay, videoId, isVideoPlaying]);
+  
 
   const handleSubscribe = async () => {
     if (!currentUser) {
@@ -1489,7 +1482,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
                   Contribute
                 </button>
               ) : (
-                <FollowToContributeButton
+                <FollowToContributeButton 
                   onClick={handleFollowCreator}
                   isLoading={subscribeLoading}
                 />
@@ -1511,7 +1504,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
             {communityLinksData.length === 0 ? (
               <div className={styles.noLinksMessage}>
                 {isContributionsAllowed ? (
-                  isFollowingCreator ?
+                  isFollowingCreator ? 
                     "No community links yet. Be the first to contribute!" :
                     "No community links yet. Follow the creator to contribute."
                 ) : (
@@ -1568,11 +1561,11 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
                 </div>
               ))
             )}
-
+            
             {/* Empty state with Follow button when no contributions but following is required */}
             {communityLinksData.length === 0 && isContributionsAllowed && !isFollowingCreator && currentUser && !isPostCreator && (
               <div className={styles.emptyStateWithAction}>
-                <button
+                <button 
                   className={styles.followCreatorButton}
                   onClick={handleFollowCreator}
                   disabled={subscribeLoading}
