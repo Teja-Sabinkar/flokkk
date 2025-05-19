@@ -289,7 +289,7 @@ async function formatPostsForExplore(db, posts) {
       title: post.title,
       description: post.content?.substring(0, 120) + (post.content?.length > 120 ? '...' : '') || '',
       imageUrl: post.image || '/api/placeholder/600/300',
-      videoUrl: post.videoUrl || null,  // Add this line
+      videoUrl: post.videoUrl || null, // ADD THIS LINE
       discussionCount: formatCount(post.discussions || 0),
       hashtags: post.hashtags || [],
       profilePicture: user.profilePicture
