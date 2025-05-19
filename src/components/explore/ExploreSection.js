@@ -1,4 +1,4 @@
-// src/components/explore/ExploreSection.js - Updated to pass id to ExploreItem
+// src/components/explore/ExploreSection.js - Updated to pass videoUrl to ExploreItem
 import React from 'react';
 import ExploreItem from './ExploreItem';
 import styles from './ExploreSection.module.css';
@@ -26,6 +26,7 @@ const ExploreSection = ({ title, items }) => {
               imageUrl={item.imageUrl}
               discussionCount={item.discussionCount}
               profilePicture={item.profilePicture}
+              videoUrl={item.videoUrl} // Add this line for video support
             />
           ))}
         </div>

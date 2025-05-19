@@ -65,14 +65,22 @@ const RecentlyViewedContainer = ({ items: initialItems, viewMode = 'grid' }) => 
     <div className={styles.container}>
       <div className={`${styles.itemsContainer} ${viewMode === 'list' ? styles.listView : styles.gridView}`}>
         {items && items.length > 0 ? (
-          items.map((item, index) => (
-            <RecentlyViewedItem 
-              key={index} 
-              item={item} 
-              viewMode={viewMode}
-              onHideItem={handleHideItem}
-            />
-          ))
+          items.map((item, index) => {
+            // Ensure the item has all necessary properties including videoUrl
+            const formattedItem = {
+              ...item,
+              videoUrl: item.videoUrl || null // Ensure videoUrl is passed
+            };
+            
+            return (
+              <RecentlyViewedItem 
+                key={item.id || item._id || index} 
+                item={formattedItem} 
+                viewMode={viewMode}
+                onHideItem={handleHideItem}
+              />
+            );
+          })
         ) : (
           <p className={styles.noItems}>No recently viewed items</p>
         )}

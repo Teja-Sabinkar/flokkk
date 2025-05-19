@@ -11,7 +11,6 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    margin-bottom: 16px; 
 }
 
 .item:hover {
@@ -179,6 +178,7 @@
 
 /* Item Image */
 .imageContainer {
+    margin-bottom: 16px;
     border-radius: 8px;
     overflow: hidden;
     flex-grow: 1;
@@ -200,6 +200,151 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* Play Button Overlay */
+.playButton {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.2s ease;
+}
+
+.playButton:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.playButtonCircle {
+    width: 60px;
+    height: 60px;
+    background-color: rgba(0, 0, 0, 0.177);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.2s ease;
+}
+
+.playButton:hover .playButtonCircle {
+    background-color: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.playIcon {
+    width: 32px;
+    height: 32px;
+    color: white;
+    margin-left: 3px; /* Slightly offset to center the triangle visually */
+}
+
+/* Video Player Wrapper */
+.videoPlayerWrapper {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    background-color: #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.youtubeEmbed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Close Video Button */
+.closeVideoButton {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    transition: background-color 0.2s ease;
+}
+
+.closeVideoButton:hover {
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+/* Video Error Container */
+.videoErrorContainer {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%;
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.videoErrorContent {
+    position: absolute;
+    text-align: center;
+    color: #fff;
+    padding: 20px;
+    max-width: 80%;
+}
+
+.errorIcon {
+    color: #ff6b6b;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: center;
+}
+
+.videoErrorContent h3 {
+    margin-bottom: 12px;
+    color: #ff6b6b;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.videoErrorContent p {
+    margin-bottom: 16px;
+    color: #ccc;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.watchOnYoutubeBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #ff0000;
+    color: white;
+    padding: 12px 20px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.watchOnYoutubeBtn:hover {
+    background-color: #cc0000;
 }
 
 /* Item Engagement */
@@ -270,6 +415,16 @@
         width: 28px;
         height: 28px;
     }
+
+    .playButtonCircle {
+        width: 50px;
+        height: 50px;
+    }
+
+    .playIcon {
+        width: 28px;
+        height: 28px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -295,8 +450,42 @@
         height: 16px;
     }
 
-    .menuButton {
+    .menuButton{
         width: 18px;
         height: 18px;
+    }
+
+    .playButtonCircle {
+        width: 45px;
+        height: 45px;
+    }
+
+    .playIcon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .closeVideoButton {
+        width: 28px;
+        height: 28px;
+        top: 8px;
+        right: 8px;
+    }
+
+    .videoErrorContent {
+        padding: 16px;
+    }
+
+    .videoErrorContent h3 {
+        font-size: 14px;
+    }
+
+    .videoErrorContent p {
+        font-size: 12px;
+    }
+
+    .watchOnYoutubeBtn {
+        padding: 10px 16px;
+        font-size: 13px;
     }
 }

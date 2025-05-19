@@ -102,13 +102,20 @@ const SubscriptionsContainer = ({
             {visiblePosts.map((post, index) => {
               // Apply ref to last post for infinite scrolling
               const isLastPost = index === visiblePosts.length - 1;
+              
+              // Ensure the post has all necessary properties including videoUrl
+              const formattedPost = {
+                ...post,
+                videoUrl: post.videoUrl || null // Ensure videoUrl is passed
+              };
+              
               return (
                 <div 
-                  key={post.id}
+                  key={post.id || post._id}
                   ref={isLastPost ? lastPostRef : null}
                 >
                   <SubscriptionPostItem 
-                    post={post} 
+                    post={formattedPost} 
                     viewMode={viewMode}
                     onHidePost={handleHidePost}
                   />

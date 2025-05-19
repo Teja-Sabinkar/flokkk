@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -18,6 +18,12 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
   const [reportSuccess, setReportSuccess] = useState(false);
   const [currentUsername, setCurrentUsername] = useState(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false); // New state for share modal
+  
+  // Video playback states
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [videoId, setVideoId] = useState(null);
+  const [videoError, setVideoError] = useState(false);
+  
   const menuRef = useRef(null);
 
   const {
@@ -30,10 +36,60 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
     authorAvatar,
     postedTime,
     discussionCount,
-    lastViewed
+    lastViewed,
+    videoUrl
   } = item;
 
   const itemId = id || _id;
+
+  // Extract YouTube video ID from URL
+  const extractYouTubeVideoId = useCallback((url) => {
+    if (!url || typeof url !== 'string') return null;
+    
+    try {
+      // Comprehensive regex that handles all YouTube URL formats
+      const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+      const match = url.match(youtubeRegex);
+      return match && match[1] ? match[1] : null;
+    } catch (error) {
+      console.error('Error extracting video ID:', error);
+      return null;
+    }
+  }, []);
+
+  // Extract video ID when component mounts or videoUrl changes
+  useEffect(() => {
+    if (videoUrl) {
+      const id = extractYouTubeVideoId(videoUrl);
+      setVideoId(id);
+    } else {
+      setVideoId(null);
+    }
+  }, [videoUrl, extractYouTubeVideoId]);
+
+  // Handle play button click
+  const handlePlayClick = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (videoId) {
+      setIsVideoPlaying(true);
+      setVideoError(false);
+    }
+  }, [videoId]);
+
+  // Handle closing video (return to thumbnail)
+  const handleCloseVideo = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsVideoPlaying(false);
+    setVideoError(false);
+  }, []);
+
+  // Handle video embedding error
+  const handleVideoError = useCallback(() => {
+    setVideoError(true);
+  }, []);
 
   // Fetch current user info
   useEffect(() => {
@@ -338,20 +394,102 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
           )}
         </div>
 
-        {/* Post Image */}
+        {/* Post Image/Video */}
         <div className={`${styles.postImageContainer} ${viewMode === 'list' ? styles.listImageContainer : ''}`}>
-          <div className={styles.postImageWrapper}>
-            <Image
-              src={thumbnail || "/api/placeholder/600/300"}
-              alt={title}
-              width={viewMode === 'list' ? 200 : 600}
-              height={viewMode === 'list' ? 100 : 300}
-              className={styles.postImage}
-              unoptimized
-              priority
-              key={`recently-viewed-image-${itemId}-${thumbnail}`} // Force re-render when image changes
-            />
-          </div>
+          {isVideoPlaying && videoId && !videoError ? (
+            // YouTube video player
+            <div className={styles.videoPlayerWrapper}>
+              <button 
+                className={styles.closeVideoButton}
+                onClick={handleCloseVideo}
+                aria-label="Close video"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+              <iframe
+                className={styles.youtubeEmbed}
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+                title={title}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                onError={handleVideoError}
+              ></iframe>
+            </div>
+          ) : isVideoPlaying && videoError ? (
+            // Error fallback when embedding fails
+            <div className={styles.videoErrorContainer}>
+              <button 
+                className={styles.closeVideoButton}
+                onClick={handleCloseVideo}
+                aria-label="Close video"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+              <div className={styles.videoErrorContent}>
+                <div className={styles.errorIcon}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                </div>
+                <h3>Video cannot be embedded</h3>
+                <p>This video cannot be played directly. Click below to watch on YouTube.</p>
+                <a 
+                  href={videoUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className={styles.watchOnYoutubeBtn}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  Watch on YouTube
+                </a>
+              </div>
+            </div>
+          ) : (
+            // Thumbnail with optional play button
+            <div className={styles.postImageWrapper}>
+              <Image
+                src={thumbnail || "/api/placeholder/600/300"}
+                alt={title}
+                width={viewMode === 'list' ? 200 : 600}
+                height={viewMode === 'list' ? 100 : 300}
+                className={styles.postImage}
+                unoptimized
+                priority
+                key={`recently-viewed-image-${itemId}-${thumbnail}`} // Force re-render when image changes
+              />
+              
+              {/* Play button overlay for videos */}
+              {videoUrl && videoId && (
+                <button 
+                  className={styles.playButton}
+                  onClick={handlePlayClick}
+                  aria-label="Play video"
+                >
+                  <div className={styles.playButtonCircle}>
+                    <svg 
+                      className={styles.playIcon}
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      fill="currentColor"
+                    >
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  </div>
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

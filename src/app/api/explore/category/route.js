@@ -58,12 +58,12 @@ export async function GET(request) {
         const hiddenPosts = await db.collection('hiddenposts').find({
           userId: new ObjectId(currentUserId)
         }).toArray();
-        
+
         // Extract post IDs
-        hiddenPostIds = hiddenPosts.map(hp => 
+        hiddenPostIds = hiddenPosts.map(hp =>
           typeof hp.postId === 'string' ? new ObjectId(hp.postId) : hp.postId
         );
-        
+
         console.log(`Found ${hiddenPostIds.length} hidden posts for user ${currentUserId}`);
       } catch (error) {
         console.error('Error filtering hidden posts:', error);
@@ -79,26 +79,26 @@ export async function GET(request) {
     // Special case for Trending - use engagement metrics
     if (category === 'Trending') {
       console.log('Fetching trending posts based on engagement');
-      
+
       // Get posts from the last 30 days for trending
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       query.createdAt = { $gte: thirtyDaysAgo };
-      
+
       const trendingPosts = await db.collection('posts')
         .find(query)
         .sort({ discussions: -1, shares: -1, createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .toArray();
-      
+
       const totalPosts = await db.collection('posts').countDocuments(query);
-      
+
       console.log(`Found ${trendingPosts.length} trending posts`);
-      
+
       // Format trending posts
       const items = await formatPostsForExplore(db, trendingPosts);
-      
+
       return NextResponse.json({
         category,
         items,
@@ -114,7 +114,7 @@ export async function GET(request) {
     // For other categories, use keyword filtering approach
     console.log(`Fetching posts for category: ${category}`);
     const keywords = CATEGORY_KEYWORDS[category] || [];
-    
+
     if (keywords.length === 0) {
       console.warn(`No keywords defined for category: ${category}`);
       return NextResponse.json({
@@ -129,15 +129,15 @@ export async function GET(request) {
         message: 'No keywords defined for this category'
       }, { status: 200 });
     }
-    
+
     // Create keyword regex patterns
-    const keywordPatterns = keywords.map(keyword => 
+    const keywordPatterns = keywords.map(keyword =>
       new RegExp(keyword, 'i')
     );
-    
+
     // Add category name as a pattern as well
     keywordPatterns.push(new RegExp(category, 'i'));
-    
+
     // Build the search query for this category
     const categoryQuery = {
       ...query,
@@ -147,9 +147,9 @@ export async function GET(request) {
         { hashtags: { $in: keywordPatterns } }
       ]
     };
-    
+
     console.log(`Using keywords for ${category}:`, keywords);
-    
+
     // Execute the query with pagination
     const categoryPosts = await db.collection('posts')
       .find(categoryQuery)
@@ -157,15 +157,15 @@ export async function GET(request) {
       .skip((page - 1) * limit)
       .limit(limit)
       .toArray();
-    
+
     const totalCategoryPosts = await db.collection('posts').countDocuments(categoryQuery);
-    
+
     console.log(`Found ${categoryPosts.length} posts for category: ${category}`);
-    
+
     // If no posts found with keyword approach, try a more general query as fallback
     if (categoryPosts.length === 0) {
       console.log(`No posts found for ${category}, trying fallback`);
-      
+
       // Create a simpler query that looks for the category name in any field
       const fallbackQuery = {
         ...query,
@@ -175,18 +175,18 @@ export async function GET(request) {
           { hashtags: new RegExp(category, 'i') }
         ]
       };
-      
+
       const fallbackPosts = await db.collection('posts')
         .find(fallbackQuery)
         .sort({ createdAt: -1 })
         .limit(limit)
         .toArray();
-        
+
       console.log(`Fallback found ${fallbackPosts.length} posts for category: ${category}`);
-      
+
       if (fallbackPosts.length > 0) {
         const items = await formatPostsForExplore(db, fallbackPosts);
-        
+
         return NextResponse.json({
           category,
           items,
@@ -199,7 +199,7 @@ export async function GET(request) {
           source: 'fallback'
         }, { status: 200 });
       }
-      
+
       // If still no results, get most recent posts as a last resort
       console.log('No posts found with fallback, returning recent posts');
       const recentPosts = await db.collection('posts')
@@ -207,9 +207,9 @@ export async function GET(request) {
         .sort({ createdAt: -1 })
         .limit(limit)
         .toArray();
-        
+
       const items = await formatPostsForExplore(db, recentPosts);
-      
+
       return NextResponse.json({
         category,
         items,
@@ -222,10 +222,10 @@ export async function GET(request) {
         source: 'recent'
       }, { status: 200 });
     }
-    
+
     // Format posts for the explore grid
     const items = await formatPostsForExplore(db, categoryPosts);
-    
+
     return NextResponse.json({
       category,
       items,
@@ -250,7 +250,7 @@ export async function GET(request) {
 // Helper function to format posts for the explore grid
 async function formatPostsForExplore(db, posts) {
   if (!posts || posts.length === 0) return [];
-  
+
   // Get user information for each post in a single batch
   const userIds = [...new Set(posts.map(post => {
     if (post.userId) {
@@ -258,12 +258,12 @@ async function formatPostsForExplore(db, posts) {
     }
     return null;
   }))].filter(id => id !== null);
-  
+
   const users = await db.collection('users')
     .find({ _id: { $in: userIds } })
     .project({ _id: 1, username: 1, name: 1, profilePicture: 1 })
     .toArray();
-  
+
   // Create a map for fast user lookup
   const userMap = {};
   users.forEach(user => {
@@ -272,16 +272,16 @@ async function formatPostsForExplore(db, posts) {
       profilePicture: user.profilePicture || '/profile-placeholder.jpg'
     };
   });
-  
+
   // Format each post with user information
   return posts.map(post => {
     const userId = post.userId?.toString() || 'unknown';
     const user = userMap[userId] || { username: post.username || 'unnamed', profilePicture: '/profile-placeholder.jpg' };
-    
+
     // Calculate time ago
     const postDate = post.createdAt || new Date();
     const timeAgo = getTimeAgo(postDate);
-    
+
     return {
       id: post._id.toString(),
       username: user.username,
@@ -289,9 +289,10 @@ async function formatPostsForExplore(db, posts) {
       title: post.title,
       description: post.content?.substring(0, 120) + (post.content?.length > 120 ? '...' : '') || '',
       imageUrl: post.image || '/api/placeholder/600/300',
+      videoUrl: post.videoUrl || null,  // Add this line
       discussionCount: formatCount(post.discussions || 0),
       hashtags: post.hashtags || [],
-      profilePicture: user.profilePicture // Include the profile picture
+      profilePicture: user.profilePicture
     };
   });
 }
@@ -300,14 +301,14 @@ async function formatPostsForExplore(db, posts) {
 function getTimeAgo(date) {
   const now = new Date();
   const diffInSeconds = Math.floor((now - date) / 1000);
-  
+
   const minute = 60;
   const hour = minute * 60;
   const day = hour * 24;
   const week = day * 7;
   const month = day * 30;
   const year = day * 365;
-  
+
   if (diffInSeconds < minute) {
     return 'just now';
   } else if (diffInSeconds < hour) {
