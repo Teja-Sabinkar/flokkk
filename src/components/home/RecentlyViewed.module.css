@@ -1,7 +1,6 @@
 .recentlyViewedContainer {
   padding: 0 0 0 16px;
   /* Added left padding to prevent text being cut off */
-  max-width: 300px;
   background-color: transparent;
   width: 100%;
   /* Ensure full width of container */
@@ -23,9 +22,10 @@
 .itemsList {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 100%;
+  gap: 8px;
+  padding-bottom: 12px;
 }
+
 
 .itemCard {
   display: flex;
@@ -188,21 +188,20 @@
 
 .showMoreButton {
   display: block;
-  margin-top: 16px;
-  width: 100%;
   background: none;
   border: none;
-  color: #fff;
+  color: #3b82f6;
   font-size: 14px;
-  font-weight: 500;
-  padding: 8px 0;
-  cursor: pointer;
+  padding: 8px;
   text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
   text-decoration: none;
+  font-weight: 500;
 }
 
 .showMoreButton:hover {
-  text-decoration: underline;
+   color: #60a5fa;
 }
 
 /* Loading, error and empty states */

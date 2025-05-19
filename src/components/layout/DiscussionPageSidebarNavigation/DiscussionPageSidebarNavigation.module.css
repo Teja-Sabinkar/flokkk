@@ -9,7 +9,6 @@
   overflow-y: auto;
   z-index: 100;
   /* Space for the header if used together */
-  border-right: 1px solid #222;
 }
 
 .navList {

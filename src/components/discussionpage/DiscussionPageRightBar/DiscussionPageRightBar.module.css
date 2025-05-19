@@ -446,7 +446,7 @@
 .suggestionButton {
   background-color: transparent;
   color: rgb(148, 148, 148);
-  border: none;
+  border: 1px solid #333;
   border-radius: 8px;
   padding: 5px 14px;
   font-size: 14px;

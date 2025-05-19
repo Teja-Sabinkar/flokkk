@@ -119,6 +119,10 @@
   bottom: 0;
   background-color: #0f0f0f;
   overflow: hidden;
+  z-index: 100;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   transition: transform 0.3s ease;
 }
 
@@ -129,11 +133,11 @@
   width: 100%;
   height: 100%;
   overflow-y: auto;
-  /* Enable independent scrolling */
-  padding: 20px 20px 20px 0;
-  /* Removed left padding to prevent component being cut */
   background-color: #0f0f0f;
-  border-left: 1px solid #222;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  /* Ensure padding is included in width calculation */
 }
 
 /* Section title for sidebar components */
@@ -158,12 +162,394 @@
   backdrop-filter: blur(4px);
 }
 
+/* Resize handle styles like in DiscussionPageRightBar */
+.resizeHandle {
+  position: absolute;
+  left: -10px;
+  top: 0;
+  height: 100%;
+  width: 20px;
+  cursor: col-resize;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.2;
+  transition: opacity 0.2s;
+}
+
+.resizeHandle:hover,
+.resizeHandle.isResizing {
+  opacity: 1;
+  background-color: rgba(65, 105, 225, 0.1);
+}
+
+.resizeBar {
+  width: 10px;
+  height: 100px;
+  background-color: #4169e1;
+  border-radius: 4px;
+}
+
+/* Chat Messages CSS */
+.chatMessages {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 0;
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
+  /* Ensure padding is included in width calculation */
+}
+
+.recentlyViewedWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+}
+
+
+
+/* Fix any padding issues in the right sidebar elements */
+.rightSidebarScrollable>* {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Chat divider to separate RecentlyViewed from AI messages */
+
+.chatMessage {
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  animation: fadeIn 0.3s ease;
+  border-radius: 12px;
+  position: relative;
+}
+
+.system {
+  color: #a1a1a1;
+  padding: 10px 14px;
+  background-color: transparent;
+  font-size: 13px;
+  text-align: center;
+  max-width: 80%;
+  margin: 0px auto;
+}
+
+.user {
+  background-color: #2962FF;
+  align-self: flex-end;
+  max-width: 85%;
+  padding: 12px 16px;
+  color: white;
+}
+
+.ai {
+  background-color: #181818;
+  align-self: flex-start;
+  color: #fff;
+  border: 1px solid #333;
+  padding: 12px 16px;
+}
+
+.error {
+  background-color: rgba(220, 53, 69, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  padding: 12px 16px;
+  border-radius: 12px;
+  max-width: 85%;
+}
+
+.avatarContainer {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1e1e1e;
+  border-radius: 50%;
+  position: absolute;
+  top: 10px;
+  left: -16px;
+}
+
+.messageContent {
+  padding-left: 12px;
+}
+
+/* Typing indicator */
+.typingIndicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 16px;
+}
+
+.typingIndicator span {
+  width: 6px;
+  height: 6px;
+  background-color: #6e6e6e;
+  border-radius: 50%;
+  display: inline-block;
+  animation: typing 1.4s infinite ease-in-out both;
+}
+
+.typingIndicator span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typingIndicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typingIndicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+/* Chat input styles */
+.chatInputContainer {
+  padding: 12px;
+  margin-top: auto;
+  /* Push to bottom */
+  margin-bottom: 0;
+  /* Remove bottom margin */
+}
+
+.chatInputWrapper {
+  display: flex;
+  position: relative;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background-color: #252525;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  min-height: 46px;
+}
+
+.chatInput {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background-color: transparent;
+  color: #d1d1d1;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  resize: none;
+  overflow-y: auto;
+  line-height: 1.4;
+}
+
+.chatInput::placeholder {
+  color: #6e6e6e;
+}
+
+.chatControls {
+  display: flex;
+  align-items: flex-end;
+  padding-right: 4px;
+  padding-bottom: 4px;
+  padding-top: 4px;
+  background-color: #252525;
+  align-self: flex-end;
+}
+
+.sendButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #4169e1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sendButton:hover:not(:disabled) {
+  background-color: #365bd6;
+}
+
+.sendButton:disabled {
+  background-color: #333;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Suggestions */
+.suggestionsContainer {
+  padding: 12px 16px;
+  margin-bottom: 8px;
+}
+
+.suggestionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.suggestionButton {
+  background-color: transparent;
+  color: rgb(148, 148, 148);
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 5px 14px;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  line-height: 1.4;
+}
+
+.suggestionButton:hover {
+  color: rgb(255, 255, 255);
+  background-color: #1e50e0;
+}
+
+/* Greeting section styles */
+.sectionHeader {
+  color: #a1a1a1;
+  padding: 10px 14px;
+  background-color: transparent;
+  font-size: 13px;
+  text-align: center;
+  max-width: 80%;
+  margin: 0px auto;
+}
+
+.sectionHeader span {
+  display: block;
+  margin-top: 8px;
+  color: #a1a1a1;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Right sidebar toggle button */
+.rightSidebarToggle {
+  position: fixed;
+  right: 0px;
+  top: 100px;
+  transform: translateY(-50%);
+  border-top: 1px solid #4169e1;
+  border-left: 1px solid #4169e1;
+  border-bottom: 1px solid #4169e1;
+  border-right: none;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  color: #fff;
+  width: 28px;
+  height: 80px;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  cursor: pointer;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
+  transition: right 0.3s ease;
+  background-color: #4169e1da;
+  backdrop-filter: blur(1px);
+  font-size: 8px;
+}
+
+.rightSidebarToggle:hover {
+background-color: #4169e1;
+}
+
+.rightSidebarToggle.active {
+  color: white;
+}
+
+/* Adjusted position for active state */
+.rightSidebarToggle.active {
+  right: var(--sidebar-width, 330px);
+}
+
+.mobileView {
+  /* Full width on mobile */
+  width: 100% !important;
+  max-width: 100% !important;
+  position: fixed !important;
+  z-index: 900 !important;
+}
+
+/* Show sidebar when visible class is present */
+.rightSidebarContainer.visible {
+  transform: translateX(0);
+}
+
+/* Hide sidebar by default in mobile view */
+@media (max-width: 1300px) {
+  .rightSidebarContainer {
+    transform: translateX(100%);
+  }
+
+  /* Make feed expand when sidebar is hidden */
+  .expandedFeed {
+    right: 0 !important;
+  }
+}
+
+
+
+/* Flock AI text in button */
+.aiText {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 2px;
+}
+
+/* Wrapper for RecentlyViewed */
+.recentlyViewedWrapper {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+
 /* Responsive adjustments */
 @media (max-width: 1300px) {
 
   /* Hide right sidebar */
   .rightSidebarContainer {
-    display: none;
+    width: 100% !important;
+    max-width: 350px !important;
   }
 
   /* Hide left sidebar by default, will be shown with toggle */
@@ -178,8 +564,13 @@
 
   /* Adjust feed container to take full width */
   .feedContainer {
-    left: 0;
-    right: 0;
+    right: 0 !important;
+    left: 0 !important;
+    transition: right 0.3s ease;
+  }
+
+  .feedContainer.expandedFeed {
+    right: 0 !important;
   }
 
   /* Show overlay when sidebar is open - but only cover the feed area */
