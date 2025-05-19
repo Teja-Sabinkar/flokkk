@@ -485,7 +485,7 @@
 }
 
 .rightSidebarToggle:hover {
-background-color: #4169e1;
+  background-color: #4169e1;
 }
 
 .rightSidebarToggle.active {
@@ -548,8 +548,31 @@ background-color: #4169e1;
 
   /* Hide right sidebar */
   .rightSidebarContainer {
-    width: 100% !important;
-    max-width: 350px !important;
+    position: fixed;
+    right: 0;
+    top: 60px;
+    /* Below header */
+    height: calc(100vh - 60px);
+    z-index: 998;
+    margin-left: 0;
+    transform: translateX(100%);
+    /* Move it completely off-screen to the right */
+    /* Hide by default */
+    border-radius: 0;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    /* Ensure smooth animation */
+    width: 400px !important;
+    /* Use fixed width in mobile view */
+    min-width: 330px !important;
+    max-width: 450px !important;
+  }
+
+  .rightSidebarContainer.visible {
+    transform: translateX(0);
+    /* Bring it back to visible position */
+    /* Show when toggled */
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
   }
 
   /* Hide left sidebar by default, will be shown with toggle */
@@ -586,6 +609,10 @@ background-color: #4169e1;
     display: block;
     left: 0px;
     /* Width of the sidebar on mobile */
+  }
+
+  .resizeHandle {
+    display: none;
   }
 }
 
@@ -642,6 +669,23 @@ background-color: #4169e1;
   .feedScrollable {
     padding: 8px;
     padding-bottom: 40px;
+  }
+
+}
+
+
+@media (max-width: 480px) {
+
+  .rightSidebarContainer {
+    width: 330px !important;
+    /* Use fixed width in mobile view */
+    min-width: 300px !important;
+    max-width: 330px !important;
+  }
+
+  .rightSidebarToggle.active {
+    right: 329px;
+    /* Width of the sidebar when open */
   }
 
 }

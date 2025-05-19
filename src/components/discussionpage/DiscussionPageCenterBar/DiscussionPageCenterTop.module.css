@@ -139,9 +139,7 @@
 .postActions {
   display: flex;
   flex-wrap: wrap;
-  border-bottom: 1px solid #333;
   padding-bottom: 16px;
-  margin-bottom: 24px;
 }
 
 .actionButton {

@@ -346,7 +346,7 @@
 }
 
 @media (max-width: 480px) {
-  .contentContainer{
+  .contentContainer {
     padding: 0px;
   }
 
@@ -378,17 +378,14 @@
     /* Width of the sidebar when open */
   }
 
-  .leftBarContent{
+  .leftBarContent {
     padding-bottom: 50px;
   }
 
-  .rightBarContent{
+  .rightBarContent {
     padding-bottom: 50px;
   }
 
 
 
 }
-
-
-
