@@ -17,6 +17,7 @@ export default function ExplorePage() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  
 
   // Fetch user data if not using a context
   useEffect(() => {
@@ -82,6 +83,7 @@ export default function ExplorePage() {
         title: item.title || 'Untitled',
         description: item.description || item.content || '',
         imageUrl: item.imageUrl || item.image || '/api/placeholder/600/300',
+        videoUrl: item.videoUrl || null, // ADD THIS LINE - Include videoUrl for play button functionality
         discussionCount: item.discussionCount || '0',
         profilePicture: item.profilePicture || '/profile-placeholder.jpg'
       }));

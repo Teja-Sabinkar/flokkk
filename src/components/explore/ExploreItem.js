@@ -1,24 +1,24 @@
-// src/components/explore/ExploreItem.js - Modified for Save, Report, Share, Hide and Video functionality
+// src/components/explore/ExploreItem.js - Updated with consistent video functionality
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation'; // Import Next.js router
+import { useRouter } from 'next/navigation';
 import styles from './ExploreItem.module.css';
-import PostSaveModal from '../home/PostSaveModal'; // Import PostSaveModal component
-import ReportModal from '../report/ReportModal'; // Import ReportModal component
-import ShareModal from '../share/ShareModal'; // Import ShareModal component
-import { submitReport } from '../../components/report/reportService'; // Import report submission service with correct path
+import PostSaveModal from '../home/PostSaveModal';
+import ReportModal from '../report/ReportModal';
+import ShareModal from '../share/ShareModal';
+import { submitReport } from '../../components/report/reportService';
 
 const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussionCount, profilePicture, id, onHide, videoUrl }) => {
-  const router = useRouter(); // Initialize the Next.js router
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false); // State for save modal
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false); // State for report modal
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false); // State for share modal
-  const [isReporting, setIsReporting] = useState(false); // State for report submission
-  const [reportError, setReportError] = useState(null); // State for report errors
-  const [isHiding, setIsHiding] = useState(false); // State for hide operation
-  const [isHidden, setIsHidden] = useState(false); // State to track if item is hidden
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
+  const [reportError, setReportError] = useState(null);
+  const [isHiding, setIsHiding] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
   
   // Video playback states
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -27,7 +27,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
   
   const menuRef = useRef(null);
 
-  // Extract YouTube video ID from URL
+  // Extract YouTube video ID from URL - Same logic as Post.js
   const extractYouTubeVideoId = useCallback((url) => {
     if (!url || typeof url !== 'string') return null;
     
@@ -42,7 +42,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     }
   }, []);
 
-  // Extract video ID when component mounts or videoUrl changes
+  // Extract video ID when component mounts or videoUrl changes - Same as Post.js
   useEffect(() => {
     if (videoUrl) {
       const id = extractYouTubeVideoId(videoUrl);
@@ -52,7 +52,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     }
   }, [videoUrl, extractYouTubeVideoId]);
 
-  // Handle play button click
+  // Handle play button click - Same as Post.js
   const handlePlayClick = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -63,7 +63,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     }
   }, [videoId]);
 
-  // Handle closing video (return to thumbnail)
+  // Handle closing video (return to thumbnail) - Same as Post.js
   const handleCloseVideo = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -71,7 +71,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     setVideoError(false);
   }, []);
 
-  // Handle video embedding error
+  // Handle video embedding error - Same as Post.js
   const handleVideoError = useCallback(() => {
     setVideoError(true);
   }, []);
@@ -95,22 +95,20 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
 
   // Menu option handlers
   const handleSave = () => {
-    setIsMenuOpen(false); // Close dropdown menu first
-    setIsSaveModalOpen(true); // Open save modal
+    setIsMenuOpen(false);
+    setIsSaveModalOpen(true);
   };
 
   const handleHide = async () => {
     try {
-      setIsMenuOpen(false); // Close dropdown menu
-      setIsHiding(true); // Set hiding state for loading indicator
+      setIsMenuOpen(false);
+      setIsHiding(true);
 
-      // Get authentication token
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('Authentication required');
       }
 
-      // Call the API to hide the post
       const response = await fetch('/api/posts/hide', {
         method: 'POST',
         headers: {
@@ -125,49 +123,38 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
         throw new Error(errorData.message || 'Failed to hide post');
       }
 
-      // Set as hidden locally
       setIsHidden(true);
 
-      // If parent component provided an onHide callback, call it
       if (typeof onHide === 'function') {
         onHide(id);
       }
 
       console.log(`Hidden: ${title} (ID: ${id})`);
-
-      // You could show a toast notification here
     } catch (error) {
       console.error('Error hiding post:', error);
-      // You could show an error toast notification here
     } finally {
       setIsHiding(false);
     }
   };
 
   const handleReport = () => {
-    setIsMenuOpen(false); // Close dropdown menu first
-    setIsReportModalOpen(true); // Open report modal
+    setIsMenuOpen(false);
+    setIsReportModalOpen(true);
   };
 
-  // Handler for modal close
   const handleReportModalClose = () => {
     setIsReportModalOpen(false);
     setReportError(null);
   };
 
-  // Handler for report submission
   const handleReportSubmit = async (reportData) => {
     try {
       setIsReporting(true);
       setReportError(null);
 
-      // Submit the report using the service
       await submitReport(reportData);
-
-      // Close the modal after successful submission
       setIsReportModalOpen(false);
 
-      // You could show a success toast notification here
       console.log(`Report submitted for post "${title}"`);
     } catch (error) {
       console.error('Error submitting report:', error);
@@ -177,45 +164,35 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     }
   };
 
-  // Handler for share button click
   const handleShareClick = () => {
     setIsShareModalOpen(true);
   };
 
-  // Handler for share modal close
   const handleShareModalClose = () => {
     setIsShareModalOpen(false);
   };
 
-  // Handler for discussions button click
   const handleDiscussionsClick = () => {
-    // Navigate to the discussion page using Next.js router
     router.push(`/discussion?id=${id}`);
   };
 
-  // Handler for modal close
   const handleSaveModalClose = () => {
     setIsSaveModalOpen(false);
   };
 
-  // Handler for successful save
   const handleSaveSuccess = (saveResult) => {
     console.log(`Saved post "${title}" to playlist: ${saveResult.playlistTitle}`);
     setIsSaveModalOpen(false);
-    // You could show a success message/toast here if desired
   };
 
-  // Generate a color based on username for avatar
   const generateColorFromUsername = (username) => {
-    if (!username) return '#3b5fe2'; // Default blue color
+    if (!username) return '#3b5fe2';
 
-    // Simple hash function for consistent color generation
     let hash = 0;
     for (let i = 0; i < username.length; i++) {
       hash = username.charCodeAt(i) + ((hash << 5) - hash);
     }
 
-    // Convert hash to a hex color
     let color = '#';
     for (let i = 0; i < 3; i++) {
       const value = (hash >> (i * 8)) & 0xFF;
@@ -225,29 +202,26 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     return color;
   };
 
-  // Prepare post data for the save modal
   const postData = {
-    id: id, // Make sure id is passed as a prop
+    id: id,
     title: title,
     description: description,
-    content: description, // Use description as content
+    content: description,
     image: imageUrl,
     username: username
   };
 
-  // Prepare content details for the report modal
   const contentDetails = {
     postId: id,
-    userId: null, // We might not have this info, server will handle it
+    userId: null,
     username: username,
     title: title,
     content: description,
     image: imageUrl,
-    hashtags: [], // We might not have this info
+    hashtags: [],
     reportedAt: new Date().toISOString()
   };
 
-  // Prepare data for the share modal
   const sharePostData = {
     id: id,
     title: title,
@@ -255,11 +229,8 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     username: username
   };
 
-  // Check if profilePicture is available and not the default placeholder
-  const hasProfilePicture = profilePicture &&
-    profilePicture !== '/profile-placeholder.jpg';
+  const hasProfilePicture = profilePicture && profilePicture !== '/profile-placeholder.jpg';
 
-  // Check if item is hidden, if so return null (don't render)
   if (isHidden) {
     return null;
   }
@@ -279,7 +250,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
                 className={styles.avatarImage}
                 priority
                 unoptimized
-                key={profilePicture} // Force re-render when URL changes
+                key={profilePicture}
               />
             ) : (
               <div
@@ -315,10 +286,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
 
           {isMenuOpen && (
             <div className={styles.dropdown}>
-              <button
-                className={styles.dropdownItem}
-                onClick={handleSave}
-              >
+              <button className={styles.dropdownItem} onClick={handleSave}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                   <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -346,10 +314,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
                   </>
                 )}
               </button>
-              <button
-                className={styles.dropdownItem}
-                onClick={handleReport}
-              >
+              <button className={styles.dropdownItem} onClick={handleReport}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                   <line x1="12" y1="9" x2="12" y2="13"></line>
@@ -362,10 +327,10 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
         </div>
       </div>
 
-      {/* Rest of component remains unchanged */}
       <h3 className={styles.itemTitle}>{title}</h3>
       <p className={styles.itemDescription}>{description}</p>
 
+      {/* Updated Image/Video Container - Now matches Post.js exactly */}
       <div className={styles.imageContainer}>
         {isVideoPlaying && videoId && !videoError ? (
           // YouTube video player
@@ -427,7 +392,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
             </div>
           </div>
         ) : (
-          // Thumbnail with optional play button
+          // Thumbnail with optional play button - Matches Post.js logic exactly
           <div className={styles.imageWrapper}>
             <Image
               src={imageUrl || "/api/placeholder/600/300"}
@@ -437,10 +402,10 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
               className={styles.itemImage}
               unoptimized
               priority
-              key={`explore-image-${id}-${imageUrl}`} // Force re-render when image changes
+              key={`explore-image-${id}-${imageUrl}`}
             />
             
-            {/* Play button overlay for videos */}
+            {/* Play button overlay for videos - Now matches Post.js exactly */}
             {videoUrl && videoId && (
               <button 
                 className={styles.playButton}
@@ -483,7 +448,6 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
         </button>
       </div>
 
-      {/* Add the PostSaveModal component */}
       <PostSaveModal
         isOpen={isSaveModalOpen}
         onClose={handleSaveModalClose}
@@ -491,7 +455,6 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
         onSave={handleSaveSuccess}
       />
 
-      {/* Add the ReportModal component */}
       <ReportModal
         isOpen={isReportModalOpen}
         onClose={handleReportModalClose}
@@ -499,7 +462,6 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
         contentDetails={contentDetails}
       />
 
-      {/* Add the ShareModal component */}
       <ShareModal
         isOpen={isShareModalOpen}
         onClose={handleShareModalClose}
