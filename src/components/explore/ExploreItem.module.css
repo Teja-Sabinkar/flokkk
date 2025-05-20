@@ -267,7 +267,7 @@
 /* Close Video Button */
 .closeVideoButton {
     position: absolute;
-    top: 10px;
+    top: 50%;
     right: 10px;
     width: 32px;
     height: 32px;
