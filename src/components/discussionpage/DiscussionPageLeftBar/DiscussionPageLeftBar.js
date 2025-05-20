@@ -64,7 +64,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
   const isPostCreator = currentUser && postData &&
     (currentUser.username === postData.username ||
       currentUser.id === postData.userId);
-      
+
   // Check if contributions are allowed
   // FIXED: More explicit checking - handle both undefined and boolean values correctly
   // Convert to explicit boolean value to handle edge cases
@@ -80,7 +80,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
   // Component for "Follow to contribute" message that can be clicked to follow
   const FollowToContributeButton = ({ onClick, isLoading }) => {
     return (
-      <div 
+      <div
         className={`${styles.contributionsDisabled} ${styles.followToContribute}`}
         onClick={onClick}
       >
@@ -158,7 +158,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
         }, 5000);
       } else {
         console.error('Error response from follow API:', await response.text());
-        
+
         // Show error feedback
         setFeedbackMessage({
           type: 'error',
@@ -172,7 +172,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
       }
     } catch (error) {
       console.error('Error following creator:', error);
-      
+
       // Show error feedback
       setFeedbackMessage({
         type: 'error',
@@ -552,7 +552,74 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
 
     fetchCreatorProfile();
   }, [postData]);
-  
+
+
+  useEffect(() => {
+    // Function to handle when a contribution is approved
+    const handleContributionApproved = (event) => {
+      // Check if this post's data should be refreshed
+      if (postData && event.detail && event.detail.postId === (postData.id || postData._id)) {
+        console.log('Detected contribution approval for current post, refreshing data...');
+
+        // Refresh the post data to get the updated community links
+        const refreshPostData = async () => {
+          try {
+            const token = localStorage.getItem('token');
+            const postId = postData.id || postData._id;
+
+            const response = await fetch(`/api/posts/${postId}`, {
+              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+
+            if (response.ok) {
+              const updatedPost = await response.json();
+              // Update community links in the component
+              if (updatedPost.communityLinks && Array.isArray(updatedPost.communityLinks)) {
+                console.log('Refreshed community links:', updatedPost.communityLinks);
+
+                const formattedCommunityLinks = updatedPost.communityLinks.map((link, index) => {
+                  return {
+                    id: index + 1,
+                    title: link.title || 'Untitled Link',
+                    description: link.description || '',
+                    url: link.url || '#',
+                    votes: link.voteCount || link.votes || 0,
+                    contributorUsername: link.contributorUsername || 'Anonymous',
+                  };
+                });
+
+                setCommunityLinksData(formattedCommunityLinks);
+
+                // Show a feedback message
+                setFeedbackMessage({
+                  type: 'success',
+                  text: 'Community links updated with newly approved contribution!'
+                });
+
+                // Clear the message after a few seconds
+                setTimeout(() => {
+                  setFeedbackMessage(null);
+                }, 5000);
+              }
+            }
+          } catch (error) {
+            console.error('Error refreshing post data:', error);
+          }
+        };
+
+        refreshPostData();
+      }
+    };
+
+    // Add event listener for contribution approvals
+    window.addEventListener('contribution-approved', handleContributionApproved);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('contribution-approved', handleContributionApproved);
+    };
+  }, [postData]);
+
 
   const handleSubscribe = async () => {
     if (!currentUser) {
@@ -1482,7 +1549,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
                   Contribute
                 </button>
               ) : (
-                <FollowToContributeButton 
+                <FollowToContributeButton
                   onClick={handleFollowCreator}
                   isLoading={subscribeLoading}
                 />
@@ -1504,7 +1571,7 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
             {communityLinksData.length === 0 ? (
               <div className={styles.noLinksMessage}>
                 {isContributionsAllowed ? (
-                  isFollowingCreator ? 
+                  isFollowingCreator ?
                     "No community links yet. Be the first to contribute!" :
                     "No community links yet. Follow the creator to contribute."
                 ) : (
@@ -1561,11 +1628,11 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
                 </div>
               ))
             )}
-            
+
             {/* Empty state with Follow button when no contributions but following is required */}
             {communityLinksData.length === 0 && isContributionsAllowed && !isFollowingCreator && currentUser && !isPostCreator && (
               <div className={styles.emptyStateWithAction}>
-                <button 
+                <button
                   className={styles.followCreatorButton}
                   onClick={handleFollowCreator}
                   disabled={subscribeLoading}

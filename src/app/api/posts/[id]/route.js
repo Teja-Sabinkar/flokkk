@@ -8,7 +8,7 @@ export async function GET(request, { params }) {
   try {
     const { db } = await connectToDatabase();
     const { id } = params;
-    
+
     // Create a valid ObjectId
     let postId;
     try {
@@ -20,17 +20,17 @@ export async function GET(request, { params }) {
         { status: 400 }
       );
     }
-    
+
     // Find post by ID using direct MongoDB query
     const post = await db.collection('posts').findOne({ _id: postId });
-    
+
     if (!post) {
       return NextResponse.json(
         { message: 'Post not found' },
         { status: 404 }
       );
     }
-    
+
     // Ensure all fields are properly included in the response
     const responsePost = {
       _id: post._id,
@@ -40,16 +40,27 @@ export async function GET(request, { params }) {
       title: post.title,
       content: post.content,
       image: post.image,
-      videoUrl: post.videoUrl, // Explicitly include videoUrl
+      videoUrl: post.videoUrl,
       hashtags: post.hashtags || [],
       discussions: post.discussions || 0,
       shares: post.shares || 0,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
       creatorLinks: post.creatorLinks || [],
+      // Ensure communityLinks are properly formatted
+      communityLinks: (post.communityLinks || []).map(link => ({
+        title: link.title || 'Untitled Link',
+        url: link.url || '#',
+        description: link.description || '',
+        contributorId: link.contributorId,
+        contributorUsername: link.contributorUsername || 'Anonymous',
+        voteCount: link.voteCount || link.votes || 0,
+        votes: link.voteCount || link.votes || 0, // For backward compatibility
+        userVotes: link.userVotes || {}
+      })),
       allowContributions: post.allowContributions
     };
-    
+
     // Return post data
     return NextResponse.json(responsePost, { status: 200 });
   } catch (error) {

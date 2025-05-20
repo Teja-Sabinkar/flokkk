@@ -56,6 +56,12 @@ const ContributionsTab = () => {
         throw new Error('Authentication required');
       }
 
+      // Find the contribution in our current state to get post details
+      const contribution = contributions.find(c => c.id === contributionId);
+      if (!contribution) {
+        throw new Error('Contribution not found');
+      }
+
       const response = await fetch(`/api/link-contributions/${contributionId}`, {
         method: 'PATCH',
         headers: {
@@ -74,8 +80,22 @@ const ContributionsTab = () => {
         setContributions(prev => prev.filter(c => c.id !== contributionId));
       }
 
-      // Show a success message
-      alert(`Contribution ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
+      // Show a custom success message for approval
+      if (action === 'approve') {
+        alert(`The link has been approved and will now appear in the Community Links section of your post.`);
+
+        // Optional: If the discussion page is currently open, we could dispatch a custom event
+        // to notify it to refresh the community links data
+        try {
+          window.dispatchEvent(new CustomEvent('contribution-approved', {
+            detail: { postId: contribution.postId }
+          }));
+        } catch (e) {
+          console.log('Event dispatch not critical:', e);
+        }
+      } else {
+        alert(`Contribution ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
+      }
 
     } catch (error) {
       console.error(`Error ${action}ing contribution:`, error);
@@ -240,7 +260,7 @@ const ContributionsTab = () => {
 
               <div className={styles.contributionContent}>
 
-              {contribution.description && (
+                {contribution.description && (
                   <p className={styles.contributionDescription}>
                     {contribution.description}
                   </p>
