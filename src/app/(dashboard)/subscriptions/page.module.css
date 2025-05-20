@@ -1,3 +1,4 @@
+/* src/app/(dashboard)/subscriptions/page.module.css - Fixed positioning */
 /* Main container for the entire page */
 .pageContainer {
   display: flex;
@@ -33,13 +34,13 @@
   right: 0;
   z-index: 1000;
   height: 60px;
-  /* Should match the header height */
   background-color: #0f0f0f;
 }
 
-/* Main content area */
+/* Main content area - fixed to use row layout */
 .mainContent {
   display: flex;
+  flex-direction: row; /* Ensure horizontal layout */
   position: fixed;
   top: 60px;
   left: 0;
@@ -50,62 +51,48 @@
   z-index: 0;
 }
 
-/* Left sidebar container */
+/* Left sidebar container - changed to relative positioning */
 .sidebarContainer {
   width: 330px;
-  /* Match sidebar width */
   flex-shrink: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
   background-color: #121212;
+  position: relative; /* Changed from absolute */
+  height: 100%;
   overflow: hidden;
   transition: transform 0.3s ease;
   z-index: 100;
-  /* Ensure sidebar is above overlay */
 }
 
 .sidebarScrollable {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
   height: 100%;
+  width: 100%;
   overflow-y: auto;
-  /* Enable independent scrolling */
   background-color: #121212;
-  /* Ensure bottom is covered */
   padding-bottom: 20px;
 }
 
-/* Content container */
+/* Content container - changed to relative positioning */
 .contentContainer {
   flex: 1;
-  position: absolute;
-  top: 0;
-  left: 330px;
-  /* Match sidebar width */
-  right: 0;
-  bottom: 0;
+  position: relative; /* Changed from absolute */
+  height: 100%;
   background-color: #0f0f0f;
   overflow: hidden;
-  transition: left 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .contentScrollable {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  flex: 1;
   overflow-y: auto;
-  /* Enable independent scrolling */
   padding: 30px;
   background-color: #0f0f0f;
-  /* Ensure bottom is covered */
   padding-bottom: 40px;
   scrollbar-width: none;
+}
+
+.contentScrollable::-webkit-scrollbar {
+  display: none;
 }
 
 /* Page header styling */
@@ -126,7 +113,7 @@
   margin-bottom: 20px;
 }
 
-/* Filter bar styles - New addition */
+/* Filter bar styles */
 .filterBar {
   display: flex;
   justify-content: space-between;
@@ -260,56 +247,49 @@
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 90;
-  /* Lower than sidebar */
   backdrop-filter: blur(4px);
 }
 
-/* Responsive adjustments */
-@media (max-width: 1300px) {
+/* For when right sidebar is not visible to expand content */
+.expandedContent {
+  width: 100%;
+}
 
-  /* Hide left sidebar by default, will be shown with toggle */
+/* Responsive adjustments - switch to absolute positioning for mobile */
+@media (max-width: 1300px) {
   .sidebarContainer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
   }
 
-  /* Show sidebar when open class is applied */
   .sidebarContainer.open {
     transform: translateX(0);
   }
 
-  /* Adjust content container to take full width */
   .contentContainer {
-    left: 0;
+    width: 100%;
   }
 
-  /* Show overlay when sidebar is open */
   .mobileOverlay {
     display: none;
-    /* Hidden by default */
   }
 
-  /* When sidebar is open, show the overlay but only to the right of the sidebar */
   .open~.mobileOverlay,
   .open+.mobileOverlay,
   .open~* .mobileOverlay {
     display: block;
     left: 0px;
-    /* Width of the sidebar on mobile */
   }
 }
 
 @media (max-width: 992px) {
-  .mainContent {
-    flex-direction: column;
-  }
-
   .sidebarContainer {
     width: 240px;
-    /* Slightly narrower for mobile */
   }
 
-  /* Update overlay left position to match sidebar width */
   .open~.mobileOverlay,
   .open+.mobileOverlay,
   .open~* .mobileOverlay {
@@ -338,18 +318,9 @@
   }
 
   .sidebarContainer {
-    width: 220px;
-  }
-
-  .sidebarScrollable {
-    width: 80px;
-  }
-
-  .sidebarContainer {
     width: 72px;
   }
 
-  /* Update overlay left position to match sidebar width */
   .open~.mobileOverlay,
   .open+.mobileOverlay,
   .open~* .mobileOverlay {
@@ -383,10 +354,8 @@
 @media (max-width: 480px) {
   .sidebarContainer {
     width: 72px;
-    /* Even narrower for small screens */
   }
 
-  /* Update overlay left position to match sidebar width */
   .open~.mobileOverlay,
   .open+.mobileOverlay,
   .open~* .mobileOverlay {

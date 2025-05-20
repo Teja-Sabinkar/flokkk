@@ -1,0 +1,48 @@
+/* src/components/ai/DesktopSidebarToggle.module.css */
+.desktopSidebarToggle {
+    position: fixed;
+    right: 340px;
+    /* Adjust based on sidebar width */
+    top: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: #1a1a1a;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    z-index: 900;
+    transition: right 0.3s ease, background-color 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.desktopSidebarToggle:hover {
+    background-color: #2a2a2a;
+}
+
+.desktopSidebarToggle.active {
+    right: 340px;
+    /* Positioned to match sidebar width */
+    background-color: #1a1a1a;
+}
+
+.aiText {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.toggleIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Only display in desktop view */
+@media (max-width: 1300px) {
+    .desktopSidebarToggle {
+        display: none;
+    }
+}

@@ -1,9 +1,12 @@
+// src/app/(dashboard)/subscriptions/page.js - Updated (removed DesktopSidebarToggle)
 'use client';
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/layout/Header/Header';
 import SidebarNavigation from '@/components/layout/SidebarNavigation/SidebarNavigation';
 import SubscriptionsContainer from '@/components/subscriptions/SubscriptionsContainer';
+import RightSidebarContainer from '@/components/ai/RightSidebarContainer';
+import RightSidebarToggle from '@/components/ai/RightSidebarToggle';
 import { 
   fetchSubscriptionFeed, 
   getRecentSubscriptions 
@@ -28,6 +31,35 @@ export default function SubscriptionsPage() {
   const [timeFilter, setTimeFilter] = useState('all'); // 'all', 'day', 'week', or 'month'
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+
+  // Add state for right sidebar visibility and mobile view detection
+  const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(() => {
+    // Initially visible only if screen width >= 1300px (desktop)
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1300;
+    }
+    return true; // Default to true for SSR
+  });
+  const [isMobileView, setIsMobileView] = useState(false);
+  
+  // Check for mobile view and update sidebar visibility
+  useEffect(() => {
+    const checkMobileView = () => {
+      const isMobile = window.innerWidth < 1300;
+      setIsMobileView(isMobile);
+    };
+
+    // Check initially
+    checkMobileView();
+
+    // Set up event listener for window resize
+    window.addEventListener('resize', checkMobileView);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', checkMobileView);
+    };
+  }, []);
   
   // Fetch user data if not using a context
   useEffect(() => {
@@ -122,6 +154,11 @@ export default function SubscriptionsPage() {
   // Handle overlay click to close sidebar
   const handleOverlayClick = () => {
     setIsSidebarOpen(false);
+  };
+
+  // Define the right sidebar toggle function
+  const handleRightSidebarToggle = () => {
+    setIsRightSidebarVisible(!isRightSidebarVisible);
   };
 
   // Filter subscriptions based on time period and search query
@@ -345,6 +382,19 @@ export default function SubscriptionsPage() {
             />
           </div>
         </div>
+
+        {/* Unified Right sidebar toggle - visible on both desktop and mobile */}
+        <RightSidebarToggle
+          isRightSidebarVisible={isRightSidebarVisible}
+          handleRightSidebarToggle={handleRightSidebarToggle}
+        />
+
+        {/* Right sidebar with AI assistant - Part of the flex layout in desktop */}
+        <RightSidebarContainer
+          user={userWithFallback}
+          isRightSidebarVisible={isRightSidebarVisible}
+          isMobileView={isMobileView}
+        />
       </div>
     </div>
   );

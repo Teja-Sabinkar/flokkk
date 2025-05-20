@@ -11,39 +11,45 @@
 
 .categoriesScroll {
     overflow-x: auto;
-    scrollbar-width: thin; /* Thin scrollbar for Firefox */
+    scrollbar-width: thin;
+    /* Thin scrollbar for Firefox */
     scroll-behavior: smooth;
     padding: 10px 0;
     min-height: 120px;
 }
 
 .categoriesScroll::-webkit-scrollbar {
-    height: 4px; /* Make the scrollbar thinner */
+    height: 4px;
+    /* Make the scrollbar thinner */
     background: transparent;
 }
 
 .categoriesScroll::-webkit-scrollbar-track {
-    background: #1a1a1a; /* Dark background for the track */
+    background: #1a1a1a;
+    /* Dark background for the track */
     border-radius: 2px;
 }
 
 .categoriesScroll::-webkit-scrollbar-thumb {
-    background: #555; /* Gray color for the scrollbar thumb */
+    background: #555;
+    /* Gray color for the scrollbar thumb */
     border-radius: 2px;
 }
 
 .categoriesScroll::-webkit-scrollbar-thumb:hover {
-    background: #666; /* Slightly lighter on hover */
+    background: #666;
+    /* Slightly lighter on hover */
 }
 
 .categoriesScroll {
-    scrollbar-color: #555 #1a1a1a; /* thumb color, track color */
+    scrollbar-color: #555 #1a1a1a;
+    /* thumb color, track color */
 }
 
 /* The rest of your CSS remains unchanged */
 .categoriesWrapper {
     display: flex;
-    gap: 16px;
+    gap: 17px;
     padding: 0 4px;
 }
 

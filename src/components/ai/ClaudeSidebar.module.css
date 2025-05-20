@@ -1,0 +1,376 @@
+/* src/components/ai/ClaudeSidebar.module.css */
+.rightSidebarScrollable {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background-color: #0f0f0f;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+/* Chat Messages CSS */
+.chatMessages {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    margin-bottom: 0;
+    flex: 1;
+    overflow-y: auto;
+    width: 100%;
+    box-sizing: border-box;
+    scrollbar-width: none;
+}
+
+/* New Dashboard Section */
+.dashboardSection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-bottom: 12px;
+}
+
+/* Platform Stats Container */
+.statsContainer {
+    background-color: #171717;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #2a2a2a;
+}
+
+.sectionTitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.statItem {
+    text-align: center;
+    padding: 8px;
+    background-color: #1e1e1e;
+    border-radius: 6px;
+    border: 1px solid #333;
+}
+
+.statNumber {
+    font-size: 20px;
+    font-weight: 700;
+    color: #4169e1;
+    display: block;
+}
+
+.statLabel {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 4px;
+}
+
+.trendingTopic {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: rgba(65, 105, 225, 0.1);
+    border-radius: 6px;
+    border: 1px solid rgba(65, 105, 225, 0.2);
+}
+
+.trendingLabel {
+    font-size: 12px;
+    color: #4169e1;
+    font-weight: 500;
+}
+
+.trendingText {
+    font-size: 12px;
+    color: #e0e0e0;
+    font-weight: 500;
+}
+
+/* Daily Insight Container */
+.insightContainer {
+    background-color: #171717;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #2a2a2a;
+}
+
+.dailyInsight {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #d1d1d1;
+    padding: 8px;
+    background-color: #1e1e1e;
+    border-radius: 6px;
+    border-left: 3px solid #4169e1;
+    position: relative;
+}
+
+/* Quick Actions */
+.quickActions {
+    background-color: #171717;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #2a2a2a;
+}
+
+.actionTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 12px 0;
+}
+
+.actionButtons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+
+.actionButton {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: #d1d1d1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.actionButton:hover {
+    background-color: #2a2a2a;
+    border-color: #4169e1;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.actionButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+
+.chatMessage {
+    padding: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    animation: fadeIn 0.3s ease;
+    border-radius: 12px;
+    position: relative;
+}
+
+.system {
+    color: #a1a1a1;
+    padding: 10px 14px;
+    background-color: transparent;
+    font-size: 13px;
+    text-align: center;
+    max-width: 80%;
+    margin: 0px auto;
+}
+
+.user {
+    background-color: #2962FF;
+    align-self: flex-end;
+    max-width: 85%;
+    padding: 12px 16px;
+    color: white;
+}
+
+.ai {
+    background-color: #181818;
+    align-self: flex-start;
+    color: #fff;
+    border: 1px solid #333;
+    padding: 12px 16px;
+}
+
+.error {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #ff6b6b;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    padding: 12px 16px;
+    border-radius: 12px;
+    max-width: 85%;
+}
+
+.messageContent {
+    padding: 0;
+}
+
+/* Typing indicator */
+.typingIndicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 16px;
+}
+
+.typingIndicator span {
+    width: 6px;
+    height: 6px;
+    background-color: #6e6e6e;
+    border-radius: 50%;
+    display: inline-block;
+    animation: typing 1.4s infinite ease-in-out both;
+}
+
+.typingIndicator span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.typingIndicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typingIndicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+
+    0%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: translateY(-6px);
+        opacity: 1;
+    }
+}
+
+/* Chat input styles */
+.chatInputContainer {
+    padding: 12px;
+    margin-top: auto;
+    margin-bottom: 0;
+}
+
+.chatInputWrapper {
+    display: flex;
+    position: relative;
+    border: 1px solid #333;
+    border-radius: 8px;
+    background-color: #252525;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    min-height: 46px;
+}
+
+.chatInput {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    background-color: transparent;
+    color: #d1d1d1;
+    font-size: 14px;
+    outline: none;
+    width: 100%;
+    resize: none;
+    overflow-y: auto;
+    line-height: 1.4;
+}
+
+.chatInput::placeholder {
+    color: #6e6e6e;
+}
+
+.chatControls {
+    display: flex;
+    align-items: flex-end;
+    padding-right: 4px;
+    padding-bottom: 4px;
+    padding-top: 4px;
+    background-color: #252525;
+    align-self: flex-end;
+}
+
+.sendButton {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background-color: #4169e1;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.sendButton:hover:not(:disabled) {
+    background-color: #365bd6;
+}
+
+.sendButton:disabled {
+    background-color: #333;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Suggestions */
+.suggestionsContainer {
+    padding: 12px 16px;
+    margin-bottom: 8px;
+}
+
+.suggestionsList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.suggestionButton {
+    background-color: transparent;
+    color: rgb(148, 148, 148);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 5px 14px;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    line-height: 1.4;
+}
+
+.suggestionButton:hover {
+    color: rgb(255, 255, 255);
+    background-color: #1e50e0;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

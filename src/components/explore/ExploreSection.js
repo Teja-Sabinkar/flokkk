@@ -1,9 +1,9 @@
-// src/components/explore/ExploreSection.js - Updated to pass videoUrl to ExploreItem
+// src/components/explore/ExploreSection.js
 import React from 'react';
 import ExploreItem from './ExploreItem';
 import styles from './ExploreSection.module.css';
 
-const ExploreSection = ({ title, items }) => {
+const ExploreSection = ({ title, items = [] }) => {
   // Check if we have any items to display
   const hasItems = items && items.length > 0;
 

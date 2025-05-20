@@ -1,0 +1,111 @@
+/* src/components/ai/RightSidebarContainer.module.css - Fixed to allow content expansion */
+.rightSidebarContainer {
+  /* Use CSS custom property for consistent width */
+  width: var(--sidebar-width, 330px);
+  flex-shrink: 0;
+  height: 100%;
+  background-color: #0f0f0f;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #222;
+  position: relative;
+  
+  /* Smooth transitions for width, transform and opacity */
+  transition: width 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+  opacity: 1;
+}
+
+/* Hidden state in desktop - collapse width and fade out */
+.rightSidebarContainer.hidden {
+  width: 0 !important;
+  opacity: 0;
+  border-left: none;
+  overflow: hidden;
+}
+
+/* Visible state */
+.rightSidebarContainer.visible {
+  opacity: 1;
+}
+
+/* Resize handle styles */
+.resizeHandle {
+  position: absolute;
+  left: -10px;
+  top: 0;
+  height: 100%;
+  width: 20px;
+  cursor: col-resize;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.2;
+  transition: opacity 0.2s ease;
+}
+
+.resizeHandle:hover,
+.resizeHandle.isResizing {
+  opacity: 1;
+  background-color: rgba(65, 105, 225, 0.1);
+}
+
+.resizeBar {
+  width: 3px;
+  height: 100px;
+  background-color: #4169e1;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.resizeHandle:hover .resizeBar,
+.resizeHandle.isResizing .resizeBar {
+  width: 4px;
+  height: 120px;
+  background-color: #5577ff;
+  box-shadow: 0 0 8px rgba(65, 105, 225, 0.3);
+}
+
+/* Mobile styles - use transform for overlay behavior */
+@media (max-width: 1300px) {
+  .rightSidebarContainer {
+    position: fixed;
+    right: 0;
+    top: 60px;
+    height: calc(100vh - 60px);
+    z-index: 998;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+    /* Override width for mobile and use transform */
+    width: 400px !important;
+    transform: translateX(100%);
+    opacity: 0;
+    /* Override transitions for mobile */
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  /* Mobile visible state - slide in */
+  .rightSidebarContainer.visible {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  /* Mobile hidden state - slide out */
+  .rightSidebarContainer.hidden {
+    width: 400px !important;
+    transform: translateX(100%);
+    opacity: 0;
+    border-left: none;
+  }
+
+  /* Hide resize handle in mobile */
+  .resizeHandle {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .rightSidebarContainer {
+    width: 330px !important;
+  }
+}

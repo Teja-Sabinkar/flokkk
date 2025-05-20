@@ -21,7 +21,13 @@ export default function HomePage() {
   const [hasInteracted, setHasInteracted] = useState(false);
 
   // Add state for right sidebar visibility and mobile view detection
-  const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
+  const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(() => {
+    // Initially visible only if screen width >= 1300px (desktop)
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1300;
+    }
+    return true; // Default to true for SSR
+  });
   const [isMobileView, setIsMobileView] = useState(false);
 
   const containerRef = useRef(null);
@@ -63,7 +69,6 @@ export default function HomePage() {
     ]);
   }, [user]);
 
-
   useEffect(() => {
     const checkMobileView = () => {
       const isMobile = window.innerWidth < 1300;
@@ -86,8 +91,6 @@ export default function HomePage() {
       window.removeEventListener('resize', checkMobileView);
     };
   }, []);
-
-
 
   // Fetch user data if not using a context
   useEffect(() => {

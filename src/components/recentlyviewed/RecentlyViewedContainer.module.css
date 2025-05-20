@@ -11,7 +11,7 @@
 
 .gridView {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(2, 1fr); /* Changed to always show exactly 2 columns */
   gap: 20px;
 }
 
@@ -45,8 +45,15 @@
   to { opacity: 1; }
 }
 
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .gridView {
-    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 580px) {
+  .gridView {
+    grid-template-columns: 1fr; /* Single column on small screens */
   }
 }

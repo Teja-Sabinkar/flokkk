@@ -1,4 +1,4 @@
-// src/app/(dashboard)/explore/page.js
+// src/app/(dashboard)/explore/page.js - Updated layout (removed DesktopSidebarToggle)
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,6 +6,8 @@ import Header from '@/components/layout/Header/Header';
 import SidebarNavigation from '@/components/layout/SidebarNavigation/SidebarNavigation';
 import CategorySection from '@/components/explore/CategorySection';
 import ExploreSection from '@/components/explore/ExploreSection';
+import RightSidebarContainer from '@/components/ai/RightSidebarContainer';
+import RightSidebarToggle from '@/components/ai/RightSidebarToggle';
 import styles from './page.module.css';
 
 export default function ExplorePage() {
@@ -17,7 +19,16 @@ export default function ExplorePage() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  
+
+  // Add state for right sidebar visibility and mobile view detection
+  const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(() => {
+    // Initially visible only if screen width >= 1300px (desktop)
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1300;
+    }
+    return true; // Default to true for SSR
+  });
+  const [isMobileView, setIsMobileView] = useState(false);
 
   // Fetch user data if not using a context
   useEffect(() => {
@@ -47,6 +58,25 @@ export default function ExplorePage() {
     fetchUserData();
   }, []);
 
+  // Check for mobile view and update sidebar visibility
+  useEffect(() => {
+    const checkMobileView = () => {
+      const isMobile = window.innerWidth < 1300;
+      setIsMobileView(isMobile);
+    };
+
+    // Check initially
+    checkMobileView();
+
+    // Set up event listener for window resize
+    window.addEventListener('resize', checkMobileView);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', checkMobileView);
+    };
+  }, []);
+
   // Fetch explore content when category changes
   useEffect(() => {
     fetchExploreContent(activeCategory, 1);
@@ -56,25 +86,25 @@ export default function ExplorePage() {
   const fetchExploreContent = async (category, pageNumber) => {
     setIsLoading(true);
     setError(null);
-  
+
     if (pageNumber === 1) {
       setExploreItems([]); // Clear existing items if loading first page
     }
-  
+
     try {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-  
+
       const response = await fetch(`/api/explore/category?category=${encodeURIComponent(category)}&page=${pageNumber}`, {
         headers
       });
-  
+
       if (!response.ok) {
         throw new Error(`Failed to fetch explore content: ${response.statusText}`);
       }
-  
+
       const data = await response.json();
-      
+
       // Process the items to ensure all necessary fields are present
       const processedItems = (data.items || []).map(item => ({
         id: item.id || item._id, // Ensure we have an id field
@@ -83,11 +113,11 @@ export default function ExplorePage() {
         title: item.title || 'Untitled',
         description: item.description || item.content || '',
         imageUrl: item.imageUrl || item.image || '/api/placeholder/600/300',
-        videoUrl: item.videoUrl || null, // ADD THIS LINE - Include videoUrl for play button functionality
+        videoUrl: item.videoUrl || null,
         discussionCount: item.discussionCount || '0',
         profilePicture: item.profilePicture || '/profile-placeholder.jpg'
       }));
-  
+
       if (pageNumber === 1) {
         // Replace existing items
         setExploreItems(processedItems);
@@ -95,13 +125,13 @@ export default function ExplorePage() {
         // Append to existing items
         setExploreItems(prevItems => [...prevItems, ...processedItems]);
       }
-  
+
       // Update pagination info
       setPage(pageNumber);
       setHasMore(data.pagination.page < data.pagination.totalPages);
-  
+
       console.log(`Loaded ${processedItems.length} items for ${category} (source: ${data.source || 'unknown'})`);
-  
+
     } catch (err) {
       console.error('Error fetching explore content:', err);
       setError(err.message || 'Failed to load content');
@@ -132,6 +162,11 @@ export default function ExplorePage() {
   // Handle overlay click to close sidebar
   const handleOverlayClick = () => {
     setIsSidebarOpen(false);
+  };
+
+  // Define the right sidebar toggle function
+  const handleRightSidebarToggle = () => {
+    setIsRightSidebarVisible(!isRightSidebarVisible);
   };
 
   // Handle category change
@@ -363,6 +398,19 @@ export default function ExplorePage() {
             </div>
           </div>
         </div>
+
+        {/* Unified Right sidebar toggle - visible on both desktop and mobile */}
+        <RightSidebarToggle
+          isRightSidebarVisible={isRightSidebarVisible}
+          handleRightSidebarToggle={handleRightSidebarToggle}
+        />
+
+        {/* Right sidebar with AI assistant - Part of the flex layout in desktop */}
+        <RightSidebarContainer
+          user={userWithFallback}
+          isRightSidebarVisible={isRightSidebarVisible}
+          isMobileView={isMobileView}
+        />
       </div>
     </div>
   );

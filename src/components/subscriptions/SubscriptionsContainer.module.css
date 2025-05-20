@@ -25,7 +25,7 @@
 }
 
 .gridView {
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(2, 1fr); /* Changed to always show exactly 2 columns */
 }
 
 .listView {
@@ -147,9 +147,15 @@
   }
 }
 
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .itemsContainer.gridView {
-    grid-template-columns: 1fr;
+  .gridView {
+    gap: 16px;
   }
-  
+}
+
+@media (max-width: 580px) {
+  .gridView {
+    grid-template-columns: 1fr; /* Single column on small screens */
+  }
 }
