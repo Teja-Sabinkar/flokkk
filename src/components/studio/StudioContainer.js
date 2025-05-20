@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './StudioContainer.module.css';
 import PostsList from './PostsList';
-import { useRouter } from 'next/navigation';
+import CreateStudioDiscussionModal from './CreateStudioDiscussionModal';
 
 // Updated mock data with local image paths instead of external URLs
 const MOCK_POSTS = [
@@ -112,6 +113,8 @@ export default function StudioContainer({ user }) {
     published: 0,
     draft: 0
   });
+  // State to control modal visibility
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Load mock data instead of fetching from API
   useEffect(() => {
@@ -131,6 +134,66 @@ export default function StudioContainer({ user }) {
     
     return () => clearTimeout(timer);
   }, []);
+
+  // Toggle create modal
+  const handleOpenCreateModal = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
+  // Handle creating a new discussion (mock implementation)
+  const handleCreateDiscussion = async (discussionData) => {
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Create a new post with mock ID and date
+      const newPost = {
+        _id: `new-${Date.now()}`,
+        title: discussionData.title,
+        content: discussionData.description,
+        status: discussionData.status || 'published',
+        createdAt: new Date().toISOString(),
+        metrics: {
+          views: 0,
+          comments: 0,
+          contributions: 0
+        },
+        tags: discussionData.hashtags,
+        category: discussionData.category,
+        type: discussionData.type || 'discussion',
+        youtubeUrl: discussionData.videoUrl || null,
+        youtubeMetadata: discussionData.youtubeMetadata || null,
+        creator: {
+          links: discussionData.creatorLinks || []
+        },
+        community: {
+          allowContributions: discussionData.allowContributions
+        },
+        thumbnail: discussionData.thumbnailPreview
+      };
+      
+      // Update local state
+      setPosts(prevPosts => [newPost, ...prevPosts]);
+      
+      // Update stats
+      setStats(prevStats => ({
+        ...prevStats,
+        total: prevStats.total + 1,
+        published: prevStats.published + (discussionData.status === 'published' ? 1 : 0),
+        draft: prevStats.draft + (discussionData.status === 'draft' ? 1 : 0)
+      }));
+
+      console.log('Created new discussion:', newPost);
+      return true;
+    } catch (err) {
+      console.error('Error creating discussion:', err);
+      return false;
+    }
+  };
 
   // Handle post update (mock implementation)
   const handlePostUpdate = async (updatedPost) => {
@@ -205,17 +268,13 @@ export default function StudioContainer({ user }) {
     return true;
   });
 
-  const handleCreatePost = () => {
-    router.push('/home');
-  };
-
   return (
     <div className={styles.studioContent}>
       <div className={styles.studioHeader}>
         <h1 className={styles.studioTitle}>Content Studio</h1>
         <button 
           className={styles.createPostButton}
-          onClick={handleCreatePost}
+          onClick={handleOpenCreateModal}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -268,6 +327,13 @@ export default function StudioContainer({ user }) {
         onUpdate={handlePostUpdate}
         onDelete={handlePostDelete}
       />
+
+      {isCreateModalOpen && (
+        <CreateStudioDiscussionModal 
+          onClose={handleCloseCreateModal} 
+          onSave={handleCreateDiscussion}
+        />
+      )}
     </div>
   );
 }
