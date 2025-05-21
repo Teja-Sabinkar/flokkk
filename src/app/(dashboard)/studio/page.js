@@ -22,17 +22,53 @@ const MOCK_USER = {
 
 export default function StudioPage() {
   const router = useRouter();
-  const [user, setUser] = useState(MOCK_USER); // Initialize with mock data
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Add a useEffect to fetch the real user data
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          // Fallback to mock data if no token
+          setUser(MOCK_USER);
+          return;
+        }
+
+        const response = await fetch('/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        } else {
+          // Fallback to mock data if API call fails
+          setUser(MOCK_USER);
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        setUser(MOCK_USER);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+  
 
   // Simulate loading delay
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -88,7 +124,7 @@ export default function StudioPage() {
     return (
       <div className={styles.errorContainer}>
         <p className={styles.errorMessage}>{error}</p>
-        <button 
+        <button
           className={styles.retryButton}
           onClick={() => window.location.reload()}
         >
@@ -100,23 +136,23 @@ export default function StudioPage() {
 
   return (
     <div className={styles.studioPage}>
-      <DiscussionPageHeader 
-        user={user} 
+      <DiscussionPageHeader
+        user={user}
         onMenuToggle={handleMenuToggle}
         isMobileMenuOpen={isMobileMenuOpen}
       />
-      
+
       <div className={styles.mainContent}>
         {/* Sidebar navigation - hidden by default on mobile */}
         <div className={styles.sidebarContainer}>
           <DiscussionPageSidebarNavigation isOpen={isMobileMenuOpen} />
         </div>
-        
+
         {/* Main content area */}
         <div className={`${styles.contentContainer} ${isMobileMenuOpen ? styles.menuOpen : ''}`}>
           <StudioContainer user={user} />
         </div>
-        
+
         {/* Overlay for mobile when menu is open */}
         {isMobileMenuOpen && (
           <div className={styles.mobileOverlay} onClick={handleMenuToggle}></div>

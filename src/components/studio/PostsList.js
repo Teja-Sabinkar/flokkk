@@ -3,28 +3,34 @@
 import { useState } from 'react';
 import styles from './PostsList.module.css';
 import PostItem from './PostItem';
-// EditPostModal import removed
 
-export default function PostsList({ posts, isLoading, error, onUpdate, onDelete }) {
-  // Modal-related state removed
-  const [sortBy, setSortBy] = useState('date');
-  const [sortOrder, setSortOrder] = useState('desc');
-
-  // Handle sorting change
-  const handleSortChange = (event) => {
-    setSortBy(event.target.value);
+export default function PostsList({ 
+  posts, 
+  isLoading, 
+  error, 
+  onUpdate, 
+  onDelete,
+  currentPage,
+  totalPages,
+  onPageChange,
+  sortBy,
+  sortOrder,
+  onSortChange
+}) {
+  // Debugging: Count posts by status
+  const filteredCount = {
+    all: posts.length,
+    published: posts.filter(post => post.status === 'published').length,
+    draft: posts.filter(post => post.status === 'draft').length
   };
 
-  // Toggle sort order
-  const toggleSortOrder = () => {
-    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-  };
+  console.log('PostsList status counts:', filteredCount);
 
   // Sort posts
   const sortedPosts = [...posts].sort((a, b) => {
     let comparison = 0;
     
-    if (sortBy === 'date') {
+    if (sortBy === 'date' || sortBy === 'createdAt') {
       comparison = new Date(b.createdAt) - new Date(a.createdAt);
     } else if (sortBy === 'title') {
       comparison = a.title.localeCompare(b.title);
@@ -37,8 +43,6 @@ export default function PostsList({ posts, isLoading, error, onUpdate, onDelete 
     return sortOrder === 'asc' ? comparison * -1 : comparison;
   });
 
-  // Modal-related handlers removed
-
   // Handle post deletion
   const handleDeletePost = async (postId) => {
     const confirmed = window.confirm('Are you sure you want to delete this post? This action cannot be undone.');
@@ -47,6 +51,11 @@ export default function PostsList({ posts, isLoading, error, onUpdate, onDelete 
       return success;
     }
     return false;
+  };
+
+  // Handle edit post
+  const handleEditPost = (postId, updatedPost) => {
+    return onUpdate(updatedPost);
   };
 
   if (isLoading) {
@@ -91,9 +100,9 @@ export default function PostsList({ posts, isLoading, error, onUpdate, onDelete 
             id="sortBy" 
             className={styles.sortSelect}
             value={sortBy}
-            onChange={handleSortChange}
+            onChange={(e) => onSortChange(e.target.value)}
           >
-            <option value="date">Date</option>
+            <option value="createdAt">Date</option>
             <option value="title">Title</option>
             <option value="views">Views</option>
             <option value="comments">Comments</option>
@@ -101,7 +110,7 @@ export default function PostsList({ posts, isLoading, error, onUpdate, onDelete 
           
           <button 
             className={styles.sortOrderButton} 
-            onClick={toggleSortOrder}
+            onClick={() => onSortChange(sortBy)}
             aria-label={sortOrder === 'asc' ? 'Sort ascending' : 'Sort descending'}
           >
             {sortOrder === 'asc' ? (
@@ -135,13 +144,36 @@ export default function PostsList({ posts, isLoading, error, onUpdate, onDelete 
           <PostItem
             key={post._id}
             post={post}
-            // onEdit prop removed as we're handling navigation directly in PostItem
+            onEdit={(updatedPost) => handleEditPost(post._id, updatedPost)}
             onDelete={() => handleDeletePost(post._id)}
           />
         ))}
       </div>
 
-      {/* EditPostModal removed */}
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className={styles.pagination}>
+          <button 
+            className={styles.paginationButton}
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          
+          <span className={styles.paginationInfo}>
+            Page {currentPage} of {totalPages}
+          </span>
+          
+          <button
+            className={styles.paginationButton}
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -6,102 +6,6 @@ import styles from './StudioContainer.module.css';
 import PostsList from './PostsList';
 import CreateStudioDiscussionModal from './CreateStudioDiscussionModal';
 
-// Updated mock data with local image paths instead of external URLs
-const MOCK_POSTS = [
-  {
-    _id: '1',
-    title: 'Getting Started with React Hooks',
-    content: 'React Hooks are a powerful way to add state and lifecycle features to functional components...',
-    status: 'published',
-    createdAt: '2025-04-29T10:30:00Z',
-    metrics: {
-      views: 342,
-      comments: 27,
-      contributions: 8
-    },
-    // Don't use external URLs
-    thumbnail: null
-  },
-  {
-    _id: '2',
-    title: 'The Future of AI in Web Development',
-    content: 'Artificial intelligence is rapidly changing how we build and interact with web applications...',
-    status: 'published',
-    createdAt: '2025-05-10T14:20:00Z',
-    metrics: {
-      views: 523,
-      comments: 41,
-      contributions: 12
-    },
-    thumbnail: null
-  },
-  {
-    _id: '3',
-    title: 'CSS Grid Layout: Tips and Tricks',
-    content: 'CSS Grid provides a powerful layout system for modern web design. Here are some advanced techniques...',
-    status: 'published',
-    createdAt: '2025-05-01T09:15:00Z',
-    metrics: {
-      views: 187,
-      comments: 13,
-      contributions: 5
-    },
-    thumbnail: null
-  },
-  {
-    _id: '4',
-    title: 'Building Responsive UIs with Tailwind CSS',
-    content: 'Tailwind CSS provides a utility-first approach to styling that can speed up your development workflow...',
-    status: 'draft',
-    createdAt: '2025-05-15T16:45:00Z',
-    metrics: {
-      views: 0,
-      comments: 0,
-      contributions: 0
-    },
-    thumbnail: null
-  },
-  {
-    _id: '5',
-    title: 'Server-Side Rendering vs. Static Site Generation',
-    content: 'Comparing different rendering strategies for modern web applications and when to use each approach...',
-    status: 'draft',
-    createdAt: '2025-05-16T11:30:00Z',
-    metrics: {
-      views: 0,
-      comments: 0,
-      contributions: 0
-    },
-    thumbnail: null
-  },
-  {
-    _id: '6',
-    title: 'JavaScript Performance Optimization Techniques',
-    content: 'Discover ways to make your JavaScript code run faster and consume fewer resources...',
-    status: 'published',
-    createdAt: '2025-04-25T13:20:00Z',
-    metrics: {
-      views: 276,
-      comments: 19,
-      contributions: 7
-    },
-    thumbnail: null
-  },
-  {
-    _id: '7',
-    title: 'Introduction to WebAssembly',
-    content: 'WebAssembly is changing how we think about performance on the web. Learn the basics in this guide...',
-    status: 'published',
-    createdAt: '2025-05-08T10:10:00Z',
-    metrics: {
-      views: 192,
-      comments: 14,
-      contributions: 3
-    },
-    thumbnail: null
-  }
-];
-
 export default function StudioContainer({ user }) {
   const router = useRouter();
   const [posts, setPosts] = useState([]);
@@ -113,27 +17,112 @@ export default function StudioContainer({ user }) {
     published: 0,
     draft: 0
   });
-  // State to control modal visibility
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  
+  // New sort state to track sorting options
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Load mock data instead of fetching from API
-  useEffect(() => {
-    // Simulate loading delay
-    const timer = setTimeout(() => {
-      setPosts(MOCK_POSTS);
+  // Fetch posts from the API
+  const fetchPosts = async () => {
+    console.log('Fetching posts with active tab:', activeTab);
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+
+      // Create query params with explicit logging
+      const status = activeTab === 'all' ? 'all' : (activeTab === 'published' ? 'published' : 'draft');
+      console.log(`Setting status filter to: ${status} based on activeTab: ${activeTab}`);
       
-      // Calculate stats from mock data
-      setStats({
-        total: MOCK_POSTS.length,
-        published: MOCK_POSTS.filter(post => post.status === 'published').length,
-        draft: MOCK_POSTS.filter(post => post.status === 'draft').length
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: 10,
+        status: status,
+        sortBy: sortBy,
+        sortOrder: sortOrder
+      });
+
+      console.log(`Fetching from API with params: ${params.toString()}`);
+
+      // Fetch posts from our API
+      const response = await fetch(`/api/studio?${params.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch posts');
+      }
+
+      const data = await response.json();
+      console.log(`Received ${data.posts.length} posts from API`);
+      console.log('Posts statuses:', data.posts.map(p => p.status).join(', '));
+      
+      // Transform API data to match the expected format for PostItem
+      const formattedPosts = data.posts.map(post => {
+        // Create a properly structured post object
+        return {
+          _id: post._id,
+          id: post._id,  // Include both forms for compatibility
+          title: post.title || '',
+          content: post.content || '',
+          status: post.status || 'published',  // Ensure status exists
+          image: post.image || null,
+          thumbnail: post.image || null, // Duplicate as thumbnail for PostItem
+          createdAt: post.createdAt || new Date().toISOString(),
+          updatedAt: post.updatedAt || post.createdAt || new Date().toISOString(),
+          type: post.contentType === 'communityPost' ? 'post' : 'discussion',
+          metrics: {
+            views: post.views || post.metrics?.views || 0,
+            comments: post.comments || post.metrics?.comments || 0,
+            contributions: post.metrics?.contributions || 
+                         ((post.communityLinks?.length || 0) + (post.creatorLinks?.length || 0)) || 0
+          }
+        };
       });
       
+      console.log('StudioContainer formatted posts:', formattedPosts);
+      setPosts(formattedPosts);
+      setTotalPages(data.pagination.totalPages);
+      
+      // Fetch metrics for stats
+      const metricsResponse = await fetch('/api/studio/metrics', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (metricsResponse.ok) {
+        const metricsData = await metricsResponse.json();
+        
+        setStats({
+          total: metricsData.discussions.total,
+          published: metricsData.discussions.published,
+          draft: metricsData.discussions.draft
+        });
+      }
+      
+    } catch (err) {
+      console.error('Error fetching posts:', err);
+      setError('Failed to load posts. Please try again.');
+    } finally {
       setIsLoading(false);
-    }, 1000); // 1 second delay to simulate loading
-    
-    return () => clearTimeout(timer);
-  }, []);
+    }
+  };
+
+  // Load posts when component mounts or filters change
+  useEffect(() => {
+    fetchPosts();
+  }, [activeTab, sortBy, sortOrder, currentPage]);
 
   // Toggle create modal
   const handleOpenCreateModal = () => {
@@ -144,86 +133,114 @@ export default function StudioContainer({ user }) {
     setIsCreateModalOpen(false);
   };
 
-  // Handle creating a new discussion (mock implementation)
+  // Create a new discussion
   const handleCreateDiscussion = async (discussionData) => {
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setIsLoading(true);
       
-      // Create a new post with mock ID and date
-      const newPost = {
-        _id: `new-${Date.now()}`,
+      // Log the entire discussion data for debugging
+      console.log('Creating discussion with data:', discussionData);
+      console.log('Status value:', discussionData.status);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+      
+      // First, upload the image if present
+      let imageUrl = null;
+      if (discussionData.thumbnailFile) {
+        const formData = new FormData();
+        formData.append('file', discussionData.thumbnailFile);
+        formData.append('directory', 'posts');
+        
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData,
+        });
+        
+        if (!uploadResponse.ok) throw new Error('Image upload failed');
+        const uploadData = await uploadResponse.json();
+        imageUrl = uploadData.filepath;
+      } else if (discussionData.thumbnailPreview && 
+                !discussionData.thumbnailPreview.startsWith('/api/placeholder')) {
+        // If there's a preview URL from fetched data, use that
+        imageUrl = discussionData.thumbnailPreview;
+      }
+      
+      // Create API request body with status explicitly highlighted for debugging
+      const requestBody = {
         title: discussionData.title,
-        content: discussionData.description,
-        status: discussionData.status || 'published',
-        createdAt: new Date().toISOString(),
-        metrics: {
-          views: 0,
-          comments: 0,
-          contributions: 0
-        },
-        tags: discussionData.hashtags,
-        category: discussionData.category,
-        type: discussionData.type || 'discussion',
-        youtubeUrl: discussionData.videoUrl || null,
-        youtubeMetadata: discussionData.youtubeMetadata || null,
-        creator: {
-          links: discussionData.creatorLinks || []
-        },
-        community: {
-          allowContributions: discussionData.allowContributions
-        },
-        thumbnail: discussionData.thumbnailPreview
+        content: discussionData.description || '',
+        image: imageUrl || null,
+        videoUrl: discussionData.videoUrl || null,
+        hashtags: discussionData.hashtags || [],
+        status: discussionData.status, // Explicitly pass status value
+        creatorLinks: discussionData.creatorLinks || [],
+        allowContributions: discussionData.allowContributions !== false
       };
-      
-      // Update local state
-      setPosts(prevPosts => [newPost, ...prevPosts]);
-      
-      // Update stats
-      setStats(prevStats => ({
-        ...prevStats,
-        total: prevStats.total + 1,
-        published: prevStats.published + (discussionData.status === 'published' ? 1 : 0),
-        draft: prevStats.draft + (discussionData.status === 'draft' ? 1 : 0)
-      }));
 
-      console.log('Created new discussion:', newPost);
+      console.log('API request body:', requestBody);
+      console.log('Status being sent to API:', requestBody.status);
+      
+      // Create the post
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create discussion');
+      }
+      
+      // Refresh posts after creation
+      fetchPosts();
+      
       return true;
     } catch (err) {
       console.error('Error creating discussion:', err);
+      setError('Failed to create discussion. Please try again.');
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Handle post update (mock implementation)
+  // Update post
   const handlePostUpdate = async (updatedPost) => {
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Update local state
-      setPosts(prevPosts => 
-        prevPosts.map(post => 
-          post._id === updatedPost._id ? { ...post, ...updatedPost } : post
-        )
-      );
-      
-      // Update stats if status changed
-      const oldPost = posts.find(p => p._id === updatedPost._id);
-      if (oldPost && oldPost.status !== updatedPost.status) {
-        setStats(prevStats => {
-          const newStats = { ...prevStats };
-          
-          if (oldPost.status === 'published') newStats.published--;
-          if (oldPost.status === 'draft') newStats.draft--;
-          
-          if (updatedPost.status === 'published') newStats.published++;
-          if (updatedPost.status === 'draft') newStats.draft++;
-          
-          return newStats;
-        });
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Not authenticated');
       }
-
+      
+      const response = await fetch(`/api/studio/posts/${updatedPost._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          contentType: updatedPost.contentType,
+          title: updatedPost.title,
+          content: updatedPost.content,
+          status: updatedPost.status,
+          hashtags: updatedPost.tags || updatedPost.hashtags
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update post');
+      }
+      
+      // Refresh posts after update
+      fetchPosts();
+      
       return true;
     } catch (err) {
       console.error('Error updating post:', err);
@@ -231,28 +248,28 @@ export default function StudioContainer({ user }) {
     }
   };
 
-  // Handle post deletion (mock implementation)
+  // Delete post
   const handlePostDelete = async (postId) => {
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Find post before removing it
-      const postToDelete = posts.find(p => p._id === postId);
-      
-      // Update local state
-      setPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
-      
-      // Update stats
-      if (postToDelete) {
-        setStats(prevStats => ({
-          ...prevStats,
-          total: prevStats.total - 1,
-          published: prevStats.published - (postToDelete.status === 'published' ? 1 : 0),
-          draft: prevStats.draft - (postToDelete.status === 'draft' ? 1 : 0)
-        }));
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Not authenticated');
       }
-
+      
+      const response = await fetch(`/api/studio/posts/${postId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete post');
+      }
+      
+      // Remove post from state and refresh
+      fetchPosts();
+      
       return true;
     } catch (err) {
       console.error('Error deleting post:', err);
@@ -260,13 +277,50 @@ export default function StudioContainer({ user }) {
     }
   };
 
-  // Filter posts based on active tab
-  const filteredPosts = posts.filter(post => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'published') return post.status === 'published';
-    if (activeTab === 'draft') return post.status === 'draft';
-    return true;
-  });
+  // Handle sort change
+  const handleSortChange = (newSortBy) => {
+    if (sortBy === newSortBy) {
+      // If clicking on the same column, toggle sort order
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // If clicking on a different column, set it as the new sort column and default to desc
+      setSortBy(newSortBy);
+      setSortOrder('desc');
+    }
+    
+    // Reset to page 1 when sorting changes
+    setCurrentPage(1);
+  };
+  
+  // Handle pagination
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  // Loading state
+  if (isLoading && posts.length === 0) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}></div>
+        <p>Loading studio...</p>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && posts.length === 0) {
+    return (
+      <div className={styles.errorContainer}>
+        <p className={styles.errorMessage}>{error}</p>
+        <button 
+          className={styles.retryButton}
+          onClick={() => fetchPosts()}
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.studioContent}>
@@ -321,11 +375,17 @@ export default function StudioContainer({ user }) {
       </div>
 
       <PostsList 
-        posts={filteredPosts} 
-        isLoading={isLoading} 
+        posts={posts} 
+        isLoading={isLoading}
         error={error}
         onUpdate={handlePostUpdate}
         onDelete={handlePostDelete}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
       />
 
       {isCreateModalOpen && (

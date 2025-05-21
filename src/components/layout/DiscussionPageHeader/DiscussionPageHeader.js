@@ -627,6 +627,13 @@ export default function DiscussionPageHeader({ user, onMenuToggle, isMobileMenuO
   };
 
 
+  // Handler for studio button
+  const handleStudioClick = () => {
+    router.push('/studio');
+    setIsProfileDropdownOpen(false);
+  };
+
+
 
   return (
     <header className={styles.header}>
@@ -898,17 +905,19 @@ export default function DiscussionPageHeader({ user, onMenuToggle, isMobileMenuO
               onClick={toggleProfileDropdown}
             >
               <div className={styles.avatarContainer}>
-                {(userProfile.avatar && userProfile.avatar !== '/profile-placeholder.jpg') ||
-                  (userState.avatar && userState.avatar !== '/profile-placeholder.jpg') ? (
+                {((userProfile.profilePicture && userProfile.profilePicture !== '/profile-placeholder.jpg') ||
+                  (userProfile.avatar && userProfile.avatar !== '/profile-placeholder.jpg') ||
+                  (userState.profilePicture && userState.profilePicture !== '/profile-placeholder.jpg') ||
+                  (userState.avatar && userState.avatar !== '/profile-placeholder.jpg')) ? (
                   <Image
-                    src={userProfile.avatar || userState.avatar}
+                    src={userProfile.profilePicture || userProfile.avatar || userState.profilePicture || userState.avatar}
                     alt={`${userState.username || userProfile.name}'s profile`}
                     width={32}
                     height={32}
                     className={styles.avatar}
                     priority
                     unoptimized
-                    key={userProfile.avatar || userState.avatar} // Force re-render when URL changes
+                    key={userProfile.profilePicture || userProfile.avatar || userState.profilePicture || userState.avatar} // Force re-render when URL changes
                   />
                 ) : (
                   <div
@@ -941,6 +950,18 @@ export default function DiscussionPageHeader({ user, onMenuToggle, isMobileMenuO
                     </svg>
                     <span>Account Profile</span>
                   </button>
+
+                  {/* Add the new Studio button here */}
+                  <button onClick={handleStudioClick} className={styles.profileDropdownItem}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7"></rect>
+                      <rect x="14" y="3" width="7" height="7"></rect>
+                      <rect x="14" y="14" width="7" height="7"></rect>
+                      <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Studio</span>
+                  </button>
+
 
                   <Link href="/settings" className={styles.profileDropdownItem}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

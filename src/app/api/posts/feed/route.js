@@ -21,7 +21,10 @@ export async function GET(request) {
     const headersList = headers();
     const authHeader = headersList.get('Authorization');
     let currentUserId = null;
-    let query = {};
+    let query = {
+      // IMPORTANT: Only show published posts in the feed, always filter out drafts
+      status: { $ne: 'draft' }
+    };
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
@@ -44,7 +47,10 @@ export async function GET(request) {
       }
     }
     
-    // Show posts, filtering out hidden ones if authenticated
+    // Log the query for debugging
+    console.log('Feed query:', JSON.stringify(query, null, 2));
+    
+    // Show posts, filtering out hidden ones AND drafts
     const posts = await Post.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -90,6 +96,7 @@ export async function GET(request) {
         username: postObj.username,
         userId: userId,
         createdAt: postObj.createdAt,
+        status: postObj.status || 'published', // Ensure status is included
         // Add profile picture from our efficient lookup
         profilePicture: userDataMap[userId]?.profilePicture || '/profile-placeholder.jpg',
         // Keep userImage for backward compatibility

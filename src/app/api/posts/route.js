@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
-import { connectToDatabase } from '@/lib/mongodb';
 import dbConnect from '@/lib/mongoose';
+import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import Follow from '@/models/Follow';
 import { createNotification } from '@/lib/notifications';
@@ -36,6 +36,9 @@ export async function POST(request) {
     
     // Get the raw data from the request
     const rawData = await request.json();
+    
+    // Log incoming status for debugging
+    console.log('Creating post with status:', rawData.status);
     
     // Connect to MongoDB using the direct client
     const { db } = await connectToDatabase();
@@ -126,8 +129,13 @@ export async function POST(request) {
       // Explicitly add creator links
       creatorLinks: creatorLinks,
       // Explicitly add allowContributions setting with correct type
-      allowContributions: allowContributions
+      allowContributions: allowContributions,
+      // Explicitly handle status with explicit check
+      status: rawData.status === 'draft' ? 'draft' : 'published'
     };
+    
+    // Log final post data for debugging
+    console.log('Final post data to be saved:', JSON.stringify(postData, null, 2));
     
     // Insert directly using MongoDB driver
     const result = await db.collection('posts').insertOne(postData);
@@ -139,33 +147,37 @@ export async function POST(request) {
     // Increment user's discussion count
     await User.findByIdAndUpdate(user._id, { $inc: { discussions: 1 } });
     
-    // Notify followers of the new post
-    try {
-      // Find all followers of the post creator
-      const follows = await Follow.find({ following: user._id });
-      
-      // Create notifications for each follower
-      if (follows && follows.length > 0) {
-        for (const follow of follows) {
-          try {
-            await createNotification({
-              userId: follow.follower,
-              type: 'new_post',
-              content: `${user.username || user.name} posted a new discussion: "${rawData.title}"`,
-              sender: user._id,
-              senderUsername: user.username || user.name,
-              relatedId: result.insertedId,
-              onModel: 'Post',
-              thumbnail: rawData.image || null
-            });
-          } catch (notifyError) {
-            console.error(`Error creating notification for follower ${follow.follower}:`, notifyError);
+    // Only notify followers if the post is published (not draft)
+    if (postData.status === 'published') {
+      try {
+        // Find all followers of the post creator
+        const follows = await Follow.find({ following: user._id });
+        
+        // Create notifications for each follower
+        if (follows && follows.length > 0) {
+          for (const follow of follows) {
+            try {
+              await createNotification({
+                userId: follow.follower,
+                type: 'new_post',
+                content: `${user.username || user.name} posted a new discussion: "${rawData.title}"`,
+                sender: user._id,
+                senderUsername: user.username || user.name,
+                relatedId: result.insertedId,
+                onModel: 'Post',
+                thumbnail: rawData.image || null
+              });
+            } catch (notifyError) {
+              console.error(`Error creating notification for follower ${follow.follower}:`, notifyError);
+            }
           }
         }
+      } catch (notifyError) {
+        // Log the error but don't fail the request
+        console.error('Error notifying followers:', notifyError);
       }
-    } catch (notifyError) {
-      // Log the error but don't fail the request
-      console.error('Error notifying followers:', notifyError);
+    } else {
+      console.log('Post saved as draft, no notifications sent');
     }
     
     // Return the created post

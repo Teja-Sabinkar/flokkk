@@ -498,6 +498,12 @@ export default function Header({ user, onMenuToggle, isMobileMenuOpen }) {
     return color;
   };
 
+  // Handler for studio button
+  const handleStudioClick = () => {
+    router.push('/studio');
+    setIsProfileDropdownOpen(false);
+  };
+
   return (
     <header className={styles.header}>
       <div className={styles.headerContent}>
@@ -797,13 +803,23 @@ export default function Header({ user, onMenuToggle, isMobileMenuOpen }) {
               <div className={styles.profileDropdown}>
                 <div className={styles.profileDropdownMenu}>
                   {/* Optional: Add user info at the top of the dropdown */}
-
                   <button onClick={handleAccountProfile} className={styles.profileDropdownItem}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                       <circle cx="12" cy="7" r="4"></circle>
                     </svg>
                     <span>Account Profile</span>
+                  </button>
+
+                  {/* Add the new Studio button here */}
+                  <button onClick={handleStudioClick} className={styles.profileDropdownItem}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7"></rect>
+                      <rect x="14" y="3" width="7" height="7"></rect>
+                      <rect x="14" y="14" width="7" height="7"></rect>
+                      <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Studio</span>
                   </button>
 
                   <Link href="/settings" className={styles.profileDropdownItem}>

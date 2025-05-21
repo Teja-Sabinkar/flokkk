@@ -46,8 +46,15 @@ export default function PostItem({ post, onEdit, onDelete }) {
     return null;
   };
 
+  console.log('PostItem received post:', post);
+  console.log('Post status:', post.status);
+
   return (
-    <div className={styles.postItem} onClick={handleClickOutside}>
+    <div 
+      className={`${styles.postItem} ${process.env.NODE_ENV === 'development' ? `debug-status-${post.status}` : ''}`} 
+      onClick={handleClickOutside}
+      data-status={post.status}
+    >
       <div className={styles.postContent}>
         <div className={styles.postTitle}>
           {/* Thumbnail - with fallback */}

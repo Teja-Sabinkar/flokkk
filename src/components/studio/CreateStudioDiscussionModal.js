@@ -339,8 +339,13 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
   };
 
   // Handle form submission with status
-  const handleSubmit = (e, status = 'published') => {
+  const handleSubmit = (e, status) => {
     e.preventDefault();
+    
+    // Ensure status is either 'draft' or 'published'
+    const postStatus = status === 'draft' ? 'draft' : 'published';
+    
+    console.log(`Submit button clicked with status: ${postStatus}`);
 
     // Validate form
     if (!title.trim()) {
@@ -354,7 +359,7 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
       return;
     }
 
-    // Create form data
+    // Create form data with explicit status field
     const discussionData = {
       videoUrl: videoUrl.trim() || null,
       title: title.trim(),
@@ -362,14 +367,14 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
       thumbnailFile,
       thumbnailPreview,
       hashtags,
-      creatorLinks,  // Add creator links to the submission data
-      allowContributions,  // Add the community links setting
-      status: status, // Use the status parameter
+      creatorLinks,  
+      allowContributions,  
+      status: postStatus, // Explicitly set status
       type: 'discussion'
     };
 
-    console.log(`Submitting discussion as ${status} with creator links:`, discussionData.creatorLinks);
-    console.log('Community contributions setting:', discussionData.allowContributions);
+    console.log(`Submitting discussion with status: ${postStatus}`);
+    console.log('Discussion data:', discussionData);
 
     // Call the onSave function passed from the parent component
     if (onSave) {
@@ -420,7 +425,7 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={(e) => handleSubmit(e, 'published')} className={styles.form}>
           <div className={styles.formGroup}>
             <label className={styles.label}>Youtube Link (Optional)</label>
             <div className={styles.videoLinkContainer}>
@@ -688,7 +693,10 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
             <button
               type="button"
               className={`${styles.draftButton} ${(!isFormValid || isProcessing) ? styles.buttonDisabled : ''}`}
-              onClick={(e) => handleSubmit(e, 'draft')}
+              onClick={(e) => {
+                console.log("Draft button clicked");
+                handleSubmit(e, 'draft');
+              }}
               disabled={isProcessing || !isFormValid}
             >
               Save as Draft
@@ -696,7 +704,10 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
             <button
               type="button"
               className={`${styles.submitButton} ${(!isFormValid || isProcessing) ? styles.buttonDisabled : ''}`}
-              onClick={(e) => handleSubmit(e, 'published')}
+              onClick={(e) => {
+                console.log("Publish button clicked");
+                handleSubmit(e, 'published');
+              }}
               disabled={isProcessing || !isFormValid}
             >
               {isProcessing ? 'Processing...' : 'Create Discussion'}
