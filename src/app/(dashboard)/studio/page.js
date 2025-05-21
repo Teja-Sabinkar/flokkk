@@ -33,8 +33,8 @@ export default function StudioPage() {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          // Fallback to mock data if no token
-          setUser(MOCK_USER);
+          // If no token, redirect to login page
+          router.push('/login');
           return;
         }
 
@@ -48,29 +48,26 @@ export default function StudioPage() {
           const userData = await response.json();
           setUser(userData);
         } else {
-          // Fallback to mock data if API call fails
-          setUser(MOCK_USER);
+          // If API call fails, redirect to login
+          router.push('/login');
         }
       } catch (error) {
         console.error('Error fetching user:', error);
-        setUser(MOCK_USER);
+        setError('Failed to authenticate. Please log in again.');
+        // Fallback to mock data for development only
+        if (process.env.NODE_ENV === 'development') {
+          setUser(MOCK_USER);
+        } else {
+          router.push('/login');
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchUser();
-  }, []);
+  }, [router]);
   
-
-  // Simulate loading delay
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   // Handle menu toggle
   const handleMenuToggle = () => {

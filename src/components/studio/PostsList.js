@@ -15,33 +15,12 @@ export default function PostsList({
   onPageChange,
   sortBy,
   sortOrder,
-  onSortChange
+  onSortChange,
+  activeTab 
 }) {
-  // Debugging: Count posts by status
-  const filteredCount = {
-    all: posts.length,
-    published: posts.filter(post => post.status === 'published').length,
-    draft: posts.filter(post => post.status === 'draft').length
-  };
-
-  console.log('PostsList status counts:', filteredCount);
-
-  // Sort posts
-  const sortedPosts = [...posts].sort((a, b) => {
-    let comparison = 0;
-    
-    if (sortBy === 'date' || sortBy === 'createdAt') {
-      comparison = new Date(b.createdAt) - new Date(a.createdAt);
-    } else if (sortBy === 'title') {
-      comparison = a.title.localeCompare(b.title);
-    } else if (sortBy === 'views') {
-      comparison = (b.metrics?.views || 0) - (a.metrics?.views || 0);
-    } else if (sortBy === 'comments') {
-      comparison = (b.metrics?.comments || 0) - (a.metrics?.comments || 0);
-    }
-    
-    return sortOrder === 'asc' ? comparison * -1 : comparison;
-  });
+  // Simple debug logging
+  console.log(`PostsList rendering with ${posts.length} posts in ${activeTab} tab`);
+  console.log('Post statuses:', posts.map(post => post.status).join(', '));
 
   // Handle post deletion
   const handleDeletePost = async (postId) => {
@@ -85,11 +64,32 @@ export default function PostsList({
           <line x1="16" y1="17" x2="8" y2="17"></line>
           <polyline points="10 9 9 9 8 9"></polyline>
         </svg>
-        <h3>No posts found</h3>
-        <p>You haven't created any posts yet. Start creating content!</p>
+        <h3>No {activeTab !== 'all' ? activeTab : ''} posts found</h3>
+        <p>
+          {activeTab === 'all' && "You haven't created any posts yet. Start creating content!"}
+          {activeTab === 'published' && "You don't have any published posts. Publish your drafts to see them here."}
+          {activeTab === 'draft' && "You don't have any drafts. Save a post as draft to see it here."}
+        </p>
       </div>
     );
   }
+
+  // Sort posts
+  const sortedPosts = [...posts].sort((a, b) => {
+    let comparison = 0;
+    
+    if (sortBy === 'date' || sortBy === 'createdAt') {
+      comparison = new Date(b.createdAt) - new Date(a.createdAt);
+    } else if (sortBy === 'title') {
+      comparison = a.title.localeCompare(b.title);
+    } else if (sortBy === 'views') {
+      comparison = (b.metrics?.views || 0) - (a.metrics?.views || 0);
+    } else if (sortBy === 'comments') {
+      comparison = (b.metrics?.comments || 0) - (a.metrics?.comments || 0);
+    }
+    
+    return sortOrder === 'asc' ? comparison * -1 : comparison;
+  });
 
   return (
     <div className={styles.postsListContainer}>
@@ -127,7 +127,9 @@ export default function PostsList({
           </button>
         </div>
         
-        <p className={styles.totalCount}>{posts.length} post{posts.length !== 1 ? 's' : ''}</p>
+        <p className={styles.totalCount}>
+          {posts.length} {activeTab !== 'all' ? activeTab : ''} post{posts.length !== 1 ? 's' : ''}
+        </p>
       </div>
 
       <div className={styles.tableHeader}>

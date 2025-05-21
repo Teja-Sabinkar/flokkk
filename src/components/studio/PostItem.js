@@ -8,6 +8,9 @@ import styles from './PostItem.module.css';
 export default function PostItem({ post, onEdit, onDelete }) {
   const [isActionsOpen, setIsActionsOpen] = useState(false);
 
+  // Add debug information about this post
+  console.log(`Rendering PostItem: ${post.title}, status=${post.status}, isDraft=${post.isDraft}, isPublished=${post.isPublished}`);
+
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -38,16 +41,18 @@ export default function PostItem({ post, onEdit, onDelete }) {
 
   // Generate a status badge based on post status
   const getStatusBadge = () => {
-    if (post.status === 'published') {
+    // Normalize status check to be extra careful
+    const isDraft = 
+      post.status === 'draft' || 
+      post.status === 'Draft' || 
+      post.isDraft === true;
+    
+    if (!isDraft) {
       return <span className={`${styles.statusBadge} ${styles.publishedBadge}`}>Published</span>;
-    } else if (post.status === 'draft') {
+    } else {
       return <span className={`${styles.statusBadge} ${styles.draftBadge}`}>Draft</span>;
     }
-    return null;
   };
-
-  console.log('PostItem received post:', post);
-  console.log('Post status:', post.status);
 
   return (
     <div 

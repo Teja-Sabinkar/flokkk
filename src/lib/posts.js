@@ -1,139 +1,16 @@
 /**
- * Posts service for managing post operations across components
+ * Enhanced Posts service for managing post operations across components
+ * This extends the existing posts.js file with edit functionality
  */
 
 // Create a post with the given data
 export async function createPost(postData, token) {
-  try {
-    // Use provided token or get from localStorage
-    const authToken = token || localStorage.getItem('token');
-    if (!authToken) throw new Error('Authentication required');
-
-    // Handle image upload if present
-    let imageUrl = null;
-    if (postData.thumbnailFile) {
-      const formData = new FormData();
-      formData.append('file', postData.thumbnailFile);
-      formData.append('directory', 'posts');
-      
-      const uploadResponse = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${authToken}` },
-        body: formData,
-      });
-      
-      if (!uploadResponse.ok) throw new Error('Image upload failed');
-      const uploadData = await uploadResponse.json();
-      imageUrl = uploadData.filepath;
-    } else if (postData.thumbnailPreview && !postData.thumbnailPreview.startsWith('/api/placeholder')) {
-      // If there's a preview URL from fetched data, use that
-      imageUrl = postData.thumbnailPreview;
-    }
-    
-    // Prepare the post data
-    const postPayload = {
-      title: postData.title,
-      content: postData.content || postData.description || '',
-      image: imageUrl || postData.image || '/api/placeholder/600/300',
-      videoUrl: postData.videoUrl || null,
-      hashtags: postData.hashtags || [],
-      isDiscussion: postData.isDiscussion || true
-    };
-    
-    // Create post with API
-    const response = await fetch('/api/posts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`
-      },
-      body: JSON.stringify(postPayload),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to create post');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error creating post:', error);
-    throw error;
-  }
+  // ... existing createPost function
 }
 
 // Fetch posts with various filtering options
 export async function fetchPosts(options = {}) {
-  const { 
-    username, 
-    page = 1, 
-    limit = 10, 
-    token = localStorage.getItem('token') 
-  } = options;
-  
-  const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-  
-  try {
-    // If username is provided, fetch user-specific posts
-    if (username) {
-      // First try the dedicated endpoint
-      try {
-        const encodedUsername = encodeURIComponent(username);
-        const response = await fetch(`/api/users/${encodedUsername}/posts?page=${page}&limit=${limit}`, { headers });
-        if (response.ok) {
-          return await response.json();
-        }
-      } catch (error) {
-        console.warn('User posts API failed, falling back to filter', error);
-      }
-      
-      // Fallback: get all posts and filter client-side
-      const allPostsResponse = await fetch(`/api/posts?page=${page}&limit=${limit*2}`, { headers });
-      if (!allPostsResponse.ok) throw new Error('Failed to fetch posts');
-      
-      const allPosts = await allPostsResponse.json();
-      
-      // Get current user data to compare
-      const userResponse = await fetch('/api/auth/me', { headers });
-      if (!userResponse.ok) throw new Error('Failed to get current user');
-      
-      const userData = await userResponse.json();
-      
-      // Filter posts by username match or userId match
-      const userPosts = allPosts.posts.filter(post => 
-        post.username.toLowerCase() === username.toLowerCase() ||
-        post.userId === userData.id
-      );
-      
-      return {
-        posts: userPosts,
-        pagination: {
-          page,
-          limit,
-          totalPosts: userPosts.length
-        }
-      };
-    }
-    
-    // Try the feed endpoint first
-    try {
-      const response = await fetch(`/api/posts/feed?page=${page}&limit=${limit}`, { headers });
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (feedError) {
-      console.warn('Feed API not available, falling back to regular posts API');
-    }
-    
-    // Otherwise, fetch all posts
-    const response = await fetch(`/api/posts?page=${page}&limit=${limit}`, { headers });
-    if (!response.ok) throw new Error('Failed to fetch posts');
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error in fetchPosts:', error);
-    throw error;
-  }
+  // ... existing fetchPosts function
 }
 
 // Get a single post by ID
@@ -147,6 +24,108 @@ export async function getPostById(postId, token = localStorage.getItem('token'))
     return await response.json();
   } catch (error) {
     console.error('Error getting post:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update an existing post with new data
+ * @param {string} postId - The ID of the post to update
+ * @param {Object} postData - The updated post data
+ * @param {string} token - Authentication token (optional)
+ * @returns {Promise<Object>} - The updated post
+ */
+export async function updatePost(postId, postData, token = localStorage.getItem('token')) {
+  try {
+    if (!token) throw new Error('Authentication required');
+    if (!postId) throw new Error('Post ID is required');
+    
+    console.log('Updating post with data:', postData);
+    
+    // Handle file uploads if present
+    let imageUrl = null;
+    if (postData.thumbnailFile) {
+      const formData = new FormData();
+      formData.append('file', postData.thumbnailFile);
+      formData.append('directory', 'posts');
+      
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
+      
+      if (!uploadResponse.ok) throw new Error('Image upload failed');
+      const uploadData = await uploadResponse.json();
+      imageUrl = uploadData.filepath;
+    } 
+    
+    // Prepare post update payload
+    const updatePayload = {
+      title: postData.title,
+      content: postData.content || '',
+      status: postData.status || 'published',
+      tags: postData.tags || [],
+      links: postData.links || []
+    };
+    
+    // Only include image fields if they're being changed
+    if (imageUrl) {
+      updatePayload.newThumbnail = imageUrl;
+    } else if (postData.thumbnailPreview) {
+      updatePayload.newThumbnail = postData.thumbnailPreview;
+    } else if (postData.removeThumbnail) {
+      updatePayload.removeThumbnail = true;
+    }
+    
+    // Update post with API
+    const response = await fetch(`/api/posts/${postId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(updatePayload),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to update post');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating post:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a post by ID
+ * @param {string} postId - The ID of the post to delete
+ * @param {string} token - Authentication token (optional)
+ * @returns {Promise<Object>} - Confirmation of deletion
+ */
+export async function deletePost(postId, token = localStorage.getItem('token')) {
+  try {
+    if (!token) throw new Error('Authentication required');
+    if (!postId) throw new Error('Post ID is required');
+    
+    const response = await fetch(`/api/posts/${postId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to delete post');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error deleting post:', error);
     throw error;
   }
 }

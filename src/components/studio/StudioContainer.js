@@ -8,7 +8,8 @@ import CreateStudioDiscussionModal from './CreateStudioDiscussionModal';
 
 export default function StudioContainer({ user }) {
   const router = useRouter();
-  const [posts, setPosts] = useState([]);
+  const [allPosts, setAllPosts] = useState([]); // Store ALL posts here
+  const [displayPosts, setDisplayPosts] = useState([]); // Posts filtered for display
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
@@ -19,15 +20,15 @@ export default function StudioContainer({ user }) {
   });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   
-  // New sort state to track sorting options
+  // Sort state
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch posts from the API
+  // Fetch ALL posts initially, then filter locally for tabs
   const fetchPosts = async () => {
-    console.log('Fetching posts with active tab:', activeTab);
+    console.log('Fetching ALL posts regardless of tab');
     setIsLoading(true);
     setError(null);
     
@@ -37,14 +38,11 @@ export default function StudioContainer({ user }) {
         throw new Error('Not authenticated');
       }
 
-      // Create query params with explicit logging
-      const status = activeTab === 'all' ? 'all' : (activeTab === 'published' ? 'published' : 'draft');
-      console.log(`Setting status filter to: ${status} based on activeTab: ${activeTab}`);
-      
+      // Always fetch ALL posts
       const params = new URLSearchParams({
         page: currentPage,
-        limit: 10,
-        status: status,
+        limit: 20,  // Increased limit to make sure we get everything
+        status: 'all',
         sortBy: sortBy,
         sortOrder: sortOrder
       });
@@ -65,19 +63,26 @@ export default function StudioContainer({ user }) {
 
       const data = await response.json();
       console.log(`Received ${data.posts.length} posts from API`);
-      console.log('Posts statuses:', data.posts.map(p => p.status).join(', '));
       
       // Transform API data to match the expected format for PostItem
       const formattedPosts = data.posts.map(post => {
-        // Create a properly structured post object
+        // Explicitly determine if this post should be considered published
+        // If it doesn't have status='draft', consider it published
+        const isDraft = 
+          post.status === 'draft' || 
+          post.status === 'Draft' || 
+          post.status === 'DRAFT';
+        
+        const isPublished = !isDraft;
+        
         return {
           _id: post._id,
-          id: post._id,  // Include both forms for compatibility
+          id: post._id,
           title: post.title || '',
           content: post.content || '',
-          status: post.status || 'published',  // Ensure status exists
+          status: isDraft ? 'draft' : 'published', // Normalize status to only 'draft' or 'published'
           image: post.image || null,
-          thumbnail: post.image || null, // Duplicate as thumbnail for PostItem
+          thumbnail: post.image || null,
           createdAt: post.createdAt || new Date().toISOString(),
           updatedAt: post.updatedAt || post.createdAt || new Date().toISOString(),
           type: post.contentType === 'communityPost' ? 'post' : 'discussion',
@@ -86,30 +91,34 @@ export default function StudioContainer({ user }) {
             comments: post.comments || post.metrics?.comments || 0,
             contributions: post.metrics?.contributions || 
                          ((post.communityLinks?.length || 0) + (post.creatorLinks?.length || 0)) || 0
-          }
+          },
+          // Add our own flags for filtering
+          isDraft: isDraft,
+          isPublished: isPublished
         };
       });
       
-      console.log('StudioContainer formatted posts:', formattedPosts);
-      setPosts(formattedPosts);
-      setTotalPages(data.pagination.totalPages);
-      
-      // Fetch metrics for stats
-      const metricsResponse = await fetch('/api/studio/metrics', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      // Log post statuses for debugging
+      console.log("Posts with normalized statuses:");
+      formattedPosts.forEach(post => {
+        console.log(`${post.title}: status=${post.status}, isDraft=${post.isDraft}, isPublished=${post.isPublished}`);
       });
-
-      if (metricsResponse.ok) {
-        const metricsData = await metricsResponse.json();
-        
-        setStats({
-          total: metricsData.discussions.total,
-          published: metricsData.discussions.published,
-          draft: metricsData.discussions.draft
-        });
-      }
+      
+      // Store all posts
+      setAllPosts(formattedPosts);
+      
+      // Calculate counts for stats
+      const publishedCount = formattedPosts.filter(post => post.isPublished).length;
+      const draftCount = formattedPosts.filter(post => post.isDraft).length;
+      
+      // Update stats manually based on our count
+      setStats({
+        total: formattedPosts.length,
+        published: publishedCount,
+        draft: draftCount
+      });
+      
+      setTotalPages(data.pagination.totalPages);
       
     } catch (err) {
       console.error('Error fetching posts:', err);
@@ -118,11 +127,35 @@ export default function StudioContainer({ user }) {
       setIsLoading(false);
     }
   };
+  
+  // Filter posts locally based on activeTab
+  useEffect(() => {
+    console.log(`Filtering for ${activeTab} tab from ${allPosts.length} total posts`);
+    
+    if (allPosts.length === 0) {
+      setDisplayPosts([]);
+      return;
+    }
+    
+    let filtered = [];
+    
+    if (activeTab === 'all') {
+      filtered = allPosts;
+    } else if (activeTab === 'published') {
+      filtered = allPosts.filter(post => post.isPublished);
+      console.log(`Found ${filtered.length} published posts`);
+    } else { // draft tab
+      filtered = allPosts.filter(post => post.isDraft);
+      console.log(`Found ${filtered.length} draft posts`);
+    }
+    
+    setDisplayPosts(filtered);
+  }, [activeTab, allPosts]);
 
-  // Load posts when component mounts or filters change
+  // Load posts when component mounts or sort/page changes
   useEffect(() => {
     fetchPosts();
-  }, [activeTab, sortBy, sortOrder, currentPage]);
+  }, [sortBy, sortOrder, currentPage]);
 
   // Toggle create modal
   const handleOpenCreateModal = () => {
@@ -137,10 +170,6 @@ export default function StudioContainer({ user }) {
   const handleCreateDiscussion = async (discussionData) => {
     try {
       setIsLoading(true);
-      
-      // Log the entire discussion data for debugging
-      console.log('Creating discussion with data:', discussionData);
-      console.log('Status value:', discussionData.status);
       
       const token = localStorage.getItem('token');
       if (!token) {
@@ -165,24 +194,20 @@ export default function StudioContainer({ user }) {
         imageUrl = uploadData.filepath;
       } else if (discussionData.thumbnailPreview && 
                 !discussionData.thumbnailPreview.startsWith('/api/placeholder')) {
-        // If there's a preview URL from fetched data, use that
         imageUrl = discussionData.thumbnailPreview;
       }
       
-      // Create API request body with status explicitly highlighted for debugging
+      // Create API request body
       const requestBody = {
         title: discussionData.title,
         content: discussionData.description || '',
         image: imageUrl || null,
         videoUrl: discussionData.videoUrl || null,
         hashtags: discussionData.hashtags || [],
-        status: discussionData.status, // Explicitly pass status value
+        status: discussionData.status,
         creatorLinks: discussionData.creatorLinks || [],
         allowContributions: discussionData.allowContributions !== false
       };
-
-      console.log('API request body:', requestBody);
-      console.log('Status being sent to API:', requestBody.status);
       
       // Create the post
       const response = await fetch('/api/posts', {
@@ -267,7 +292,7 @@ export default function StudioContainer({ user }) {
         throw new Error('Failed to delete post');
       }
       
-      // Remove post from state and refresh
+      // Refresh posts after deletion
       fetchPosts();
       
       return true;
@@ -298,7 +323,7 @@ export default function StudioContainer({ user }) {
   };
 
   // Loading state
-  if (isLoading && posts.length === 0) {
+  if (isLoading && displayPosts.length === 0) {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.loadingSpinner}></div>
@@ -308,7 +333,7 @@ export default function StudioContainer({ user }) {
   }
 
   // Error state
-  if (error && posts.length === 0) {
+  if (error && displayPosts.length === 0) {
     return (
       <div className={styles.errorContainer}>
         <p className={styles.errorMessage}>{error}</p>
@@ -375,7 +400,7 @@ export default function StudioContainer({ user }) {
       </div>
 
       <PostsList 
-        posts={posts} 
+        posts={displayPosts} 
         isLoading={isLoading}
         error={error}
         onUpdate={handlePostUpdate}
@@ -386,6 +411,7 @@ export default function StudioContainer({ user }) {
         sortBy={sortBy}
         sortOrder={sortOrder}
         onSortChange={handleSortChange}
+        activeTab={activeTab}
       />
 
       {isCreateModalOpen && (
