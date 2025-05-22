@@ -10,6 +10,32 @@ const ShareModal = ({ isOpen, onClose, postData }) => {
   const postUrl = typeof window !== 'undefined' 
     ? `${window.location.origin}/discussion?id=${postData.id}`
     : '';
+
+  // Track share engagement with the post
+  const trackShareEngagement = async (platform = 'unknown') => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postData.id}/track-share`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ platform })
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track share engagement');
+      } else {
+        const data = await response.json();
+        console.log('Share engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking share engagement:', error);
+    }
+  };
   
   // Handle click outside to close modal
   useEffect(() => {
@@ -29,44 +55,61 @@ const ShareModal = ({ isOpen, onClose, postData }) => {
   }, [isOpen, onClose]);
 
   // Function to copy link to clipboard
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(postUrl)
-      .then(() => {
-        setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
-      })
-      .catch(err => {
-        console.error('Failed to copy: ', err);
-      });
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(postUrl);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+      
+      // Track copy link as share
+      await trackShareEngagement('copy_link');
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
   };
 
   // Social media sharing functions
-  const shareToTwitter = () => {
+  const shareToTwitter = async () => {
     const text = `Check out this discussion: ${postData.title}`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(postUrl)}`;
     window.open(url, '_blank');
+    
+    // Track Twitter share
+    await trackShareEngagement('twitter');
   };
 
-  const shareToFacebook = () => {
+  const shareToFacebook = async () => {
     const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`;
     window.open(url, '_blank');
+    
+    // Track Facebook share
+    await trackShareEngagement('facebook');
   };
 
-  const shareToLinkedIn = () => {
+  const shareToLinkedIn = async () => {
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}`;
     window.open(url, '_blank');
+    
+    // Track LinkedIn share
+    await trackShareEngagement('linkedin');
   };
 
-  const shareToReddit = () => {
+  const shareToReddit = async () => {
     const url = `https://www.reddit.com/submit?url=${encodeURIComponent(postUrl)}&title=${encodeURIComponent(postData.title)}`;
     window.open(url, '_blank');
+    
+    // Track Reddit share
+    await trackShareEngagement('reddit');
   };
 
-  const shareByEmail = () => {
+  const shareByEmail = async () => {
     const subject = `Check out this discussion: ${postData.title}`;
     const body = `I thought you might be interested in this discussion:\n\n${postData.title}\n\n${postUrl}`;
     const url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(url);
+    
+    // Track email share
+    await trackShareEngagement('email');
   };
 
   if (!isOpen) return null;

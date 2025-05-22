@@ -6,6 +6,7 @@ import dbConnect from '@/lib/mongoose';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import Post from '@/models/Post';
+import PostEngagement from '@/models/PostEngagement';
 import { put, del } from '@vercel/blob';
 
 // Helper function to generate sample view history data
@@ -133,6 +134,18 @@ export async function GET(request, { params }) {
       postId: new ObjectId(id)
     });
     
+    // Get real engagement counts from PostEngagement collection
+    const [saveCount, shareCount] = await Promise.all([
+      PostEngagement.countDocuments({ 
+        postId: new ObjectId(id), 
+        hasSaved: true 
+      }),
+      PostEngagement.countDocuments({ 
+        postId: new ObjectId(id), 
+        hasShared: true 
+      })
+    ]);
+    
     // Generate view history data
     // First check if the post already has viewsHistory
     let viewsHistory = post.viewsHistory || [];
@@ -185,7 +198,7 @@ export async function GET(request, { params }) {
       }
     }
     
-    // Format post with metrics
+    // Format post with real engagement metrics
     const formattedPost = {
       ...post,
       metrics: {
@@ -193,8 +206,8 @@ export async function GET(request, { params }) {
         uniqueViewers: Math.round((post.views || 0) * 0.8), // Estimate unique viewers if not available
         comments: commentsCount || 0,
         contributions: (post.communityLinks?.length || 0) + (post.creatorLinks?.length || 0),
-        saves: post.saves || Math.floor(Math.random() * 50), // Sample data if not available
-        shares: post.shares || Math.floor(Math.random() * 30) // Sample data if not available
+        saves: saveCount, // Real save count from engagement tracking
+        shares: shareCount // Real share count from engagement tracking
       },
       viewsHistory: viewsHistory
     };
@@ -383,6 +396,18 @@ export async function PATCH(request, { params }) {
       postId: new ObjectId(id)
     });
     
+    // Get real engagement counts from PostEngagement collection
+    const [saveCount, shareCount] = await Promise.all([
+      PostEngagement.countDocuments({ 
+        postId: new ObjectId(id), 
+        hasSaved: true 
+      }),
+      PostEngagement.countDocuments({ 
+        postId: new ObjectId(id), 
+        hasShared: true 
+      })
+    ]);
+    
     // Generate view history data for the updated post
     let viewsHistory = updatedPost.viewsHistory || [];
     
@@ -391,7 +416,7 @@ export async function PATCH(request, { params }) {
       viewsHistory = generateSampleViewHistory(updatedPost.views || 0);
     }
     
-    // Format post with metrics
+    // Format post with real engagement metrics
     const formattedPost = {
       ...updatedPost,
       metrics: {
@@ -399,8 +424,8 @@ export async function PATCH(request, { params }) {
         uniqueViewers: Math.round((updatedPost.views || 0) * 0.8), // Estimate unique viewers
         comments: commentsCount || 0,
         contributions: (updatedPost.communityLinks?.length || 0) + (updatedPost.creatorLinks?.length || 0),
-        saves: updatedPost.saves || Math.floor(Math.random() * 50), // Sample data if not available
-        shares: updatedPost.shares || Math.floor(Math.random() * 30) // Sample data if not available
+        saves: saveCount, // Real save count from engagement tracking
+        shares: shareCount // Real share count from engagement tracking
       },
       viewsHistory: viewsHistory
     };
@@ -499,6 +524,11 @@ export async function DELETE(request, { params }) {
     
     // Delete comments associated with the post
     await db.collection('comments').deleteMany({
+      postId: new ObjectId(id)
+    });
+    
+    // Delete engagement records associated with the post
+    await PostEngagement.deleteMany({
       postId: new ObjectId(id)
     });
     

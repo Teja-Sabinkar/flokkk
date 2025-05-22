@@ -35,6 +35,31 @@ export default function PostSaveModal({ isOpen, onClose, post, onSave }) {
     fetchPlaylists();
   }, [isOpen]);
 
+  // Track save engagement with the post
+  const trackSaveEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-save`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track save engagement');
+      } else {
+        const data = await response.json();
+        console.log('Save engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking save engagement:', error);
+    }
+  };
+
   // Handle playlist selection
   const handlePlaylistSelect = (playlistId) => {
     setSelectedPlaylistId(playlistId);
@@ -76,6 +101,9 @@ export default function PostSaveModal({ isOpen, onClose, post, onSave }) {
         // Create new playlist with the post
         const newPlaylist = await createPlaylist(newPlaylistTitle.trim(), [formattedPost]);
         
+        // Track save engagement
+        await trackSaveEngagement(formattedPost.id);
+        
         if (onSave) {
           onSave({
             playlistId: newPlaylist.id,
@@ -102,6 +130,9 @@ export default function PostSaveModal({ isOpen, onClose, post, onSave }) {
         
         // Add post to the existing playlist
         const result = await addPostToPlaylist(selectedPlaylistId, postForSaving);
+        
+        // Track save engagement
+        await trackSaveEngagement(postForSaving.id);
         
         if (onSave) {
           onSave({
