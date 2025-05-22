@@ -594,6 +594,7 @@
     margin: 0 0 8px 0;
 }
 
+
 .analyticsCard {
     background-color: #1a1a1a;
     border-radius: 8px;
@@ -601,7 +602,7 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     border: 1px solid #2a2a2a;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
 }
 
@@ -827,6 +828,11 @@
 }
 
 @media (max-width: 768px) {
+
+    .engagementStats {
+        grid-template-columns: 1fr;
+    }
+
     .editPostLayout {
         grid-template-columns: 1fr;
         gap: 16px;
