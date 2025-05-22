@@ -1,3 +1,37 @@
+/* NEW: YouTube restriction notice */
+.youtubeNotice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background-color: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 4px;
+    color: #ffc107;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.youtubeNotice svg {
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+/* NEW: Disabled button styling */
+.disabledButton {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+.disabledButton:hover {
+    background-color: inherit !important;
+    border-color: inherit !important;
+}
+
+
+
 .modalOverlay {
     position: fixed;
     top: 0;
@@ -627,6 +661,21 @@
 .addHashtagButton:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+.processingOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    color: #fff;
+    font-size: 14px;
 }
 
 /* Responsive adjustments */

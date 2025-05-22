@@ -58,8 +58,13 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [standardizedVideoUrl, setStandardizedVideoUrl] = useState('');
   const [error, setError] = useState(null);
-  // Add state for community links setting
   const [allowContributions, setAllowContributions] = useState(true);
+  
+  // State to track if thumbnail is from YouTube
+  const [isYouTubeThumbnail, setIsYouTubeThumbnail] = useState(false);
+  
+  // NEW: State to track the protected YouTube channel hashtag
+  const [youtubeChannelHashtag, setYoutubeChannelHashtag] = useState(null);
 
   // Creator Links state
   const [creatorLinks, setCreatorLinks] = useState([]);
@@ -123,10 +128,7 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
       console.log(`Fetching data for video ID: ${videoId}`);
 
       // Call our new API endpoint to fetch video data
-      // Using clone() technique to allow reading the response multiple times
       const response = await fetch(`/api/youtube?videoId=${videoId}`);
-
-      // First, clone the response for use in error handling
       const responseClone = response.clone();
 
       let errorMessage = 'Failed to fetch video information';
@@ -136,7 +138,6 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
           const errorData = await responseClone.json();
           errorMessage = errorData.message || errorMessage;
         } catch (e) {
-          // If we can't parse the error as JSON, use status text
           errorMessage = `Failed to fetch video information (${response.status}: ${response.statusText})`;
         }
 
@@ -159,16 +160,38 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
 
       if (thumbnailUrl) {
         setThumbnailPreview(thumbnailUrl);
-        console.log(`Set thumbnail preview: ${thumbnailUrl}`);
+        // Mark thumbnail as YouTube thumbnail
+        setIsYouTubeThumbnail(true);
+        console.log(`Set YouTube thumbnail preview: ${thumbnailUrl}`);
       } else {
         console.warn('No thumbnail URL found in response');
       }
 
-      // Add channel to hashtags if not already included
-      if (videoData.channelTitle && !hashtags.includes(`#${videoData.channelTitle.replace(/\s+/g, '')}`)) {
+      // NEW: Handle channel hashtag with protection
+      if (videoData.channelTitle) {
         const channelHashtag = `#${videoData.channelTitle.replace(/\s+/g, '')}`;
-        setHashtags([...hashtags, channelHashtag]);
-        console.log(`Added channel hashtag: ${channelHashtag}`);
+        
+        // Check if this hashtag already exists in the current list
+        const existingIndex = hashtags.findIndex(tag => 
+          tag.toLowerCase() === channelHashtag.toLowerCase()
+        );
+        
+        let updatedHashtags;
+        if (existingIndex !== -1) {
+          // Replace existing hashtag at the same position
+          updatedHashtags = [...hashtags];
+          updatedHashtags[existingIndex] = channelHashtag;
+          console.log(`Replaced existing channel hashtag at position ${existingIndex}: ${channelHashtag}`);
+        } else {
+          // Add new hashtag to the list
+          updatedHashtags = [...hashtags, channelHashtag];
+          console.log(`Added new channel hashtag: ${channelHashtag}`);
+        }
+        
+        setHashtags(updatedHashtags);
+        // Set this as the protected hashtag
+        setYoutubeChannelHashtag(channelHashtag);
+        console.log(`Protected YouTube channel hashtag: ${channelHashtag}`);
       }
 
       setIsLoading(false);
@@ -179,8 +202,14 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
     }
   };
 
-  // Handle thumbnail file selection
+  // Modified thumbnail file selection with YouTube restriction
   const handleThumbnailChange = async (e) => {
+    // Prevent thumbnail changes if it's a YouTube thumbnail
+    if (isYouTubeThumbnail) {
+      console.log('Thumbnail change blocked: YouTube thumbnail detected');
+      return;
+    }
+
     const file = e.target.files[0];
     if (!file) return;
 
@@ -215,8 +244,6 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
 
       // For larger files, attempt compression with timeout
       const compressionPromise = compressImage(file, 1280, 720, 0.85);
-
-      // Set a timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error("Compression timed out")), 5000);
       });
@@ -234,18 +261,21 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
       console.error('Error compressing image:', error);
       // Fall back to using the original file
       setThumbnailFile(file);
-      // We already set the preview, so no need to do it again
     } finally {
       setIsProcessingImage(false);
     }
   };
 
-  // Handle choosing a file
+  // Modified handle choose file with YouTube restriction
   const handleChooseFile = () => {
+    if (isYouTubeThumbnail) {
+      console.log('File selection blocked: YouTube thumbnail detected');
+      return;
+    }
     fileInputRef.current.click();
   };
 
-  // Add a new function to handle adding hashtags (can be reused)
+  // Add a new function to handle adding hashtags
   const addHashtag = () => {
     if (currentHashtag.trim()) {
       const newHashtag = currentHashtag.trim().startsWith('#')
@@ -261,21 +291,25 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
 
   // Handle hashtag input
   const handleHashtagKeyDown = (e) => {
-    // Add hashtag when pressing Enter or Space
     if ((e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
       addHashtag();
     }
   };
 
-  // Remove hashtag
+  // NEW: Modified remove hashtag with YouTube channel protection
   const removeHashtag = (tagToRemove) => {
+    // Don't remove if this is the protected YouTube channel hashtag
+    if (tagToRemove === youtubeChannelHashtag) {
+      console.log('Cannot remove protected YouTube channel hashtag:', tagToRemove);
+      return;
+    }
+    
     setHashtags(hashtags.filter(tag => tag !== tagToRemove));
   };
 
   // Add creator link
   const addCreatorLink = () => {
-    // Basic validation
     setLinkError(null);
 
     if (!currentLinkTitle.trim()) {
@@ -288,20 +322,17 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
       return;
     }
 
-    // Ensure the URL has a protocol
     const formattedUrl = ensureUrlProtocol(currentLinkUrl.trim());
 
-    // Simple URL validation
     try {
-      new URL(formattedUrl); // Will throw if invalid
+      new URL(formattedUrl);
     } catch (e) {
       setLinkError('Please enter a valid URL');
       return;
     }
 
-    // Add new link with properly formatted URL
     const newLink = {
-      id: Date.now(), // Simple unique ID for UI purposes
+      id: Date.now(),
       title: currentLinkTitle.trim(),
       url: formattedUrl,
       description: currentLinkDescription.trim()
@@ -336,15 +367,17 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
     setAllowContributions(true);
     setError(null);
     setLinkError(null);
+    // Reset YouTube thumbnail flag
+    setIsYouTubeThumbnail(false);
+    // NEW: Reset YouTube channel hashtag protection
+    setYoutubeChannelHashtag(null);
   };
 
   // Handle form submission with status
   const handleSubmit = (e, status) => {
     e.preventDefault();
     
-    // Ensure status is either 'draft' or 'published'
     const postStatus = status === 'draft' ? 'draft' : 'published';
-    
     console.log(`Submit button clicked with status: ${postStatus}`);
 
     // Validate form
@@ -369,7 +402,7 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
       hashtags,
       creatorLinks,  
       allowContributions,  
-      status: postStatus, // Explicitly set status
+      status: postStatus,
       type: 'discussion'
     };
 
@@ -478,13 +511,27 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
               Thumbnail <span className={styles.requiredField}>*</span>
               <span className={styles.requiredFieldText}>(Required)</span>
             </label>
+            
+            {/* YouTube restriction notice */}
+            {isYouTubeThumbnail && (
+              <div className={styles.youtubeNotice}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                YouTube video thumbnails cannot be modified
+              </div>
+            )}
+            
             <button
               type="button"
-              className={styles.fileButton}
+              className={`${styles.fileButton} ${isYouTubeThumbnail ? styles.disabledButton : ''}`}
               onClick={handleChooseFile}
-              disabled={isProcessing}
+              disabled={isProcessing || isYouTubeThumbnail}
             >
-              {isProcessingImage ? 'Processing...' : 'Choose File'}
+              {isProcessingImage ? 'Processing...' : 
+               isYouTubeThumbnail ? 'Cannot change YouTube thumbnail' : 'Choose File'}
             </button>
             <input
               type="file"
@@ -492,7 +539,7 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
               className={styles.fileInput}
               accept="image/*"
               onChange={handleThumbnailChange}
-              disabled={isProcessing}
+              disabled={isProcessing || isYouTubeThumbnail}
             />
 
             <div className={styles.thumbnailPreview}>
@@ -548,9 +595,10 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
                     {tag}
                     <button
                       type="button"
-                      className={styles.removeHashtag}
+                      className={`${styles.removeHashtag} ${tag === youtubeChannelHashtag ? styles.disabledHashtagRemove : ''}`}
                       onClick={() => removeHashtag(tag)}
-                      disabled={isProcessing}
+                      disabled={isProcessing || tag === youtubeChannelHashtag}
+                      title={tag === youtubeChannelHashtag ? "Cannot remove YouTube channel hashtag" : "Remove hashtag"}
                     >
                       ×
                     </button>

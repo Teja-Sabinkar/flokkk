@@ -28,6 +28,28 @@ export default function EditPostPage({ params }) {
   const [submitError, setSubmitError] = useState(null);
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [removeThumbnail, setRemoveThumbnail] = useState(false);
+  
+  // NEW: State to track if this is a YouTube post
+  const [isYouTubePost, setIsYouTubePost] = useState(false);
+
+  // NEW: Helper function to detect YouTube posts
+  const detectYouTubePost = (postData) => {
+    if (!postData) return false;
+    
+    // Check if videoUrl contains YouTube domains
+    const hasYouTubeUrl = postData.videoUrl && (
+      postData.videoUrl.includes('youtube.com') || 
+      postData.videoUrl.includes('youtu.be')
+    );
+    
+    // Check if thumbnail URL contains YouTube domains
+    const hasYouTubeThumbnail = postData.image && (
+      postData.image.includes('i.ytimg.com') || 
+      postData.image.includes('img.youtube.com')
+    );
+    
+    return hasYouTubeUrl || hasYouTubeThumbnail;
+  };
 
   // Fetch post data and current user
   useEffect(() => {
@@ -65,6 +87,12 @@ export default function EditPostPage({ params }) {
         const postData = await getPostById(postId, token);
 
         setPost(postData);
+        
+        // NEW: Detect if this is a YouTube post
+        const isYouTube = detectYouTubePost(postData);
+        setIsYouTubePost(isYouTube);
+        console.log('YouTube post detected:', isYouTube);
+        
         setFormData({
           title: postData.title || '',
           content: postData.content || '',
@@ -97,8 +125,14 @@ export default function EditPostPage({ params }) {
     }));
   };
 
-  // Handle thumbnail upload
+  // NEW: Modified thumbnail change handler with YouTube restriction
   const handleThumbnailChange = (e) => {
+    // Prevent thumbnail changes for YouTube posts
+    if (isYouTubePost) {
+      console.log('Thumbnail change blocked: YouTube post detected');
+      return;
+    }
+
     const file = e.target.files[0];
     if (file) {
       setThumbnailFile(file);
@@ -114,8 +148,14 @@ export default function EditPostPage({ params }) {
     }
   };
 
-  // Handle thumbnail removal
+  // NEW: Modified thumbnail removal handler with YouTube restriction
   const handleRemoveThumbnail = () => {
+    // Prevent thumbnail removal for YouTube posts
+    if (isYouTubePost) {
+      console.log('Thumbnail removal blocked: YouTube post detected');
+      return;
+    }
+
     setThumbnailFile(null);
     setRemoveThumbnail(true);
     post.thumbnailPreview = null;
@@ -326,9 +366,22 @@ export default function EditPostPage({ params }) {
                   />
                 </div>
 
-                {/* Thumbnail section */}
+                {/* NEW: Modified thumbnail section with YouTube restrictions */}
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Thumbnail</label>
+                  
+                  {/* NEW: YouTube restriction notice */}
+                  {isYouTubePost && (
+                    <div className={styles.youtubeNotice}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      </svg>
+                      YouTube video thumbnails cannot be modified
+                    </div>
+                  )}
+                  
                   <div className={styles.thumbnailSection}>
                     <div className={styles.thumbnailPreview}>
                       {post.thumbnailPreview || post.image ? (
@@ -348,14 +401,19 @@ export default function EditPostPage({ params }) {
                         </div>
                       )}
                     </div>
+                    
+                    {/* NEW: Conditionally disabled thumbnail actions */}
                     <div className={styles.thumbnailActions}>
-                      <label htmlFor="thumbnailInput" className={styles.thumbnailUploadButton}>
+                      <label 
+                        htmlFor="thumbnailInput" 
+                        className={`${styles.thumbnailUploadButton} ${isYouTubePost ? styles.disabledButton : ''}`}
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                           <polyline points="17 8 12 3 7 8"></polyline>
                           <line x1="12" y1="3" x2="12" y2="15"></line>
                         </svg>
-                        Upload new thumbnail
+                        {isYouTubePost ? 'Cannot change YouTube thumbnail' : 'Upload new thumbnail'}
                       </label>
                       <input
                         type="file"
@@ -363,18 +421,20 @@ export default function EditPostPage({ params }) {
                         style={{ display: 'none' }}
                         accept="image/*"
                         onChange={handleThumbnailChange}
+                        disabled={isYouTubePost} // NEW: Disabled for YouTube posts
                       />
                       {(post.thumbnailPreview || post.image) && (
                         <button
                           type="button"
-                          className={styles.thumbnailRemoveButton}
+                          className={`${styles.thumbnailRemoveButton} ${isYouTubePost ? styles.disabledButton : ''}`}
                           onClick={handleRemoveThumbnail}
+                          disabled={isYouTubePost} // NEW: Disabled for YouTube posts
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M3 6h18"></path>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                           </svg>
-                          Remove
+                          {isYouTubePost ? 'Cannot remove YouTube thumbnail' : 'Remove'}
                         </button>
                       )}
                     </div>
