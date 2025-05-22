@@ -135,7 +135,7 @@ export async function GET(request, { params }) {
     });
     
     // Get real engagement counts from PostEngagement collection
-    const [saveCount, shareCount, clickCount] = await Promise.all([
+    const [saveCount, shareCount] = await Promise.all([
       PostEngagement.countDocuments({ 
         postId: new ObjectId(id), 
         hasSaved: true 
@@ -143,10 +143,6 @@ export async function GET(request, { params }) {
       PostEngagement.countDocuments({ 
         postId: new ObjectId(id), 
         hasShared: true 
-      }),
-      PostEngagement.countDocuments({ 
-        postId: new ObjectId(id), 
-        hasClicked: true 
       })
     ]);
     
@@ -211,8 +207,7 @@ export async function GET(request, { params }) {
         comments: commentsCount || 0,
         contributions: (post.communityLinks?.length || 0) + (post.creatorLinks?.length || 0),
         saves: saveCount, // Real save count from engagement tracking
-        shares: shareCount, // Real share count from engagement tracking
-        clicks: clickCount // Real click count from engagement tracking
+        shares: shareCount // Real share count from engagement tracking
       },
       viewsHistory: viewsHistory
     };
@@ -402,7 +397,7 @@ export async function PATCH(request, { params }) {
     });
     
     // Get real engagement counts from PostEngagement collection
-    const [saveCount, shareCount, clickCount] = await Promise.all([
+    const [saveCount, shareCount] = await Promise.all([
       PostEngagement.countDocuments({ 
         postId: new ObjectId(id), 
         hasSaved: true 
@@ -410,10 +405,6 @@ export async function PATCH(request, { params }) {
       PostEngagement.countDocuments({ 
         postId: new ObjectId(id), 
         hasShared: true 
-      }),
-      PostEngagement.countDocuments({ 
-        postId: new ObjectId(id), 
-        hasClicked: true 
       })
     ]);
     
@@ -434,8 +425,7 @@ export async function PATCH(request, { params }) {
         comments: commentsCount || 0,
         contributions: (updatedPost.communityLinks?.length || 0) + (updatedPost.creatorLinks?.length || 0),
         saves: saveCount, // Real save count from engagement tracking
-        shares: shareCount, // Real share count from engagement tracking
-        clicks: clickCount // Real click count from engagement tracking
+        shares: shareCount // Real share count from engagement tracking
       },
       viewsHistory: viewsHistory
     };

@@ -33,35 +33,6 @@ export default function Post({ post, onHidePost }) {
   const menuRef = useRef(null);
   const hashtagsContainerRef = useRef(null);
 
-  // Track click engagement with the post
-  const trackClickEngagement = async (buttonType = 'unknown') => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const postId = post.id || post._id;
-      if (!postId) return;
-
-      const response = await fetch(`/api/posts/${postId}/track-click`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ buttonType })
-      });
-
-      if (!response.ok) {
-        console.warn('Failed to track click engagement');
-      } else {
-        const data = await response.json();
-        console.log('Click engagement tracked:', data);
-      }
-    } catch (error) {
-      console.error('Error tracking click engagement:', error);
-    }
-  };
-
   // Content truncation for longer posts
   const MAX_CONTENT_LENGTH = 150;
   const isContentLong = post.content?.length > MAX_CONTENT_LENGTH;
@@ -102,17 +73,14 @@ export default function Post({ post, onHidePost }) {
     }
   }, [post.videoUrl, extractYouTubeVideoId]);
 
-  // Handle play button click - WITH CLICK TRACKING
-  const handlePlayClick = useCallback(async (e) => {
+  // Handle play button click
+  const handlePlayClick = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     
     if (videoId) {
       setIsVideoPlaying(true);
       setVideoError(false);
-      
-      // Track click engagement
-      await trackClickEngagement('play_button');
     }
   }, [videoId]);
 
@@ -285,8 +253,8 @@ export default function Post({ post, onHidePost }) {
     setShowAllHashtags(!showAllHashtags);
   };
 
-  // Add handler for discussion button click - WITH CLICK TRACKING
-  const handleDiscussionClick = useCallback(async () => {
+  // Add handler for discussion button click
+  const handleDiscussionClick = useCallback(() => {
     // Directly check if post is empty
     if (!post || Object.keys(post).length === 0) {
       console.error('Empty post object received');
@@ -300,9 +268,6 @@ export default function Post({ post, onHidePost }) {
       console.error('No post ID available');
       return;
     }
-
-    // Track click engagement
-    await trackClickEngagement('discussions_button');
 
     router.push(`/discussion?id=${postId}`);
   }, [post, router]);
@@ -561,7 +526,7 @@ export default function Post({ post, onHidePost }) {
               key={`post-image-${post.id || post._id}-${post.image}`}
             />
             
-            {/* Play button overlay for videos - WITH CLICK TRACKING */}
+            {/* Play button overlay for videos */}
             {post.videoUrl && videoId && (
               <button 
                 className={styles.playButton}

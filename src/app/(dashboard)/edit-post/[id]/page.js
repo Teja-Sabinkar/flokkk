@@ -35,7 +35,7 @@ export default function EditPostPage({ params }) {
       try {
         setIsLoading(true);
         setError(null);
-
+        
         // Check for token
         const token = localStorage.getItem('token');
         if (!token) {
@@ -56,14 +56,14 @@ export default function EditPostPage({ params }) {
 
         const userData = await userResponse.json();
         setUser(userData);
-
+        
         // Get post data
         if (!postId) {
           throw new Error('Post ID is required');
         }
-
+        
         const postData = await getPostById(postId, token);
-
+        
         setPost(postData);
         setFormData({
           title: postData.title || '',
@@ -79,7 +79,7 @@ export default function EditPostPage({ params }) {
         setIsLoading(false);
       }
     };
-
+    
     fetchData();
   }, [postId, router]);
 
@@ -103,23 +103,23 @@ export default function EditPostPage({ params }) {
     if (file) {
       setThumbnailFile(file);
       setRemoveThumbnail(false);
-
+      
       // Create a preview
       const reader = new FileReader();
       reader.onload = (event) => {
         post.thumbnailPreview = event.target.result;
-        setPost({ ...post });
+        setPost({...post});
       };
       reader.readAsDataURL(file);
     }
   };
-
+  
   // Handle thumbnail removal
   const handleRemoveThumbnail = () => {
     setThumbnailFile(null);
     setRemoveThumbnail(true);
     post.thumbnailPreview = null;
-    setPost({ ...post });
+    setPost({...post});
   };
 
   // Handle new link input changes
@@ -134,11 +134,11 @@ export default function EditPostPage({ params }) {
   // Add a new link
   const handleAddLink = (e) => {
     e.preventDefault();
-
+    
     if (!newLink.title || !newLink.url) {
       return; // Don't add empty links
     }
-
+    
     // Add new link with a temporary ID
     setLinks(prev => [
       ...prev,
@@ -148,7 +148,7 @@ export default function EditPostPage({ params }) {
         votes: 0
       }
     ]);
-
+    
     // Reset new link form
     setNewLink({ title: '', url: '', type: 'resource' });
   };
@@ -163,13 +163,13 @@ export default function EditPostPage({ params }) {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError(null);
-
+    
     try {
       // Process tags
       const processedTags = formData.tags
         ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
         : [];
-
+      
       // Prepare updated post data
       const updatedPostData = {
         title: formData.title,
@@ -180,19 +180,19 @@ export default function EditPostPage({ params }) {
         thumbnailFile: thumbnailFile,
         removeThumbnail: removeThumbnail
       };
-
+      
       // Make API call to update post
       const result = await updatePost(postId, updatedPostData);
-
+      
       // Update local state
       setPost(result.post);
-
+      
       // Show success message
       alert('Post updated successfully!');
-
+      
       // Redirect back to studio page after successful update
       router.push('/studio');
-
+      
     } catch (err) {
       console.error('Error saving post:', err);
       setSubmitError(err.message || 'An unexpected error occurred. Please try again.');
@@ -231,7 +231,7 @@ export default function EditPostPage({ params }) {
     return (
       <div className={styles.errorContainer}>
         <p className={styles.errorMessage}>{error}</p>
-        <button
+        <button 
           className={styles.retryButton}
           onClick={() => router.push('/studio')}
         >
@@ -243,32 +243,32 @@ export default function EditPostPage({ params }) {
 
   return (
     <div className={styles.editPostPage}>
-      <DiscussionPageHeader
-        user={user}
+      <DiscussionPageHeader 
+        user={user} 
         onMenuToggle={handleMenuToggle}
         isMobileMenuOpen={isMobileMenuOpen}
       />
-
+      
       <div className={styles.mainContent}>
         {/* Sidebar navigation */}
         <div className={styles.sidebarContainer}>
           <DiscussionPageSidebarNavigation isOpen={isMobileMenuOpen} />
         </div>
-
+        
         {/* Main content area */}
         <div className={`${styles.contentContainer} ${isMobileMenuOpen ? styles.menuOpen : ''}`}>
           <div className={styles.editPostContent}>
             <div className={styles.editPostHeader}>
               <h1 className={styles.editPostTitle}>Edit Post</h1>
               <div className={styles.headerActions}>
-                <button
+                <button 
                   className={styles.cancelButton}
                   onClick={handleCancel}
                   disabled={isSubmitting}
                 >
                   Cancel
                 </button>
-                <button
+                <button 
                   className={styles.saveButton}
                   onClick={handleSubmit}
                   disabled={isSubmitting}
@@ -284,13 +284,13 @@ export default function EditPostPage({ params }) {
                 </button>
               </div>
             </div>
-
+            
             {submitError && (
               <div className={styles.errorMessage}>
                 {submitError}
               </div>
             )}
-
+            
             <div className={styles.postInfo}>
               <div className={styles.postDates}>
                 <span>Created: {formatDate(post.createdAt)}</span>
@@ -298,15 +298,15 @@ export default function EditPostPage({ params }) {
               </div>
               <div className={styles.postStatus}>
                 <span className={
-                  post.status === 'published'
-                    ? styles.publishedStatus
+                  post.status === 'published' 
+                    ? styles.publishedStatus 
                     : styles.draftStatus
                 }>
                   {post.status === 'published' ? 'Published' : 'Draft'}
                 </span>
               </div>
             </div>
-
+            
             <div className={styles.editPostLayout}>
               {/* Left side - Edit form */}
               <div className={styles.editFormContainer}>
@@ -325,16 +325,16 @@ export default function EditPostPage({ params }) {
                     required
                   />
                 </div>
-
+                
                 {/* Thumbnail section */}
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Thumbnail</label>
                   <div className={styles.thumbnailSection}>
                     <div className={styles.thumbnailPreview}>
                       {post.thumbnailPreview || post.image ? (
-                        <img
-                          src={post.thumbnailPreview || post.image}
-                          alt="Post thumbnail"
+                        <img 
+                          src={post.thumbnailPreview || post.image} 
+                          alt="Post thumbnail" 
                           className={styles.thumbnailImage}
                         />
                       ) : (
@@ -357,16 +357,16 @@ export default function EditPostPage({ params }) {
                         </svg>
                         Upload new thumbnail
                       </label>
-                      <input
-                        type="file"
-                        id="thumbnailInput"
+                      <input 
+                        type="file" 
+                        id="thumbnailInput" 
                         style={{ display: 'none' }}
                         accept="image/*"
                         onChange={handleThumbnailChange}
                       />
                       {(post.thumbnailPreview || post.image) && (
-                        <button
-                          type="button"
+                        <button 
+                          type="button" 
                           className={styles.thumbnailRemoveButton}
                           onClick={handleRemoveThumbnail}
                         >
@@ -383,7 +383,7 @@ export default function EditPostPage({ params }) {
                     Recommended size: 1200 × 630 pixels (16:9 ratio)
                   </div>
                 </div>
-
+                
                 <div className={styles.formGroup}>
                   <label htmlFor="content" className={styles.formLabel}>
                     Content
@@ -399,7 +399,7 @@ export default function EditPostPage({ params }) {
                     required
                   />
                 </div>
-
+                
                 <div className={styles.formGroup}>
                   <label htmlFor="tags" className={styles.formLabel}>
                     Tags (comma-separated)
@@ -425,7 +425,7 @@ export default function EditPostPage({ params }) {
                     </div>
                   )}
                 </div>
-
+                
                 <div className={styles.formGroup}>
                   <label htmlFor="status" className={styles.formLabel}>
                     Status
@@ -441,7 +441,7 @@ export default function EditPostPage({ params }) {
                     <option value="draft">Draft</option>
                   </select>
                 </div>
-
+                
                 {/* Links section with add/remove functionality */}
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Links</label>
@@ -452,9 +452,9 @@ export default function EditPostPage({ params }) {
                           <div key={link.id} className={styles.linkItem}>
                             <div className={styles.linkInfo}>
                               <h4 className={styles.linkTitle}>{link.title}</h4>
-                              <a
-                                href={link.url}
-                                target="_blank"
+                              <a 
+                                href={link.url} 
+                                target="_blank" 
                                 rel="noopener noreferrer"
                                 className={styles.linkUrl}
                               >
@@ -470,7 +470,7 @@ export default function EditPostPage({ params }) {
                                 </span>
                               </div>
                             </div>
-                            <button
+                            <button 
                               className={styles.removeLink}
                               onClick={() => handleRemoveLink(link.id)}
                               aria-label="Remove link"
@@ -486,7 +486,7 @@ export default function EditPostPage({ params }) {
                     ) : (
                       <p className={styles.noLinks}>No links added yet</p>
                     )}
-
+                    
                     {/* Add new link form */}
                     <div className={styles.addLinkForm}>
                       <h4 className={styles.addLinkHeading}>Add New Link</h4>
@@ -523,7 +523,7 @@ export default function EditPostPage({ params }) {
                           <option value="official">Official</option>
                           <option value="other">Other</option>
                         </select>
-                        <button
+                        <button 
                           className={styles.addLinkButton}
                           onClick={handleAddLink}
                         >
@@ -534,11 +534,11 @@ export default function EditPostPage({ params }) {
                   </div>
                 </div>
               </div>
-
+              
               {/* Right side - Analytics */}
               <div className={styles.analyticsContainer}>
                 <h2 className={styles.analyticsTitle}>Post Analytics</h2>
-
+                
                 <div className={styles.analyticsCard}>
                   <div className={styles.metricItem}>
                     <h3>Views</h3>
@@ -547,69 +547,52 @@ export default function EditPostPage({ params }) {
                       <p className={styles.metricSubtext}>{post.metrics.uniqueViewers.toLocaleString()} unique viewers</p>
                     )}
                   </div>
-
+                  
                   <div className={styles.metricItem}>
-                    <h3>Clicks</h3>
-                    <p className={styles.metricValue}>{post.metrics?.clicks.toLocaleString()}</p>
-                    <p className={styles.metricSubtext}>Unique user clicks</p>
+                    <h3>Comments</h3>
+                    <p className={styles.metricValue}>{post.metrics?.comments.toLocaleString()}</p>
+                  </div>
+                  
+                  <div className={styles.metricItem}>
+                    <h3>Contributions</h3>
+                    <p className={styles.metricValue}>{post.metrics?.contributions.toLocaleString()}</p>
                   </div>
                 </div>
 
-                <div className={styles.engagementCard}>
-                  <h3 className={styles.cardTitle}>Engagement</h3>
-                  <div className={styles.engagementStats}>
-                    <div className={styles.engagementItem}>
-                      <div className={styles.engagementIcon}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                        </svg>
+                {post.metrics?.saves !== undefined && post.metrics?.shares !== undefined && (
+                  <div className={styles.engagementCard}>
+                    <h3 className={styles.cardTitle}>Engagement</h3>
+                    <div className={styles.engagementStats}>
+                      <div className={styles.engagementItem}>
+                        <div className={styles.engagementIcon}>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                          </svg>
+                        </div>
+                        <div className={styles.engagementInfo}>
+                          <span className={styles.engagementValue}>{post.metrics?.saves}</span>
+                          <span className={styles.engagementLabel}>Saves</span>
+                        </div>
                       </div>
-                      <div className={styles.engagementInfo}>
-                        <span className={styles.engagementValue}>{post.metrics?.saves}</span>
-                        <span className={styles.engagementLabel}>Saves</span>
-                      </div>
-                    </div>
-                    <div className={styles.engagementItem}>
-                      <div className={styles.engagementIcon}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="18" cy="5" r="3"></circle>
-                          <circle cx="6" cy="12" r="3"></circle>
-                          <circle cx="18" cy="19" r="3"></circle>
-                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                        </svg>
-                      </div>
-                      <div className={styles.engagementInfo}>
-                        <span className={styles.engagementValue}>{post.metrics?.shares}</span>
-                        <span className={styles.engagementLabel}>Shares</span>
-                      </div>
-                    </div>
-                    <div className={styles.engagementItem}>
-                      <div className={styles.engagementIcon}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                        </svg>
-                      </div>
-                      <div className={styles.engagementInfo}>
-                        <span className={styles.engagementValue}>{post.metrics?.comments}</span>
-                        <span className={styles.engagementLabel}>Comments</span>
-                      </div>
-                    </div>
-                    <div className={styles.engagementItem}>
-                      <div className={styles.engagementIcon}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                        </svg>
-                      </div>
-                      <div className={styles.engagementInfo}>
-                        <span className={styles.engagementValue}>{post.metrics?.contributions}</span>
-                        <span className={styles.engagementLabel}>Contributions</span>
+                      <div className={styles.engagementItem}>
+                        <div className={styles.engagementIcon}>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                          </svg>
+                        </div>
+                        <div className={styles.engagementInfo}>
+                          <span className={styles.engagementValue}>{post.metrics?.shares}</span>
+                          <span className={styles.engagementLabel}>Shares</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-
+                )}
+                
                 {/* View History Chart */}
                 {post.viewsHistory && post.viewsHistory.length > 0 ? (
                   <div className={styles.analyticsChartSection}>
@@ -619,14 +602,14 @@ export default function EditPostPage({ params }) {
                         // Calculate the maximum views across all days for scaling
                         const maxViews = Math.max(...post.viewsHistory.map(d => d.views));
                         // Calculate height percentage based on max views
-                        const heightPercentage = maxViews > 0
-                          ? (day.views / maxViews * 100)
+                        const heightPercentage = maxViews > 0 
+                          ? (day.views / maxViews * 100) 
                           : 0;
-
+                        
                         return (
                           <div key={index} className={styles.chartBar}>
-                            <div
-                              className={styles.chartBarFill}
+                            <div 
+                              className={styles.chartBarFill} 
                               style={{ height: `${heightPercentage}%` }}
                             >
                               <span className={styles.chartTooltip}>{day.views} views on {day.date}</span>
@@ -651,7 +634,7 @@ export default function EditPostPage({ params }) {
                     </div>
                   </div>
                 )}
-
+                
                 {/* Content Recommendations Section */}
                 <div className={styles.recommendationsSection}>
                   <h3 className={styles.cardTitle}>Suggested Improvements</h3>
@@ -683,7 +666,7 @@ export default function EditPostPage({ params }) {
             </div>
           </div>
         </div>
-
+        
         {/* Overlay for mobile when menu is open */}
         {isMobileMenuOpen && (
           <div className={styles.mobileOverlay} onClick={handleMenuToggle}></div>
