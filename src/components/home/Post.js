@@ -48,6 +48,31 @@ export default function Post({ post, onHidePost }) {
   // Number of visible hashtags before "Show more" button
   const visibleHashtagCount = showAllHashtags ? hashtags.length : calculateVisibleCount();
 
+  // Track view engagement with the post
+  const trackViewEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-view`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track view engagement');
+      } else {
+        const data = await response.json();
+        console.log('View engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking view engagement:', error);
+    }
+  };
+
   // Extract YouTube video ID from URL
   const extractYouTubeVideoId = useCallback((url) => {
     if (!url || typeof url !== 'string') return null;
@@ -73,16 +98,20 @@ export default function Post({ post, onHidePost }) {
     }
   }, [post.videoUrl, extractYouTubeVideoId]);
 
-  // Handle play button click
-  const handlePlayClick = useCallback((e) => {
+  // Handle play button click - NOW WITH VIEW TRACKING
+  const handlePlayClick = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
     
     if (videoId) {
       setIsVideoPlaying(true);
       setVideoError(false);
+      
+      // Track view engagement when play button is clicked
+      const postId = post.id || post._id;
+      await trackViewEngagement(postId);
     }
-  }, [videoId]);
+  }, [videoId, post.id, post._id]);
 
   // Handle closing video (return to thumbnail)
   const handleCloseVideo = useCallback((e) => {

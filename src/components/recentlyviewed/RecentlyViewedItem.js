@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import styles from './RecentlyViewedItem.module.css';
 import PostSaveModal from '@/components/home/PostSaveModal';
 import { ReportModal, submitReport } from '@/components/report';
-import ShareModal from '@/components/share/ShareModal'; // Import the ShareModal component
+import ShareModal from '@/components/share/ShareModal';
 
 const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
   const router = useRouter();
@@ -17,7 +17,7 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
   const [currentUsername, setCurrentUsername] = useState(null);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false); // New state for share modal
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   
   // Video playback states
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -41,6 +41,31 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
   } = item;
 
   const itemId = id || _id;
+
+  // Track view engagement with the post
+  const trackViewEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-view`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track view engagement');
+      } else {
+        const data = await response.json();
+        console.log('View engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking view engagement:', error);
+    }
+  };
 
   // Extract YouTube video ID from URL
   const extractYouTubeVideoId = useCallback((url) => {
@@ -67,16 +92,19 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
     }
   }, [videoUrl, extractYouTubeVideoId]);
 
-  // Handle play button click
-  const handlePlayClick = useCallback((e) => {
+  // Handle play button click - NOW WITH VIEW TRACKING
+  const handlePlayClick = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
     
     if (videoId) {
       setIsVideoPlaying(true);
       setVideoError(false);
+      
+      // Track view engagement when play button is clicked
+      await trackViewEngagement(itemId);
     }
-  }, [videoId]);
+  }, [videoId, itemId]);
 
   // Handle closing video (return to thumbnail)
   const handleCloseVideo = useCallback((e) => {

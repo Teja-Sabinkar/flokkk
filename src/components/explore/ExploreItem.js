@@ -1,4 +1,4 @@
-// src/components/explore/ExploreItem.js - Updated with consistent video functionality
+// src/components/explore/ExploreItem.js - Updated with view tracking
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -27,6 +27,31 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
   
   const menuRef = useRef(null);
 
+  // Track view engagement with the post
+  const trackViewEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-view`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track view engagement');
+      } else {
+        const data = await response.json();
+        console.log('View engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking view engagement:', error);
+    }
+  };
+
   // Extract YouTube video ID from URL - Same logic as Post.js
   const extractYouTubeVideoId = useCallback((url) => {
     if (!url || typeof url !== 'string') return null;
@@ -52,16 +77,19 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     }
   }, [videoUrl, extractYouTubeVideoId]);
 
-  // Handle play button click - Same as Post.js
-  const handlePlayClick = useCallback((e) => {
+  // Handle play button click - NOW WITH VIEW TRACKING
+  const handlePlayClick = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
     
     if (videoId) {
       setIsVideoPlaying(true);
       setVideoError(false);
+      
+      // Track view engagement when play button is clicked
+      await trackViewEngagement(id);
     }
-  }, [videoId]);
+  }, [videoId, id]);
 
   // Handle closing video (return to thumbnail) - Same as Post.js
   const handleCloseVideo = useCallback((e) => {

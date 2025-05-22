@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import styles from './SubscriptionPostItem.module.css';
 import { ReportModal, submitReport } from '@/components/report';
 import ShareModal from '@/components/share/ShareModal';
-import PostSaveModal from '@/components/home/PostSaveModal'; // Make sure this is imported
+import PostSaveModal from '@/components/home/PostSaveModal';
 
 const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
   const router = useRouter();
@@ -14,9 +14,9 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false); // New state for save modal
-  const [saveSuccess, setSaveSuccess] = useState(false); // State to track save success
-  const [savedPlaylistName, setSavedPlaylistName] = useState(''); // For success message
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [savedPlaylistName, setSavedPlaylistName] = useState('');
   
   // Video playback states
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -74,6 +74,31 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
 
   const timeAgo = getTimeAgo(post.createdAt);
 
+  // Track view engagement with the post
+  const trackViewEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-view`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track view engagement');
+      } else {
+        const data = await response.json();
+        console.log('View engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking view engagement:', error);
+    }
+  };
+
   // Extract YouTube video ID from URL
   const extractYouTubeVideoId = useCallback((url) => {
     if (!url || typeof url !== 'string') return null;
@@ -99,16 +124,20 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
     }
   }, [post.videoUrl, extractYouTubeVideoId]);
 
-  // Handle play button click
-  const handlePlayClick = useCallback((e) => {
+  // Handle play button click - NOW WITH VIEW TRACKING
+  const handlePlayClick = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
     
     if (videoId) {
       setIsVideoPlaying(true);
       setVideoError(false);
+      
+      // Track view engagement when play button is clicked
+      const postId = post.id || post._id;
+      await trackViewEngagement(postId);
     }
-  }, [videoId]);
+  }, [videoId, post.id, post._id]);
 
   // Handle closing video (return to thumbnail)
   const handleCloseVideo = useCallback((e) => {
@@ -189,13 +218,13 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
     setIsShareModalOpen(true);
   };
 
-  // NEW: Handle save button click
+  // Handle save button click
   const handleSave = () => {
     setIsMenuOpen(false);
     setIsSaveModalOpen(true);
   };
 
-  // NEW: Handle saving post to playlist
+  // Handle saving post to playlist
   const handleSaveToPlaylist = (saveData) => {
     setSaveSuccess(true);
     setSavedPlaylistName(saveData.playlistTitle);
@@ -567,7 +596,7 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
         }}
       />
 
-      {/* Save Modal - NEW */}
+      {/* Save Modal */}
       <PostSaveModal
         isOpen={isSaveModalOpen}
         onClose={() => setIsSaveModalOpen(false)}
