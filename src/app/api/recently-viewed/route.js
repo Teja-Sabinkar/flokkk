@@ -11,7 +11,7 @@ export async function GET(request) {
     console.log('[RECENTLY VIEWED] API route called');
     
     // Get auth token from header
-    const headersList = headers();
+    const headersList = await headers();
     const authHeader = headersList.get('Authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

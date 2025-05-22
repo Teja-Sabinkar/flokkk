@@ -377,7 +377,7 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
 
   return (
     <div className={`${styles.card} ${viewMode === 'list' ? styles.listCard : ''}`} ref={cardRef} data-post-id={post.id || post._id}>
-      {/* Debug info in development */}
+      {/* DEBUG: Show appearance status in development */}
       {process.env.NODE_ENV === 'development' && (
         <div style={{ fontSize: '10px', color: '#666', padding: '2px 4px' }}>
           Subscription - Appeared: {hasAppeared ? 'Yes' : 'No'}

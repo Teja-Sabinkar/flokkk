@@ -59,7 +59,9 @@ function generateSampleViewHistory(totalAppeared = 100) {
 // GET endpoint to retrieve a single post by ID
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    // NEW: Await params before using
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     
     // Check post ID format
     if (!ObjectId.isValid(id)) {
@@ -70,7 +72,7 @@ export async function GET(request, { params }) {
     }
     
     // Verify authentication
-    const headersList = headers();
+    const headersList = await headers();
     const authHeader = headersList.get('Authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -252,7 +254,9 @@ export async function GET(request, { params }) {
 // PATCH endpoint to update a post
 export async function PATCH(request, { params }) {
   try {
-    const { id } = params;
+    // NEW: Await params before using
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     
     // Check post ID format
     if (!ObjectId.isValid(id)) {
@@ -266,7 +270,7 @@ export async function PATCH(request, { params }) {
     const requestData = await request.json();
     
     // Verify authentication
-    const headersList = headers();
+    const headersList = await headers();
     const authHeader = headersList.get('Authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -497,7 +501,9 @@ export async function PATCH(request, { params }) {
 // DELETE endpoint to delete a post
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    // NEW: Await params before using
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     
     // Check post ID format
     if (!ObjectId.isValid(id)) {
@@ -508,7 +514,7 @@ export async function DELETE(request, { params }) {
     }
     
     // Verify authentication
-    const headersList = headers();
+    const headersList = await headers();
     const authHeader = headersList.get('Authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

@@ -10,10 +10,13 @@ import CommunityPost from '@/models/CommunityPost';
 import Comment from '@/models/Comment';
 import PostEngagement from '@/models/PostEngagement'; // NEW: Import PostEngagement model
 
-export async function GET(request) {
+export async function GET(request, { params }) {
     try {
+        // NEW: Handle params if they exist (though this route may not use them)
+        const resolvedParams = params ? await params : {};
+        
         // Verify authentication
-        const headersList = headers();
+        const headersList = await headers();
         const authHeader = headersList.get('Authorization');
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {

@@ -18,7 +18,7 @@ export async function GET(request) {
     await dbConnect();
     
     // Get current user from token
-    const headersList = headers();
+    const headersList = await headers();
     const authHeader = headersList.get('Authorization');
     let currentUserId = null;
     let query = {

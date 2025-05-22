@@ -8,7 +8,7 @@ import styles from './Post.module.css';
 import PostSaveModal from './PostSaveModal';
 import { ReportModal, submitReport } from '@/components/report';
 import { ShareModal } from '@/components/share';
-import { useAppearanceTracker } from '@/hooks/useAppearanceTracker'; // Import the new hook
+import { useAppearanceTracker } from '@/hooks/useAppearanceTracker';
 
 export default function Post({ post, onHidePost }) {
   const router = useRouter();
@@ -25,16 +25,18 @@ export default function Post({ post, onHidePost }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [isCurrentUser, setIsCurrentUser] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  
+
+
   // Video playback states
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [videoId, setVideoId] = useState(null);
   const [videoError, setVideoError] = useState(false);
 
+
   // NEW: Use appearance tracking hook
-  const { elementRef: postRef, hasAppeared } = useAppearanceTracker(post.id || post._id, {
-    threshold: 0.5, // 50% visibility
-    timeThreshold: 1000 // 1 second
+  const { elementRef: postRef, hasAppeared, isTracking, debugInfo, manualTrigger } = useAppearanceTracker(post.id || post._id, {
+    threshold: 0.3, // 30% of post must be visible
+    timeThreshold: 1000 // 1 second delay
   });
 
   const menuRef = useRef(null);
@@ -108,7 +110,7 @@ export default function Post({ post, onHidePost }) {
   // Extract YouTube video ID from URL
   const extractYouTubeVideoId = useCallback((url) => {
     if (!url || typeof url !== 'string') return null;
-    
+
     try {
       // Comprehensive regex that handles all YouTube URL formats
       const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
@@ -134,11 +136,11 @@ export default function Post({ post, onHidePost }) {
   const handlePlayClick = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (videoId) {
       setIsVideoPlaying(true);
       setVideoError(false);
-      
+
       // Track view engagement when play button is clicked
       const postId = post.id || post._id;
       await trackViewEngagement(postId);
@@ -374,8 +376,13 @@ export default function Post({ post, onHidePost }) {
     return color;
   };
 
+
+
+
   return (
     <div className={styles.postCard} ref={postRef} data-post-id={post.id || post._id}>
+
+
       {/* User Info and Post Header */}
       <div className={styles.postHeader}>
         <div className={styles.userInfo}>
@@ -527,7 +534,7 @@ export default function Post({ post, onHidePost }) {
         {isVideoPlaying && videoId && !videoError ? (
           // YouTube video player
           <div className={styles.videoPlayerWrapper}>
-            <button 
+            <button
               className={styles.closeVideoButton}
               onClick={handleCloseVideo}
               aria-label="Close video"
@@ -550,7 +557,7 @@ export default function Post({ post, onHidePost }) {
         ) : isVideoPlaying && videoError ? (
           // Error fallback when embedding fails
           <div className={styles.videoErrorContainer}>
-            <button 
+            <button
               className={styles.closeVideoButton}
               onClick={handleCloseVideo}
               aria-label="Close video"
@@ -570,9 +577,9 @@ export default function Post({ post, onHidePost }) {
               </div>
               <h3>Video cannot be embedded</h3>
               <p>This video cannot be played directly. Click below to watch on YouTube.</p>
-              <a 
-                href={post.videoUrl} 
-                target="_blank" 
+              <a
+                href={post.videoUrl}
+                target="_blank"
                 rel="noopener noreferrer"
                 className={styles.watchOnYoutubeBtn}
               >
@@ -596,22 +603,22 @@ export default function Post({ post, onHidePost }) {
               unoptimized
               key={`post-image-${post.id || post._id}-${post.image}`}
             />
-            
+
             {/* Play button overlay for videos */}
             {post.videoUrl && videoId && (
-              <button 
+              <button
                 className={styles.playButton}
                 onClick={handlePlayClick}
                 aria-label="Play video"
               >
                 <div className={styles.playButtonCircle}>
-                  <svg 
+                  <svg
                     className={styles.playIcon}
-                    xmlns="http://www.w3.org/2000/svg" 
-                    viewBox="0 0 24 24" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
                     fill="currentColor"
                   >
-                    <path d="M8 5v14l11-7z"/>
+                    <path d="M8 5v14l11-7z" />
                   </svg>
                 </div>
               </button>

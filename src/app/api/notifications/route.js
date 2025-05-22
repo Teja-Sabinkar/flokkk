@@ -21,7 +21,7 @@ export async function GET(request) {
     const skip = (page - 1) * limit;
 
     // Get auth token from header
-    const headersList = headers();
+    const headersList = await headers();
     const authHeader = headersList.get('Authorization');
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
