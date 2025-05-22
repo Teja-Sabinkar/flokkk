@@ -73,6 +73,31 @@ export default function Post({ post, onHidePost }) {
     }
   };
 
+  // Track penetrate engagement with the post
+  const trackPenetrateEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-penetrate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track penetrate engagement');
+      } else {
+        const data = await response.json();
+        console.log('Penetrate engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking penetrate engagement:', error);
+    }
+  };
+
   // Extract YouTube video ID from URL
   const extractYouTubeVideoId = useCallback((url) => {
     if (!url || typeof url !== 'string') return null;
@@ -282,8 +307,8 @@ export default function Post({ post, onHidePost }) {
     setShowAllHashtags(!showAllHashtags);
   };
 
-  // Add handler for discussion button click
-  const handleDiscussionClick = useCallback(() => {
+  // Add handler for discussion button click - NOW WITH PENETRATE TRACKING
+  const handleDiscussionClick = useCallback(async () => {
     // Directly check if post is empty
     if (!post || Object.keys(post).length === 0) {
       console.error('Empty post object received');
@@ -297,6 +322,9 @@ export default function Post({ post, onHidePost }) {
       console.error('No post ID available');
       return;
     }
+
+    // Track penetrate engagement when discussion button is clicked
+    await trackPenetrateEngagement(postId);
 
     router.push(`/discussion?id=${postId}`);
   }, [post, router]);

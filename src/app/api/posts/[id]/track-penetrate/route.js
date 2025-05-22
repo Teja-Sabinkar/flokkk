@@ -77,21 +77,21 @@ export async function POST(request, { params }) {
       engagement = new PostEngagement({
         postId: new ObjectId(postId),
         userId: user._id,
-        hasViewed: true,
-        lastViewedAt: new Date()
+        hasPenetrated: true,
+        lastPenetratedAt: new Date()
       });
     } else {
-      // Update existing engagement record only if not already viewed
-      if (!engagement.hasViewed) {
-        engagement.hasViewed = true;
-        engagement.lastViewedAt = new Date();
+      // Update existing engagement record only if not already penetrated
+      if (!engagement.hasPenetrated) {
+        engagement.hasPenetrated = true;
+        engagement.lastPenetratedAt = new Date();
       }
     }
     
     await engagement.save();
     
     // Get updated engagement counts for this post
-    const [saveCount, shareCount, viewedCount] = await Promise.all([
+    const [saveCount, shareCount, viewedCount, penetrateCount] = await Promise.all([
       PostEngagement.countDocuments({ 
         postId: new ObjectId(postId), 
         hasSaved: true 
@@ -103,28 +103,35 @@ export async function POST(request, { params }) {
       PostEngagement.countDocuments({ 
         postId: new ObjectId(postId), 
         hasViewed: true 
+      }),
+      PostEngagement.countDocuments({ 
+        postId: new ObjectId(postId), 
+        hasPenetrated: true 
       })
     ]);
     
     return NextResponse.json({
-      message: 'View tracked successfully',
+      message: 'Penetrate tracked successfully',
       engagement: {
         hasSaved: engagement.hasSaved,
         hasShared: engagement.hasShared,
         hasViewed: engagement.hasViewed,
+        hasPenetrated: engagement.hasPenetrated,
         lastSavedAt: engagement.lastSavedAt,
         lastSharedAt: engagement.lastSharedAt,
-        lastViewedAt: engagement.lastViewedAt
+        lastViewedAt: engagement.lastViewedAt,
+        lastPenetratedAt: engagement.lastPenetratedAt
       },
       counts: {
         saves: saveCount,
         shares: shareCount,
-        viewed: viewedCount
+        viewed: viewedCount,
+        penetrate: penetrateCount
       }
     }, { status: 200 });
     
   } catch (error) {
-    console.error('Error tracking view:', error);
+    console.error('Error tracking penetrate:', error);
     return NextResponse.json(
       { message: 'Internal server error: ' + error.message },
       { status: 500 }

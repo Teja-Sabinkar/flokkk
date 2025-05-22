@@ -24,6 +24,10 @@ const PostEngagementSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    hasPenetrated: {
+      type: Boolean,
+      default: false
+    },
     lastSavedAt: {
       type: Date,
       default: null
@@ -33,6 +37,10 @@ const PostEngagementSchema = new mongoose.Schema(
       default: null
     },
     lastViewedAt: {
+      type: Date,
+      default: null
+    },
+    lastPenetratedAt: {
       type: Date,
       default: null
     }
@@ -51,7 +59,7 @@ PostEngagementSchema.index({ postId: 1, userId: 1 }, { unique: true });
 
 // Virtual for checking if user has engaged with post
 PostEngagementSchema.virtual('hasEngaged').get(function () {
-  return this.hasSaved || this.hasShared || this.hasViewed;
+  return this.hasSaved || this.hasShared || this.hasViewed || this.hasPenetrated;
 });
 
 // Ensure virtuals are included in JSON output

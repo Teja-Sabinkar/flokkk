@@ -99,6 +99,31 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
     }
   };
 
+  // Track penetrate engagement with the post
+  const trackPenetrateEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-penetrate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track penetrate engagement');
+      } else {
+        const data = await response.json();
+        console.log('Penetrate engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking penetrate engagement:', error);
+    }
+  };
+
   // Extract YouTube video ID from URL
   const extractYouTubeVideoId = useCallback((url) => {
     if (!url || typeof url !== 'string') return null;
@@ -286,12 +311,15 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
     }
   };
 
-  // Discussion click handler
-  const handleDiscussionClick = (e) => {
+  // Discussion click handler - NOW WITH PENETRATE TRACKING
+  const handleDiscussionClick = async (e) => {
     e.preventDefault();
     const postId = post.id || post._id;
 
     if (!postId) return;
+
+    // Track penetrate engagement when discussion button is clicked
+    await trackPenetrateEngagement(postId);
 
     // Track the view before navigating
     const trackView = async () => {

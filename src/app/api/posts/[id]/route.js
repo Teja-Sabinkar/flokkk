@@ -135,7 +135,7 @@ export async function GET(request, { params }) {
     });
     
     // Get real engagement counts from PostEngagement collection
-    const [saveCount, shareCount, viewedCount] = await Promise.all([
+    const [saveCount, shareCount, viewedCount, penetrateCount] = await Promise.all([
       PostEngagement.countDocuments({ 
         postId: new ObjectId(id), 
         hasSaved: true 
@@ -147,6 +147,10 @@ export async function GET(request, { params }) {
       PostEngagement.countDocuments({ 
         postId: new ObjectId(id), 
         hasViewed: true 
+      }),
+      PostEngagement.countDocuments({ 
+        postId: new ObjectId(id), 
+        hasPenetrated: true 
       })
     ]);
     
@@ -209,6 +213,7 @@ export async function GET(request, { params }) {
         views: post.views || 0,
         uniqueViewers: Math.round((post.views || 0) * 0.8), // Estimate unique viewers if not available
         viewed: viewedCount, // Real viewed count from engagement tracking
+        penetrate: penetrateCount, // Real penetrate count from engagement tracking
         comments: commentsCount || 0,
         contributions: (post.communityLinks?.length || 0) + (post.creatorLinks?.length || 0),
         saves: saveCount, // Real save count from engagement tracking
@@ -402,7 +407,7 @@ export async function PATCH(request, { params }) {
     });
     
     // Get real engagement counts from PostEngagement collection
-    const [saveCount, shareCount, viewedCount] = await Promise.all([
+    const [saveCount, shareCount, viewedCount, penetrateCount] = await Promise.all([
       PostEngagement.countDocuments({ 
         postId: new ObjectId(id), 
         hasSaved: true 
@@ -414,6 +419,10 @@ export async function PATCH(request, { params }) {
       PostEngagement.countDocuments({ 
         postId: new ObjectId(id), 
         hasViewed: true 
+      }),
+      PostEngagement.countDocuments({ 
+        postId: new ObjectId(id), 
+        hasPenetrated: true 
       })
     ]);
     
@@ -432,6 +441,7 @@ export async function PATCH(request, { params }) {
         views: updatedPost.views || 0,
         uniqueViewers: Math.round((updatedPost.views || 0) * 0.8), // Estimate unique viewers
         viewed: viewedCount, // Real viewed count from engagement tracking
+        penetrate: penetrateCount, // Real penetrate count from engagement tracking
         comments: commentsCount || 0,
         contributions: (updatedPost.communityLinks?.length || 0) + (updatedPost.creatorLinks?.length || 0),
         saves: saveCount, // Real save count from engagement tracking

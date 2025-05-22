@@ -553,6 +553,12 @@ export default function EditPostPage({ params }) {
                     <p className={styles.metricValue}>{post.metrics?.viewed?.toLocaleString() || '0'}</p>
                     <p className={styles.metricSubtext}>Video plays</p>
                   </div>
+                  
+                  <div className={styles.metricItem}>
+                    <h3>Penetrate</h3>
+                    <p className={styles.metricValue}>{post.metrics?.penetrate?.toLocaleString() || '0'}</p>
+                    <p className={styles.metricSubtext}>Discussion opens</p>
+                  </div>
                 </div>
 
                 <div className={styles.engagementCard}>

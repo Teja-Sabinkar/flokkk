@@ -52,6 +52,31 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     }
   };
 
+  // Track penetrate engagement with the post
+  const trackPenetrateEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-penetrate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track penetrate engagement');
+      } else {
+        const data = await response.json();
+        console.log('Penetrate engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking penetrate engagement:', error);
+    }
+  };
+
   // Extract YouTube video ID from URL - Same logic as Post.js
   const extractYouTubeVideoId = useCallback((url) => {
     if (!url || typeof url !== 'string') return null;
@@ -200,7 +225,10 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
     setIsShareModalOpen(false);
   };
 
-  const handleDiscussionsClick = () => {
+  const handleDiscussionsClick = async () => {
+    // Track penetrate engagement when discussion button is clicked
+    await trackPenetrateEngagement(id);
+    
     router.push(`/discussion?id=${id}`);
   };
 
