@@ -298,23 +298,6 @@ export default function HomeFeed() {
       <div className={styles.postsList}>
 
 
-        <button
-          onClick={testAppearanceTracking}
-          style={{
-            position: 'fixed',
-            top: '100px',
-            right: '100px',
-            zIndex: 9999,
-            background: '#4169e1',
-            color: 'white',
-            padding: '10px',
-            borderRadius: '4px',
-            border: 'none'
-          }}
-        >
-          Test Tracking
-        </button>
-
         {posts.length > 0 ? (
           posts
             .filter(post => post && (post._id || post.id)) // Only show posts with valid IDs
