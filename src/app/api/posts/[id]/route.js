@@ -10,14 +10,14 @@ import PostEngagement from '@/models/PostEngagement';
 import { put, del } from '@vercel/blob';
 
 // Helper function to generate sample view history data
-function generateSampleViewHistory(totalViews = 100) {
+function generateSampleViewHistory(totalAppeared = 100) {
   const today = new Date();
   const viewsHistory = [];
   
-  // Create a distribution of views that looks realistic
-  // 70% of views over last 3 days, 30% over preceding 4 days
-  const recentViewsPortion = Math.floor(totalViews * 0.7);
-  const olderViewsPortion = totalViews - recentViewsPortion;
+  // Create a distribution of appearances that looks realistic
+  // 70% of appearances over last 3 days, 30% over preceding 4 days
+  const recentAppearedPortion = Math.floor(totalAppeared * 0.7);
+  const olderAppearedPortion = totalAppeared - recentAppearedPortion;
   
   // Generate a somewhat random but realistic distribution
   const dailyWeights = [
@@ -34,22 +34,22 @@ function generateSampleViewHistory(totalViews = 100) {
   const weightSum = dailyWeights.reduce((sum, weight) => sum + weight, 0);
   const normalizedWeights = dailyWeights.map(weight => weight / weightSum);
   
-  // Calculate views for each day
+  // Calculate appearances for each day
   for (let i = 6; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     
-    // Calculate views for this day (with some randomness)
-    let dayViews = Math.max(1, Math.round(totalViews * normalizedWeights[6-i] * (0.8 + 0.4 * Math.random())));
+    // Calculate appearances for this day (with some randomness)
+    let dayAppeared = Math.max(1, Math.round(totalAppeared * normalizedWeights[6-i] * (0.8 + 0.4 * Math.random())));
     
     // Make sure the total doesn't exceed the original number
-    if (viewsHistory.reduce((sum, day) => sum + day.views, 0) + dayViews > totalViews) {
-      dayViews = Math.max(1, totalViews - viewsHistory.reduce((sum, day) => sum + day.views, 0));
+    if (viewsHistory.reduce((sum, day) => sum + day.views, 0) + dayAppeared > totalAppeared) {
+      dayAppeared = Math.max(1, totalAppeared - viewsHistory.reduce((sum, day) => sum + day.views, 0));
     }
     
     viewsHistory.push({
       date: date.toISOString().split('T')[0],
-      views: dayViews
+      views: dayAppeared // Keep 'views' for backward compatibility with charts
     });
   }
   
@@ -126,7 +126,6 @@ export async function GET(request, { params }) {
     }
     
     // Get additional metrics for the post if needed
-    // You could add more queries here to get comments count, views, etc.
     const { db } = await connectToDatabase();
     
     // Get comment count
@@ -134,8 +133,12 @@ export async function GET(request, { params }) {
       postId: new ObjectId(id)
     });
     
-    // Get real engagement counts from PostEngagement collection
-    const [saveCount, shareCount, viewedCount, penetrateCount] = await Promise.all([
+    // NEW: Get all engagement counts from PostEngagement collection including appeared
+    const [appearedCount, saveCount, shareCount, viewedCount, penetrateCount] = await Promise.all([
+      PostEngagement.countDocuments({ 
+        postId: new ObjectId(id), 
+        hasAppeared: true 
+      }),
       PostEngagement.countDocuments({ 
         postId: new ObjectId(id), 
         hasSaved: true 
@@ -154,26 +157,35 @@ export async function GET(request, { params }) {
       })
     ]);
     
-    // Generate view history data
-    // First check if the post already has viewsHistory
+    console.log(`📊 Post ${id} engagement counts:`, {
+      appeared: appearedCount,
+      viewed: viewedCount,
+      penetrated: penetrateCount,
+      saved: saveCount,
+      shared: shareCount
+    });
+    
+    // Generate view history data based on appeared count
     let viewsHistory = post.viewsHistory || [];
     
     // If no view history exists, generate sample data for the last 7 days
     if (!viewsHistory || viewsHistory.length === 0) {
-      // Look for views data in the view_logs collection if you have one
+      // Look for appeared logs in the PostEngagement collection
       try {
-        const viewLogs = await db.collection('view_logs')
-          .find({ postId: new ObjectId(id) })
-          .sort({ timestamp: -1 })
-          .limit(100)
-          .toArray();
-          
-        if (viewLogs && viewLogs.length > 0) {
-          // Process view logs to get daily counts
+        const recentEngagements = await PostEngagement.find({
+          postId: new ObjectId(id),
+          hasAppeared: true,
+          lastAppearedAt: { 
+            $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
+          }
+        }).select('lastAppearedAt').lean();
+        
+        if (recentEngagements && recentEngagements.length > 0) {
+          // Process engagements to get daily counts
           const dailyCounts = {};
           const now = new Date();
           
-          // Initialize the last 7 days with 0 views
+          // Initialize the last 7 days with 0 appearances
           for (let i = 6; i >= 0; i--) {
             const date = new Date(now);
             date.setDate(date.getDate() - i);
@@ -181,39 +193,41 @@ export async function GET(request, { params }) {
             dailyCounts[dateStr] = 0;
           }
           
-          // Count views by day
-          viewLogs.forEach(log => {
-            const logDate = new Date(log.timestamp);
-            const dateStr = logDate.toISOString().split('T')[0];
-            
-            if (dailyCounts[dateStr] !== undefined) {
-              dailyCounts[dateStr]++;
+          // Count appearances by day
+          recentEngagements.forEach(engagement => {
+            if (engagement.lastAppearedAt) {
+              const engagementDate = new Date(engagement.lastAppearedAt);
+              const dateStr = engagementDate.toISOString().split('T')[0];
+              
+              if (dailyCounts[dateStr] !== undefined) {
+                dailyCounts[dateStr]++;
+              }
             }
           });
           
           // Convert to array format
           viewsHistory = Object.keys(dailyCounts).map(date => ({
             date,
-            views: dailyCounts[date]
+            views: dailyCounts[date] // Keep 'views' for chart compatibility
           }));
         } else {
-          // If no actual view logs, generate sample data
-          viewsHistory = generateSampleViewHistory(post.views || 0);
+          // If no actual appearance logs, generate sample data based on total appeared
+          viewsHistory = generateSampleViewHistory(appearedCount);
         }
-      } catch (viewLogError) {
-        console.warn('Error fetching view logs, using sample data:', viewLogError);
-        viewsHistory = generateSampleViewHistory(post.views || 0);
+      } catch (engagementError) {
+        console.warn('Error fetching engagement logs, using sample data:', engagementError);
+        viewsHistory = generateSampleViewHistory(appearedCount);
       }
     }
     
-    // Format post with real engagement metrics
+    // NEW: Format post with appeared-based engagement metrics
     const formattedPost = {
       ...post,
       metrics: {
-        views: post.views || 0,
-        uniqueViewers: Math.round((post.views || 0) * 0.8), // Estimate unique viewers if not available
-        viewed: viewedCount, // Real viewed count from engagement tracking
-        penetrate: penetrateCount, // Real penetrate count from engagement tracking
+        appeared: appearedCount, // NEW: Replace views with appeared count
+        uniqueViewers: Math.round(appearedCount * 0.8), // Estimate unique viewers from appeared
+        viewed: viewedCount, // Real viewed count from engagement tracking (video plays)
+        penetrate: penetrateCount, // Real penetrate count from engagement tracking (discussion opens)
         comments: commentsCount || 0,
         contributions: (post.communityLinks?.length || 0) + (post.creatorLinks?.length || 0),
         saves: saveCount, // Real save count from engagement tracking
@@ -221,6 +235,8 @@ export async function GET(request, { params }) {
       },
       viewsHistory: viewsHistory
     };
+    
+    console.log(`📈 Post ${id} formatted metrics:`, formattedPost.metrics);
     
     return NextResponse.json(formattedPost, { status: 200 });
     
@@ -406,8 +422,12 @@ export async function PATCH(request, { params }) {
       postId: new ObjectId(id)
     });
     
-    // Get real engagement counts from PostEngagement collection
-    const [saveCount, shareCount, viewedCount, penetrateCount] = await Promise.all([
+    // NEW: Get all engagement counts from PostEngagement collection including appeared
+    const [appearedCount, saveCount, shareCount, viewedCount, penetrateCount] = await Promise.all([
+      PostEngagement.countDocuments({ 
+        postId: new ObjectId(id), 
+        hasAppeared: true 
+      }),
       PostEngagement.countDocuments({ 
         postId: new ObjectId(id), 
         hasSaved: true 
@@ -426,22 +446,30 @@ export async function PATCH(request, { params }) {
       })
     ]);
     
-    // Generate view history data for the updated post
+    console.log(`📊 Updated post ${id} engagement counts:`, {
+      appeared: appearedCount,
+      viewed: viewedCount,
+      penetrated: penetrateCount,
+      saved: saveCount,
+      shared: shareCount
+    });
+    
+    // Generate view history data for the updated post based on appeared
     let viewsHistory = updatedPost.viewsHistory || [];
     
     // If no view history exists, generate sample data
     if (!viewsHistory || viewsHistory.length === 0) {
-      viewsHistory = generateSampleViewHistory(updatedPost.views || 0);
+      viewsHistory = generateSampleViewHistory(appearedCount);
     }
     
-    // Format post with real engagement metrics
+    // NEW: Format post with appeared-based engagement metrics
     const formattedPost = {
       ...updatedPost,
       metrics: {
-        views: updatedPost.views || 0,
-        uniqueViewers: Math.round((updatedPost.views || 0) * 0.8), // Estimate unique viewers
-        viewed: viewedCount, // Real viewed count from engagement tracking
-        penetrate: penetrateCount, // Real penetrate count from engagement tracking
+        appeared: appearedCount, // NEW: Replace views with appeared count
+        uniqueViewers: Math.round(appearedCount * 0.8), // Estimate unique viewers from appeared
+        viewed: viewedCount, // Real viewed count from engagement tracking (video plays)
+        penetrate: penetrateCount, // Real penetrate count from engagement tracking (discussion opens)
         comments: commentsCount || 0,
         contributions: (updatedPost.communityLinks?.length || 0) + (updatedPost.creatorLinks?.length || 0),
         saves: saveCount, // Real save count from engagement tracking
@@ -449,6 +477,8 @@ export async function PATCH(request, { params }) {
       },
       viewsHistory: viewsHistory
     };
+    
+    console.log(`📈 Updated post ${id} formatted metrics:`, formattedPost.metrics);
     
     return NextResponse.json({
       message: 'Post updated successfully',
@@ -547,10 +577,12 @@ export async function DELETE(request, { params }) {
       postId: new ObjectId(id)
     });
     
-    // Delete engagement records associated with the post
-    await PostEngagement.deleteMany({
+    // NEW: Delete all engagement records associated with the post (including appeared tracking)
+    const deletedEngagements = await PostEngagement.deleteMany({
       postId: new ObjectId(id)
     });
+    
+    console.log(`🗑️ Deleted ${deletedEngagements.deletedCount} engagement records for post ${id}`);
     
     // Delete the post
     await Post.findByIdAndDelete(id);

@@ -6,6 +6,7 @@ import styles from './SubscriptionPostItem.module.css';
 import { ReportModal, submitReport } from '@/components/report';
 import ShareModal from '@/components/share/ShareModal';
 import PostSaveModal from '@/components/home/PostSaveModal';
+import { useAppearanceTracker } from '@/hooks/useAppearanceTracker';
 
 const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
   const router = useRouter();
@@ -17,13 +18,19 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [savedPlaylistName, setSavedPlaylistName] = useState('');
-  
+
   // Video playback states
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [videoId, setVideoId] = useState(null);
   const [videoError, setVideoError] = useState(false);
-  
+
   const menuRef = useRef(null);
+
+  // NEW: Use appearance tracking hook
+  const { elementRef: cardRef, hasAppeared } = useAppearanceTracker(post.id || post._id, {
+    threshold: 0.5, // 50% visibility
+    timeThreshold: 1000 // 1 second
+  });
 
   // Format date as "time ago" (e.g., "2h ago", "3d ago")
   const getTimeAgo = (date) => {
@@ -127,7 +134,7 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
   // Extract YouTube video ID from URL
   const extractYouTubeVideoId = useCallback((url) => {
     if (!url || typeof url !== 'string') return null;
-    
+
     try {
       // Comprehensive regex that handles all YouTube URL formats
       const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
@@ -153,11 +160,11 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
   const handlePlayClick = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (videoId) {
       setIsVideoPlaying(true);
       setVideoError(false);
-      
+
       // Track view engagement when play button is clicked
       const postId = post.id || post._id;
       await trackViewEngagement(postId);
@@ -369,7 +376,14 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
   };
 
   return (
-    <div className={`${styles.card} ${viewMode === 'list' ? styles.listCard : ''}`}>
+    <div className={`${styles.card} ${viewMode === 'list' ? styles.listCard : ''}`} ref={cardRef} data-post-id={post.id || post._id}>
+      {/* Debug info in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ fontSize: '10px', color: '#666', padding: '2px 4px' }}>
+          Subscription - Appeared: {hasAppeared ? 'Yes' : 'No'}
+        </div>
+      )}
+
       {/* Post Header with User Info */}
       <div className={styles.postHeader}>
         <div className={styles.userInfo}>
@@ -473,7 +487,7 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
             {isVideoPlaying && videoId && !videoError ? (
               // YouTube video player
               <div className={styles.videoPlayerWrapper}>
-                <button 
+                <button
                   className={styles.closeVideoButton}
                   onClick={handleCloseVideo}
                   aria-label="Close video"
@@ -496,7 +510,7 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
             ) : isVideoPlaying && videoError ? (
               // Error fallback when embedding fails
               <div className={styles.videoErrorContainer}>
-                <button 
+                <button
                   className={styles.closeVideoButton}
                   onClick={handleCloseVideo}
                   aria-label="Close video"
@@ -516,9 +530,9 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
                   </div>
                   <h3>Video cannot be embedded</h3>
                   <p>This video cannot be played directly. Click below to watch on YouTube.</p>
-                  <a 
-                    href={post.videoUrl} 
-                    target="_blank" 
+                  <a
+                    href={post.videoUrl}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className={styles.watchOnYoutubeBtn}
                   >
@@ -542,22 +556,22 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
                   priority
                   key={`subscription-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
                 />
-                
+
                 {/* Play button overlay for videos */}
                 {post.videoUrl && videoId && (
-                  <button 
+                  <button
                     className={styles.playButton}
                     onClick={handlePlayClick}
                     aria-label="Play video"
                   >
                     <div className={styles.playButtonCircle}>
-                      <svg 
+                      <svg
                         className={styles.playIcon}
-                        xmlns="http://www.w3.org/2000/svg" 
-                        viewBox="0 0 24 24" 
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
                         fill="currentColor"
                       >
-                        <path d="M8 5v14l11-7z"/>
+                        <path d="M8 5v14l11-7z" />
                       </svg>
                     </div>
                   </button>

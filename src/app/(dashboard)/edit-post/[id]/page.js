@@ -35,7 +35,7 @@ export default function EditPostPage({ params }) {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         // Check for token
         const token = localStorage.getItem('token');
         if (!token) {
@@ -56,14 +56,14 @@ export default function EditPostPage({ params }) {
 
         const userData = await userResponse.json();
         setUser(userData);
-        
+
         // Get post data
         if (!postId) {
           throw new Error('Post ID is required');
         }
-        
+
         const postData = await getPostById(postId, token);
-        
+
         setPost(postData);
         setFormData({
           title: postData.title || '',
@@ -79,7 +79,7 @@ export default function EditPostPage({ params }) {
         setIsLoading(false);
       }
     };
-    
+
     fetchData();
   }, [postId, router]);
 
@@ -103,23 +103,23 @@ export default function EditPostPage({ params }) {
     if (file) {
       setThumbnailFile(file);
       setRemoveThumbnail(false);
-      
+
       // Create a preview
       const reader = new FileReader();
       reader.onload = (event) => {
         post.thumbnailPreview = event.target.result;
-        setPost({...post});
+        setPost({ ...post });
       };
       reader.readAsDataURL(file);
     }
   };
-  
+
   // Handle thumbnail removal
   const handleRemoveThumbnail = () => {
     setThumbnailFile(null);
     setRemoveThumbnail(true);
     post.thumbnailPreview = null;
-    setPost({...post});
+    setPost({ ...post });
   };
 
   // Handle new link input changes
@@ -134,11 +134,11 @@ export default function EditPostPage({ params }) {
   // Add a new link
   const handleAddLink = (e) => {
     e.preventDefault();
-    
+
     if (!newLink.title || !newLink.url) {
       return; // Don't add empty links
     }
-    
+
     // Add new link with a temporary ID
     setLinks(prev => [
       ...prev,
@@ -148,7 +148,7 @@ export default function EditPostPage({ params }) {
         votes: 0
       }
     ]);
-    
+
     // Reset new link form
     setNewLink({ title: '', url: '', type: 'resource' });
   };
@@ -163,13 +163,13 @@ export default function EditPostPage({ params }) {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError(null);
-    
+
     try {
       // Process tags
       const processedTags = formData.tags
         ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
         : [];
-      
+
       // Prepare updated post data
       const updatedPostData = {
         title: formData.title,
@@ -180,19 +180,19 @@ export default function EditPostPage({ params }) {
         thumbnailFile: thumbnailFile,
         removeThumbnail: removeThumbnail
       };
-      
+
       // Make API call to update post
       const result = await updatePost(postId, updatedPostData);
-      
+
       // Update local state
       setPost(result.post);
-      
+
       // Show success message
       alert('Post updated successfully!');
-      
+
       // Redirect back to studio page after successful update
       router.push('/studio');
-      
+
     } catch (err) {
       console.error('Error saving post:', err);
       setSubmitError(err.message || 'An unexpected error occurred. Please try again.');
@@ -231,7 +231,7 @@ export default function EditPostPage({ params }) {
     return (
       <div className={styles.errorContainer}>
         <p className={styles.errorMessage}>{error}</p>
-        <button 
+        <button
           className={styles.retryButton}
           onClick={() => router.push('/studio')}
         >
@@ -243,32 +243,32 @@ export default function EditPostPage({ params }) {
 
   return (
     <div className={styles.editPostPage}>
-      <DiscussionPageHeader 
-        user={user} 
+      <DiscussionPageHeader
+        user={user}
         onMenuToggle={handleMenuToggle}
         isMobileMenuOpen={isMobileMenuOpen}
       />
-      
+
       <div className={styles.mainContent}>
         {/* Sidebar navigation */}
         <div className={styles.sidebarContainer}>
           <DiscussionPageSidebarNavigation isOpen={isMobileMenuOpen} />
         </div>
-        
+
         {/* Main content area */}
         <div className={`${styles.contentContainer} ${isMobileMenuOpen ? styles.menuOpen : ''}`}>
           <div className={styles.editPostContent}>
             <div className={styles.editPostHeader}>
               <h1 className={styles.editPostTitle}>Edit Post</h1>
               <div className={styles.headerActions}>
-                <button 
+                <button
                   className={styles.cancelButton}
                   onClick={handleCancel}
                   disabled={isSubmitting}
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   className={styles.saveButton}
                   onClick={handleSubmit}
                   disabled={isSubmitting}
@@ -284,13 +284,13 @@ export default function EditPostPage({ params }) {
                 </button>
               </div>
             </div>
-            
+
             {submitError && (
               <div className={styles.errorMessage}>
                 {submitError}
               </div>
             )}
-            
+
             <div className={styles.postInfo}>
               <div className={styles.postDates}>
                 <span>Created: {formatDate(post.createdAt)}</span>
@@ -298,15 +298,15 @@ export default function EditPostPage({ params }) {
               </div>
               <div className={styles.postStatus}>
                 <span className={
-                  post.status === 'published' 
-                    ? styles.publishedStatus 
+                  post.status === 'published'
+                    ? styles.publishedStatus
                     : styles.draftStatus
                 }>
                   {post.status === 'published' ? 'Published' : 'Draft'}
                 </span>
               </div>
             </div>
-            
+
             <div className={styles.editPostLayout}>
               {/* Left side - Edit form */}
               <div className={styles.editFormContainer}>
@@ -325,16 +325,16 @@ export default function EditPostPage({ params }) {
                     required
                   />
                 </div>
-                
+
                 {/* Thumbnail section */}
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Thumbnail</label>
                   <div className={styles.thumbnailSection}>
                     <div className={styles.thumbnailPreview}>
                       {post.thumbnailPreview || post.image ? (
-                        <img 
-                          src={post.thumbnailPreview || post.image} 
-                          alt="Post thumbnail" 
+                        <img
+                          src={post.thumbnailPreview || post.image}
+                          alt="Post thumbnail"
                           className={styles.thumbnailImage}
                         />
                       ) : (
@@ -357,16 +357,16 @@ export default function EditPostPage({ params }) {
                         </svg>
                         Upload new thumbnail
                       </label>
-                      <input 
-                        type="file" 
-                        id="thumbnailInput" 
+                      <input
+                        type="file"
+                        id="thumbnailInput"
                         style={{ display: 'none' }}
                         accept="image/*"
                         onChange={handleThumbnailChange}
                       />
                       {(post.thumbnailPreview || post.image) && (
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           className={styles.thumbnailRemoveButton}
                           onClick={handleRemoveThumbnail}
                         >
@@ -383,7 +383,7 @@ export default function EditPostPage({ params }) {
                     Recommended size: 1200 × 630 pixels (16:9 ratio)
                   </div>
                 </div>
-                
+
                 <div className={styles.formGroup}>
                   <label htmlFor="content" className={styles.formLabel}>
                     Content
@@ -399,7 +399,7 @@ export default function EditPostPage({ params }) {
                     required
                   />
                 </div>
-                
+
                 <div className={styles.formGroup}>
                   <label htmlFor="tags" className={styles.formLabel}>
                     Tags (comma-separated)
@@ -425,7 +425,7 @@ export default function EditPostPage({ params }) {
                     </div>
                   )}
                 </div>
-                
+
                 <div className={styles.formGroup}>
                   <label htmlFor="status" className={styles.formLabel}>
                     Status
@@ -441,7 +441,7 @@ export default function EditPostPage({ params }) {
                     <option value="draft">Draft</option>
                   </select>
                 </div>
-                
+
                 {/* Links section with add/remove functionality */}
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Links</label>
@@ -452,9 +452,9 @@ export default function EditPostPage({ params }) {
                           <div key={link.id} className={styles.linkItem}>
                             <div className={styles.linkInfo}>
                               <h4 className={styles.linkTitle}>{link.title}</h4>
-                              <a 
-                                href={link.url} 
-                                target="_blank" 
+                              <a
+                                href={link.url}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className={styles.linkUrl}
                               >
@@ -470,7 +470,7 @@ export default function EditPostPage({ params }) {
                                 </span>
                               </div>
                             </div>
-                            <button 
+                            <button
                               className={styles.removeLink}
                               onClick={() => handleRemoveLink(link.id)}
                               aria-label="Remove link"
@@ -486,7 +486,7 @@ export default function EditPostPage({ params }) {
                     ) : (
                       <p className={styles.noLinks}>No links added yet</p>
                     )}
-                    
+
                     {/* Add new link form */}
                     <div className={styles.addLinkForm}>
                       <h4 className={styles.addLinkHeading}>Add New Link</h4>
@@ -523,7 +523,7 @@ export default function EditPostPage({ params }) {
                           <option value="official">Official</option>
                           <option value="other">Other</option>
                         </select>
-                        <button 
+                        <button
                           className={styles.addLinkButton}
                           onClick={handleAddLink}
                         >
@@ -534,28 +534,26 @@ export default function EditPostPage({ params }) {
                   </div>
                 </div>
               </div>
-              
+
               {/* Right side - Analytics */}
               <div className={styles.analyticsContainer}>
                 <h2 className={styles.analyticsTitle}>Post Analytics</h2>
-                
+
                 <div className={styles.analyticsCard}>
                   <div className={styles.metricItem}>
-                    <h3>Views</h3>
-                    <p className={styles.metricValue}>{post.metrics?.views.toLocaleString()}</p>
-                    {post.metrics?.uniqueViewers && (
-                      <p className={styles.metricSubtext}>{post.metrics.uniqueViewers.toLocaleString()} unique viewers</p>
-                    )}
+                    <h3>Appeared</h3>
+                    <p className={styles.metricValue}>{post.metrics?.appeared?.toLocaleString() || '0'}</p>
+                    <p className={styles.metricSubtext}>viewed & Scrolled</p>
                   </div>
-                  
+
                   <div className={styles.metricItem}>
                     <h3>Viewed</h3>
                     <p className={styles.metricValue}>{post.metrics?.viewed?.toLocaleString() || '0'}</p>
                     <p className={styles.metricSubtext}>Video plays</p>
                   </div>
-                  
+
                   <div className={styles.metricItem}>
-                    <h3>Penetrate</h3>
+                    <h3>Penetration</h3>
                     <p className={styles.metricValue}>{post.metrics?.penetrate?.toLocaleString() || '0'}</p>
                     <p className={styles.metricSubtext}>Discussion opens</p>
                   </div>
@@ -615,7 +613,7 @@ export default function EditPostPage({ params }) {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* View History Chart */}
                 {post.viewsHistory && post.viewsHistory.length > 0 ? (
                   <div className={styles.analyticsChartSection}>
@@ -625,14 +623,14 @@ export default function EditPostPage({ params }) {
                         // Calculate the maximum views across all days for scaling
                         const maxViews = Math.max(...post.viewsHistory.map(d => d.views));
                         // Calculate height percentage based on max views
-                        const heightPercentage = maxViews > 0 
-                          ? (day.views / maxViews * 100) 
+                        const heightPercentage = maxViews > 0
+                          ? (day.views / maxViews * 100)
                           : 0;
-                        
+
                         return (
                           <div key={index} className={styles.chartBar}>
-                            <div 
-                              className={styles.chartBarFill} 
+                            <div
+                              className={styles.chartBarFill}
                               style={{ height: `${heightPercentage}%` }}
                             >
                               <span className={styles.chartTooltip}>{day.views} views on {day.date}</span>
@@ -657,7 +655,7 @@ export default function EditPostPage({ params }) {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Content Recommendations Section */}
                 <div className={styles.recommendationsSection}>
                   <h3 className={styles.cardTitle}>Suggested Improvements</h3>
@@ -689,7 +687,7 @@ export default function EditPostPage({ params }) {
             </div>
           </div>
         </div>
-        
+
         {/* Overlay for mobile when menu is open */}
         {isMobileMenuOpen && (
           <div className={styles.mobileOverlay} onClick={handleMenuToggle}></div>

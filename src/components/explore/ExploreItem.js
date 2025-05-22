@@ -1,4 +1,4 @@
-// src/components/explore/ExploreItem.js - Updated with view tracking
+// src/components/explore/ExploreItem.js - Updated with appearance tracking
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -8,6 +8,7 @@ import PostSaveModal from '../home/PostSaveModal';
 import ReportModal from '../report/ReportModal';
 import ShareModal from '../share/ShareModal';
 import { submitReport } from '../../components/report/reportService';
+import { useAppearanceTracker } from '@/hooks/useAppearanceTracker';
 
 const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussionCount, profilePicture, id, onHide, videoUrl }) => {
   const router = useRouter();
@@ -19,13 +20,19 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
   const [reportError, setReportError] = useState(null);
   const [isHiding, setIsHiding] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
-  
+
   // Video playback states
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [videoId, setVideoId] = useState(null);
   const [videoError, setVideoError] = useState(false);
-  
+
   const menuRef = useRef(null);
+
+  // NEW: Use appearance tracking hook
+  const { elementRef: itemRef, hasAppeared } = useAppearanceTracker(id, {
+    threshold: 0.5, // 50% visibility
+    timeThreshold: 1000 // 1 second
+  });
 
   // Track view engagement with the post
   const trackViewEngagement = async (postId) => {
@@ -80,7 +87,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
   // Extract YouTube video ID from URL - Same logic as Post.js
   const extractYouTubeVideoId = useCallback((url) => {
     if (!url || typeof url !== 'string') return null;
-    
+
     try {
       // Comprehensive regex that handles all YouTube URL formats
       const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
@@ -106,11 +113,11 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
   const handlePlayClick = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (videoId) {
       setIsVideoPlaying(true);
       setVideoError(false);
-      
+
       // Track view engagement when play button is clicked
       await trackViewEngagement(id);
     }
@@ -228,7 +235,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
   const handleDiscussionsClick = async () => {
     // Track penetrate engagement when discussion button is clicked
     await trackPenetrateEngagement(id);
-    
+
     router.push(`/discussion?id=${id}`);
   };
 
@@ -292,7 +299,14 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
   }
 
   return (
-    <div className={styles.item}>
+    <div className={styles.item} ref={itemRef} data-post-id={id}>
+      {/* Debug info in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ fontSize: '10px', color: '#666', padding: '2px 4px' }}>
+          Explore - Appeared: {hasAppeared ? 'Yes' : 'No'}
+        </div>
+      )}
+
       {/* User Info and Item Header */}
       <div className={styles.itemHeader}>
         <div className={styles.userInfo}>
@@ -391,7 +405,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
         {isVideoPlaying && videoId && !videoError ? (
           // YouTube video player
           <div className={styles.videoPlayerWrapper}>
-            <button 
+            <button
               className={styles.closeVideoButton}
               onClick={handleCloseVideo}
               aria-label="Close video"
@@ -414,7 +428,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
         ) : isVideoPlaying && videoError ? (
           // Error fallback when embedding fails
           <div className={styles.videoErrorContainer}>
-            <button 
+            <button
               className={styles.closeVideoButton}
               onClick={handleCloseVideo}
               aria-label="Close video"
@@ -434,9 +448,9 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
               </div>
               <h3>Video cannot be embedded</h3>
               <p>This video cannot be played directly. Click below to watch on YouTube.</p>
-              <a 
-                href={videoUrl} 
-                target="_blank" 
+              <a
+                href={videoUrl}
+                target="_blank"
                 rel="noopener noreferrer"
                 className={styles.watchOnYoutubeBtn}
               >
@@ -460,22 +474,22 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
               priority
               key={`explore-image-${id}-${imageUrl}`}
             />
-            
+
             {/* Play button overlay for videos - Now matches Post.js exactly */}
             {videoUrl && videoId && (
-              <button 
+              <button
                 className={styles.playButton}
                 onClick={handlePlayClick}
                 aria-label="Play video"
               >
                 <div className={styles.playButtonCircle}>
-                  <svg 
+                  <svg
                     className={styles.playIcon}
-                    xmlns="http://www.w3.org/2000/svg" 
-                    viewBox="0 0 24 24" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
                     fill="currentColor"
                   >
-                    <path d="M8 5v14l11-7z"/>
+                    <path d="M8 5v14l11-7z" />
                   </svg>
                 </div>
               </button>

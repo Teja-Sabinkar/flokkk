@@ -2,11 +2,13 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import { ObjectId } from 'mongodb';
 import dbConnect from '@/lib/mongoose';
 import User from '@/models/User';
 import Post from '@/models/Post';
 import CommunityPost from '@/models/CommunityPost';
 import Comment from '@/models/Comment';
+import PostEngagement from '@/models/PostEngagement'; // NEW: Import PostEngagement model
 
 export async function GET(request) {
     try {
@@ -60,56 +62,130 @@ export async function GET(request) {
 
         const communityPostsCount = await CommunityPost.countDocuments({ userId: user._id });
 
-        // Get total views across all content
+        // Get all user's posts to calculate engagement metrics
         const discussions = await Post.find({ userId: user._id });
         const communityPosts = await CommunityPost.find({ userId: user._id });
 
-        // Calculate total views
-        const discussionViews = discussions.reduce((sum, post) => sum + (post.views || 0), 0);
-        const communityViews = communityPosts.reduce((sum, post) => sum + (post.views || 0), 0);
-        const totalViews = discussionViews + communityViews;
+        // NEW: Calculate engagement metrics using PostEngagement model
+        const discussionIds = discussions.map(d => d._id);
+        
+        // Get total engagement counts across all user's posts
+        const [totalAppeared, totalViewed, totalPenetrated, totalSaved, totalShared] = await Promise.all([
+            PostEngagement.countDocuments({
+                postId: { $in: discussionIds },
+                hasAppeared: true
+            }),
+            PostEngagement.countDocuments({
+                postId: { $in: discussionIds },
+                hasViewed: true
+            }),
+            PostEngagement.countDocuments({
+                postId: { $in: discussionIds },
+                hasPenetrated: true
+            }),
+            PostEngagement.countDocuments({
+                postId: { $in: discussionIds },
+                hasSaved: true
+            }),
+            PostEngagement.countDocuments({
+                postId: { $in: discussionIds },
+                hasShared: true
+            })
+        ]);
 
         // Get comments count
-        const discussionIds = discussions.map(d => d._id);
         const commentsCount = await Comment.countDocuments({
             postId: { $in: discussionIds }
         });
 
-        // Calculate engagement rate (comments + community links + votes) / views
+        // Calculate community links from discussions
         const communityLinks = discussions.reduce((sum, post) => {
             return sum + (post.communityLinks?.length || 0);
         }, 0);
 
+        // NEW: Calculate engagement rate using appeared instead of views
+        // Engagement = (penetrated + saved + shared + comments + community links) / appeared
         let engagementRate = 0;
-        if (totalViews > 0) {
-            engagementRate = ((commentsCount + communityLinks) / totalViews) * 100;
+        if (totalAppeared > 0) {
+            const totalEngagements = totalPenetrated + totalSaved + totalShared + commentsCount + communityLinks;
+            engagementRate = (totalEngagements / totalAppeared) * 100;
         }
 
         // Format engagement rate to 2 decimal places
         engagementRate = Math.round(engagementRate * 100) / 100;
 
-        // Get most viewed posts (top 5)
-        const topDiscussions = await Post.find({ userId: user._id })
-            .sort({ views: -1 })
-            .limit(5)
-            .select('_id title views');
+        // NEW: Get top posts by appeared count instead of views
+        const postsWithEngagement = await Promise.all(
+            discussions.map(async (post) => {
+                const [appeared, viewed, penetrated, saved, shared] = await Promise.all([
+                    PostEngagement.countDocuments({
+                        postId: post._id,
+                        hasAppeared: true
+                    }),
+                    PostEngagement.countDocuments({
+                        postId: post._id,
+                        hasViewed: true
+                    }),
+                    PostEngagement.countDocuments({
+                        postId: post._id,
+                        hasPenetrated: true
+                    }),
+                    PostEngagement.countDocuments({
+                        postId: post._id,
+                        hasSaved: true
+                    }),
+                    PostEngagement.countDocuments({
+                        postId: post._id,
+                        hasShared: true
+                    })
+                ]);
 
+                return {
+                    id: post._id,
+                    title: post.title,
+                    appeared: appeared,
+                    viewed: viewed,
+                    penetrated: penetrated,
+                    saved: saved,
+                    shared: shared,
+                    type: 'discussion'
+                };
+            })
+        );
+
+        // Get top community posts (keeping existing logic but adding appeared tracking if needed)
         const topCommunityPosts = await CommunityPost.find({ userId: user._id })
             .sort({ views: -1 })
             .limit(5)
             .select('_id title views');
 
-        // Combine and sort to get top 5 overall
-        const allTopPosts = [...topDiscussions, ...topCommunityPosts]
-            .sort((a, b) => (b.views || 0) - (a.views || 0))
+        // Combine and sort to get top 5 overall by appeared count
+        const communityPostsFormatted = topCommunityPosts.map(post => ({
+            id: post._id,
+            title: post.title,
+            appeared: post.views || 0, // Use views as fallback for community posts
+            viewed: 0,
+            penetrated: 0,
+            saved: 0,
+            shared: 0,
+            type: 'community'
+        }));
+
+        const allTopPosts = [...postsWithEngagement, ...communityPostsFormatted]
+            .sort((a, b) => b.appeared - a.appeared)
             .slice(0, 5)
             .map(post => ({
-                id: post._id,
+                id: post.id,
                 title: post.title,
-                views: post.views || 0,
-                type: topDiscussions.some(d => d._id.equals(post._id)) ? 'discussion' : 'community'
+                appeared: post.appeared,
+                viewed: post.viewed,
+                penetrated: post.penetrated,
+                saved: post.saved,
+                shared: post.shared,
+                type: post.type
             }));
 
+        // NEW: Return updated metrics with appeared tracking
         return NextResponse.json({
             totalPosts: discussionsCount + communityPostsCount,
             discussions: {
@@ -118,11 +194,27 @@ export async function GET(request) {
                 draft: draftDiscussionsCount
             },
             communityPosts: communityPostsCount,
-            views: totalViews,
+            // NEW: Replace views with appeared
+            appeared: totalAppeared, // Total unique users who saw content (viewed & scrolled)
+            viewed: totalViewed,     // Total users who played videos
+            penetrated: totalPenetrated, // Total users who opened discussions
+            saved: totalSaved,       // Total users who saved content
+            shared: totalShared,     // Total users who shared content
             comments: commentsCount,
             communityLinks: communityLinks,
-            engagementRate: engagementRate,
-            topPosts: allTopPosts
+            engagementRate: engagementRate, // Now calculated based on appeared
+            topPosts: allTopPosts,
+            // Additional breakdown for detailed analytics
+            engagement: {
+                appeared: totalAppeared,
+                viewed: totalViewed,
+                penetrated: totalPenetrated,
+                saved: totalSaved,
+                shared: totalShared,
+                comments: commentsCount,
+                communityLinks: communityLinks,
+                rate: engagementRate
+            }
         }, { status: 200 });
 
     } catch (error) {

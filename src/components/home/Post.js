@@ -8,6 +8,7 @@ import styles from './Post.module.css';
 import PostSaveModal from './PostSaveModal';
 import { ReportModal, submitReport } from '@/components/report';
 import { ShareModal } from '@/components/share';
+import { useAppearanceTracker } from '@/hooks/useAppearanceTracker'; // Import the new hook
 
 export default function Post({ post, onHidePost }) {
   const router = useRouter();
@@ -29,6 +30,12 @@ export default function Post({ post, onHidePost }) {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [videoId, setVideoId] = useState(null);
   const [videoError, setVideoError] = useState(false);
+
+  // NEW: Use appearance tracking hook
+  const { elementRef: postRef, hasAppeared } = useAppearanceTracker(post.id || post._id, {
+    threshold: 0.5, // 50% visibility
+    timeThreshold: 1000 // 1 second
+  });
 
   const menuRef = useRef(null);
   const hashtagsContainerRef = useRef(null);
@@ -368,7 +375,7 @@ export default function Post({ post, onHidePost }) {
   };
 
   return (
-    <div className={styles.postCard}>
+    <div className={styles.postCard} ref={postRef} data-post-id={post.id || post._id}>
       {/* User Info and Post Header */}
       <div className={styles.postHeader}>
         <div className={styles.userInfo}>
@@ -480,6 +487,13 @@ export default function Post({ post, onHidePost }) {
       {hideSuccess && (
         <div className={styles.successMessage}>
           Post hidden successfully.
+        </div>
+      )}
+
+      {/* DEBUG: Show appearance status */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ fontSize: '10px', color: '#666', padding: '2px 4px' }}>
+          Appeared: {hasAppeared ? 'Yes' : 'No'}
         </div>
       )}
 
