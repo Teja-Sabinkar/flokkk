@@ -45,6 +45,18 @@
 }
 
 /* Responsive adjustments for smaller screens */
+
+@media (max-width: 1300px) {
+    .rightSidebarToggle {
+        right: 0px; /* Slightly closer to edge on very small screens */
+    }
+    
+    .rightSidebarToggle.active {
+        right: 400px; /* Slight adjustment for mobile */
+    }
+}
+
+
 @media (max-width: 480px) {
     .rightSidebarToggle {
         right: 0px; /* Slightly closer to edge on very small screens */

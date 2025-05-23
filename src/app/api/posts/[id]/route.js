@@ -9,57 +9,41 @@ import Post from '@/models/Post';
 import PostEngagement from '@/models/PostEngagement';
 import { put, del } from '@vercel/blob';
 
-// Helper function to generate sample view history data
-function generateSampleViewHistory(totalAppeared = 100) {
+// Helper function to generate history data for any engagement type
+function generateEngagementHistory(engagements, engagementField) {
   const today = new Date();
-  const viewsHistory = [];
+  const dailyCounts = {};
   
-  // Create a distribution of appearances that looks realistic
-  // 70% of appearances over last 3 days, 30% over preceding 4 days
-  const recentAppearedPortion = Math.floor(totalAppeared * 0.7);
-  const olderAppearedPortion = totalAppeared - recentAppearedPortion;
-  
-  // Generate a somewhat random but realistic distribution
-  const dailyWeights = [
-    0.1, // 6 days ago
-    0.15, // 5 days ago
-    0.2, // 4 days ago
-    0.25, // 3 days ago
-    0.5, // 2 days ago
-    0.8, // yesterday
-    1.0, // today
-  ];
-  
-  // Normalize weights to sum to 1.0
-  const weightSum = dailyWeights.reduce((sum, weight) => sum + weight, 0);
-  const normalizedWeights = dailyWeights.map(weight => weight / weightSum);
-  
-  // Calculate appearances for each day
+  // Initialize the last 7 days with 0 counts
   for (let i = 6; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
-    
-    // Calculate appearances for this day (with some randomness)
-    let dayAppeared = Math.max(1, Math.round(totalAppeared * normalizedWeights[6-i] * (0.8 + 0.4 * Math.random())));
-    
-    // Make sure the total doesn't exceed the original number
-    if (viewsHistory.reduce((sum, day) => sum + day.views, 0) + dayAppeared > totalAppeared) {
-      dayAppeared = Math.max(1, totalAppeared - viewsHistory.reduce((sum, day) => sum + day.views, 0));
-    }
-    
-    viewsHistory.push({
-      date: date.toISOString().split('T')[0],
-      views: dayAppeared // Keep 'views' for backward compatibility with charts
-    });
+    const dateStr = date.toISOString().split('T')[0];
+    dailyCounts[dateStr] = 0;
   }
   
-  return viewsHistory;
+  // Count engagements by day
+  engagements.forEach(engagement => {
+    if (engagement[engagementField]) {
+      const engagementDate = new Date(engagement[engagementField]);
+      const dateStr = engagementDate.toISOString().split('T')[0];
+      
+      if (dailyCounts[dateStr] !== undefined) {
+        dailyCounts[dateStr]++;
+      }
+    }
+  });
+  
+  // Convert to array format
+  return Object.keys(dailyCounts).map(date => ({
+    date,
+    views: dailyCounts[date] // Keep 'views' for chart compatibility
+  }));
 }
 
 // GET endpoint to retrieve a single post by ID
 export async function GET(request, { params }) {
   try {
-    // NEW: Await params before using
     const resolvedParams = await params;
     const { id } = resolvedParams;
     
@@ -119,7 +103,6 @@ export async function GET(request, { params }) {
     }
     
     // Check if user has permission to view this post
-    // Users can view their own posts, or any published posts
     if (post.userId.toString() !== user._id.toString() && post.status !== 'published') {
       return NextResponse.json(
         { message: 'You do not have permission to view this post' },
@@ -127,7 +110,7 @@ export async function GET(request, { params }) {
       );
     }
     
-    // Get additional metrics for the post if needed
+    // Get additional metrics for the post
     const { db } = await connectToDatabase();
     
     // Get comment count
@@ -135,7 +118,7 @@ export async function GET(request, { params }) {
       postId: new ObjectId(id)
     });
     
-    // NEW: Get all engagement counts from PostEngagement collection including appeared
+    // Get all engagement counts from PostEngagement collection
     const [appearedCount, saveCount, shareCount, viewedCount, penetrateCount] = await Promise.all([
       PostEngagement.countDocuments({ 
         postId: new ObjectId(id), 
@@ -167,78 +150,91 @@ export async function GET(request, { params }) {
       shared: shareCount
     });
     
-    // Generate view history data based on appeared count
-    let viewsHistory = post.viewsHistory || [];
+    // NEW: Generate all three history types from real engagement data
+    let appearedHistory = [];
+    let viewedHistory = [];
+    let penetrationHistory = [];
     
-    // If no view history exists, generate sample data for the last 7 days
-    if (!viewsHistory || viewsHistory.length === 0) {
-      // Look for appeared logs in the PostEngagement collection
-      try {
-        const recentEngagements = await PostEngagement.find({
-          postId: new ObjectId(id),
-          hasAppeared: true,
-          lastAppearedAt: { 
-            $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
+    try {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      
+      // Get all engagements for this post in the last 7 days
+      const recentEngagements = await PostEngagement.find({
+        postId: new ObjectId(id),
+        $or: [
+          { 
+            hasAppeared: true,
+            lastAppearedAt: { $gte: sevenDaysAgo }
+          },
+          { 
+            hasViewed: true,
+            lastViewedAt: { $gte: sevenDaysAgo }
+          },
+          { 
+            hasPenetrated: true,
+            lastPenetratedAt: { $gte: sevenDaysAgo }
           }
-        }).select('lastAppearedAt').lean();
+        ]
+      }).select('lastAppearedAt lastViewedAt lastPenetratedAt hasAppeared hasViewed hasPenetrated').lean();
+      
+      console.log(`📈 Found ${recentEngagements.length} recent engagements for post ${id}`);
+      
+      // Generate appeared history
+      const appearedEngagements = recentEngagements.filter(e => e.hasAppeared);
+      appearedHistory = generateEngagementHistory(appearedEngagements, 'lastAppearedAt');
+      
+      // Generate viewed history
+      const viewedEngagements = recentEngagements.filter(e => e.hasViewed);
+      viewedHistory = generateEngagementHistory(viewedEngagements, 'lastViewedAt');
+      
+      // Generate penetration history
+      const penetratedEngagements = recentEngagements.filter(e => e.hasPenetrated);
+      penetrationHistory = generateEngagementHistory(penetratedEngagements, 'lastPenetratedAt');
+      
+      console.log(`📊 Generated histories - Appeared: ${appearedHistory.length}, Viewed: ${viewedHistory.length}, Penetration: ${penetrationHistory.length}`);
+      
+    } catch (engagementError) {
+      console.error('Error fetching engagement history:', engagementError);
+      
+      // Fallback: create empty 7-day histories with all zeros
+      const today = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
         
-        if (recentEngagements && recentEngagements.length > 0) {
-          // Process engagements to get daily counts
-          const dailyCounts = {};
-          const now = new Date();
-          
-          // Initialize the last 7 days with 0 appearances
-          for (let i = 6; i >= 0; i--) {
-            const date = new Date(now);
-            date.setDate(date.getDate() - i);
-            const dateStr = date.toISOString().split('T')[0];
-            dailyCounts[dateStr] = 0;
-          }
-          
-          // Count appearances by day
-          recentEngagements.forEach(engagement => {
-            if (engagement.lastAppearedAt) {
-              const engagementDate = new Date(engagement.lastAppearedAt);
-              const dateStr = engagementDate.toISOString().split('T')[0];
-              
-              if (dailyCounts[dateStr] !== undefined) {
-                dailyCounts[dateStr]++;
-              }
-            }
-          });
-          
-          // Convert to array format
-          viewsHistory = Object.keys(dailyCounts).map(date => ({
-            date,
-            views: dailyCounts[date] // Keep 'views' for chart compatibility
-          }));
-        } else {
-          // If no actual appearance logs, generate sample data based on total appeared
-          viewsHistory = generateSampleViewHistory(appearedCount);
-        }
-      } catch (engagementError) {
-        console.warn('Error fetching engagement logs, using sample data:', engagementError);
-        viewsHistory = generateSampleViewHistory(appearedCount);
+        appearedHistory.push({ date: dateStr, views: 0 });
+        viewedHistory.push({ date: dateStr, views: 0 });
+        penetrationHistory.push({ date: dateStr, views: 0 });
       }
     }
     
-    // NEW: Format post with appeared-based engagement metrics
+    // Format post with all engagement metrics and histories
     const formattedPost = {
       ...post,
       metrics: {
-        appeared: appearedCount, // NEW: Replace views with appeared count
+        appeared: appearedCount,
         uniqueViewers: Math.round(appearedCount * 0.8), // Estimate unique viewers from appeared
-        viewed: viewedCount, // Real viewed count from engagement tracking (video plays)
-        penetrate: penetrateCount, // Real penetrate count from engagement tracking (discussion opens)
+        viewed: viewedCount,
+        penetrate: penetrateCount,
         comments: commentsCount || 0,
         contributions: (post.communityLinks?.length || 0) + (post.creatorLinks?.length || 0),
-        saves: saveCount, // Real save count from engagement tracking
-        shares: shareCount // Real share count from engagement tracking
+        saves: saveCount,
+        shares: shareCount
       },
-      viewsHistory: viewsHistory
+      // NEW: Include all three history types
+      appearedHistory: appearedHistory,
+      viewedHistory: viewedHistory,
+      penetrationHistory: penetrationHistory,
+      // DEPRECATED: Keep for backward compatibility
+      viewsHistory: appearedHistory
     };
     
-    console.log(`📈 Post ${id} formatted metrics:`, formattedPost.metrics);
+    console.log(`📈 Post ${id} formatted with all histories:`, {
+      appearedHistory: formattedPost.appearedHistory.length,
+      viewedHistory: formattedPost.viewedHistory.length,
+      penetrationHistory: formattedPost.penetrationHistory.length
+    });
     
     return NextResponse.json(formattedPost, { status: 200 });
     

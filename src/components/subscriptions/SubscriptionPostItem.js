@@ -29,7 +29,7 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
   // NEW: Use appearance tracking hook
   const { elementRef: cardRef, hasAppeared } = useAppearanceTracker(post.id || post._id, {
     threshold: 0.5, // 50% visibility
-    timeThreshold: 1000 // 1 second
+    timeThreshold: 500 // 0.5 second
   });
 
   // Format date as "time ago" (e.g., "2h ago", "3d ago")

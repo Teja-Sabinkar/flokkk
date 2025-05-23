@@ -31,7 +31,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
   // NEW: Use appearance tracking hook
   const { elementRef: itemRef, hasAppeared } = useAppearanceTracker(id, {
     threshold: 0.5, // 50% visibility
-    timeThreshold: 1000 // 1 second
+    timeThreshold: 500 // 0.5 second
   });
 
   // Track view engagement with the post

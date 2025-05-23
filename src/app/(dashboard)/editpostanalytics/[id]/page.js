@@ -95,6 +95,76 @@ export default function EditPostAnalyticsPage({ params }) {
     });
   };
 
+  // Component for rendering history charts
+  const HistoryChart = ({ title, historyData, emptyMessage }) => {
+    if (!historyData || historyData.length === 0) {
+      return (
+        <div className={styles.analyticsChartSection}>
+          <h3 className={styles.cardTitle}>{title}</h3>
+          <div className={styles.emptyChartMessage}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+              <line x1="3" y1="20" x2="21" y2="20"></line>
+            </svg>
+            <p>{emptyMessage}</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Check if all values are zero
+    const hasData = historyData.some(day => day.views > 0);
+
+    if (!hasData) {
+      return (
+        <div className={styles.analyticsChartSection}>
+          <h3 className={styles.cardTitle}>{title}</h3>
+          <div className={styles.emptyChartMessage}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+              <line x1="3" y1="20" x2="21" y2="20"></line>
+            </svg>
+            <p>No {title.toLowerCase()} data available yet.</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className={styles.analyticsChartSection}>
+        <h3 className={styles.cardTitle}>{title}</h3>
+        <div className={styles.viewHistoryChart}>
+          {historyData.map((day, index) => {
+            // Calculate the maximum views across all days for scaling
+            const maxViews = Math.max(...historyData.map(d => d.views));
+            // Calculate height percentage based on max views
+            const heightPercentage = maxViews > 0
+              ? (day.views / maxViews * 100)
+              : 0;
+
+            return (
+              <div key={index} className={styles.chartBar}>
+                <div
+                  className={styles.chartBarFill}
+                  style={{ height: `${heightPercentage}%` }}
+                >
+                  <span className={styles.chartTooltip}>
+                    {day.views} {title.toLowerCase().replace(' history', '')} on {day.date}
+                  </span>
+                </div>
+                <span className={styles.chartLabel}>{day.date.slice(5)}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className={styles.loadingContainer}>
@@ -279,47 +349,28 @@ export default function EditPostAnalyticsPage({ params }) {
                 </div>
               </div>
 
-              {/* View History Chart */}
-              {post.viewsHistory && post.viewsHistory.length > 0 ? (
-                <div className={styles.analyticsChartSection}>
-                  <h3 className={styles.cardTitle}>View History</h3>
-                  <div className={styles.viewHistoryChart}>
-                    {post.viewsHistory.map((day, index) => {
-                      // Calculate the maximum views across all days for scaling
-                      const maxViews = Math.max(...post.viewsHistory.map(d => d.views));
-                      // Calculate height percentage based on max views
-                      const heightPercentage = maxViews > 0
-                        ? (day.views / maxViews * 100)
-                        : 0;
+              {/* NEW: All Three History Charts Stacked Vertically */}
+              
+              {/* Appeared History Chart */}
+              <HistoryChart
+                title="Appeared History"
+                historyData={post.appearedHistory}
+                emptyMessage="No appearance history data available yet."
+              />
 
-                      return (
-                        <div key={index} className={styles.chartBar}>
-                          <div
-                            className={styles.chartBarFill}
-                            style={{ height: `${heightPercentage}%` }}
-                          >
-                            <span className={styles.chartTooltip}>{day.views} views on {day.date}</span>
-                          </div>
-                          <span className={styles.chartLabel}>{day.date.slice(5)}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.analyticsChartSection}>
-                  <h3 className={styles.cardTitle}>Appearance History</h3>
-                  <div className={styles.emptyChartMessage}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="20" x2="18" y2="10"></line>
-                      <line x1="12" y1="20" x2="12" y2="4"></line>
-                      <line x1="6" y1="20" x2="6" y2="14"></line>
-                      <line x1="3" y1="20" x2="21" y2="20"></line>
-                    </svg>
-                    <p>No appearance history data available yet.</p>
-                  </div>
-                </div>
-              )}
+              {/* Viewed History Chart */}
+              <HistoryChart
+                title="Viewed History"
+                historyData={post.viewedHistory}
+                emptyMessage="No view history data available yet."
+              />
+
+              {/* Penetration History Chart */}
+              <HistoryChart
+                title="Penetration History"
+                historyData={post.penetrationHistory}
+                emptyMessage="No penetration history data available yet."
+              />
 
               {/* Content Recommendations Section */}
               <div className={styles.recommendationsSection}>

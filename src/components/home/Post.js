@@ -36,7 +36,7 @@ export default function Post({ post, onHidePost }) {
   // NEW: Use appearance tracking hook
   const { elementRef: postRef, hasAppeared, isTracking, debugInfo, manualTrigger } = useAppearanceTracker(post.id || post._id, {
     threshold: 0.3, // 30% of post must be visible
-    timeThreshold: 1000 // 1 second delay
+    timeThreshold: 500 // 0.5 second delay
   });
 
   const menuRef = useRef(null);
@@ -381,7 +381,7 @@ export default function Post({ post, onHidePost }) {
 
   return (
     <div className={styles.postCard} ref={postRef} data-post-id={post.id || post._id}>
-
+      {/* DEBUG: Show appearance status in development */}
 
       {/* User Info and Post Header */}
       <div className={styles.postHeader}>
@@ -496,7 +496,6 @@ export default function Post({ post, onHidePost }) {
           Post hidden successfully.
         </div>
       )}
-
 
 
       {/* Post Title and Content */}
