@@ -63,7 +63,7 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
   // State to track if thumbnail is from YouTube
   const [isYouTubeThumbnail, setIsYouTubeThumbnail] = useState(false);
   
-  // NEW: State to track the protected YouTube channel hashtag
+  // State to track the protected YouTube channel hashtag
   const [youtubeChannelHashtag, setYoutubeChannelHashtag] = useState(null);
 
   // Creator Links state
@@ -167,7 +167,7 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
         console.warn('No thumbnail URL found in response');
       }
 
-      // NEW: Handle channel hashtag with protection
+      // Handle channel hashtag with protection
       if (videoData.channelTitle) {
         const channelHashtag = `#${videoData.channelTitle.replace(/\s+/g, '')}`;
         
@@ -297,7 +297,7 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
     }
   };
 
-  // NEW: Modified remove hashtag with YouTube channel protection
+  // Modified remove hashtag with YouTube channel protection
   const removeHashtag = (tagToRemove) => {
     // Don't remove if this is the protected YouTube channel hashtag
     if (tagToRemove === youtubeChannelHashtag) {
@@ -369,7 +369,7 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
     setLinkError(null);
     // Reset YouTube thumbnail flag
     setIsYouTubeThumbnail(false);
-    // NEW: Reset YouTube channel hashtag protection
+    // Reset YouTube channel hashtag protection
     setYoutubeChannelHashtag(null);
   };
 
@@ -392,7 +392,7 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
       return;
     }
 
-    // Create form data with explicit status field
+    // Create form data with explicit status field and YouTube channel hashtag
     const discussionData = {
       videoUrl: videoUrl.trim() || null,
       title: title.trim(),
@@ -403,7 +403,9 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
       creatorLinks,  
       allowContributions,  
       status: postStatus,
-      type: 'discussion'
+      type: 'discussion',
+      // NEW: Include YouTube channel hashtag for storage
+      youtubeChannelHashtag: youtubeChannelHashtag
     };
 
     console.log(`Submitting discussion with status: ${postStatus}`);
@@ -568,6 +570,19 @@ export default function CreateStudioDiscussionModal({ onClose, onSave }) {
 
           <div className={styles.formGroup}>
             <label className={styles.label}>Hashtags</label>
+            
+            {/* YouTube channel hashtag protection notice */}
+            {youtubeChannelHashtag && (
+              <div className={styles.youtubeNotice}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                YouTube channel hashtag "{youtubeChannelHashtag}" cannot be removed
+              </div>
+            )}
+            
             <div className={styles.hashtagInputContainer}>
               <input
                 type="text"

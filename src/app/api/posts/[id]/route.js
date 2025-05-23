@@ -254,7 +254,7 @@ export async function GET(request, { params }) {
 // PATCH endpoint to update a post
 export async function PATCH(request, { params }) {
   try {
-    // NEW: Await params before using
+    // Await params before using
     const resolvedParams = await params;
     const { id } = resolvedParams;
     
@@ -392,6 +392,13 @@ export async function PATCH(request, { params }) {
       }
     }
     
+    // NEW: Ensure YouTube channel hashtag is preserved
+    if (post.youtubeChannelHashtag && !tags.includes(post.youtubeChannelHashtag)) {
+      // If the protected hashtag was somehow removed from tags, add it back
+      tags.push(post.youtubeChannelHashtag);
+      console.log(`Preserved YouTube channel hashtag: ${post.youtubeChannelHashtag}`);
+    }
+    
     // Process links if provided
     let creatorLinks = post.creatorLinks || [];
     if (requestData.links !== undefined && Array.isArray(requestData.links)) {
@@ -412,8 +419,13 @@ export async function PATCH(request, { params }) {
       image: imageUrl,
       hashtags: tags,
       creatorLinks: creatorLinks,
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      // NEW: Preserve YouTube channel hashtag - don't allow it to be changed
+      youtubeChannelHashtag: post.youtubeChannelHashtag || null
     };
+    
+    console.log('Update fields:', updateFields);
+    console.log('Preserving YouTube channel hashtag:', post.youtubeChannelHashtag);
     
     // Perform update
     await Post.findByIdAndUpdate(id, { $set: updateFields });
@@ -426,7 +438,7 @@ export async function PATCH(request, { params }) {
       postId: new ObjectId(id)
     });
     
-    // NEW: Get all engagement counts from PostEngagement collection including appeared
+    // Get all engagement counts from PostEngagement collection including appeared
     const [appearedCount, saveCount, shareCount, viewedCount, penetrateCount] = await Promise.all([
       PostEngagement.countDocuments({ 
         postId: new ObjectId(id), 
@@ -466,11 +478,11 @@ export async function PATCH(request, { params }) {
       viewsHistory = generateSampleViewHistory(appearedCount);
     }
     
-    // NEW: Format post with appeared-based engagement metrics
+    // Format post with appeared-based engagement metrics
     const formattedPost = {
       ...updatedPost,
       metrics: {
-        appeared: appearedCount, // NEW: Replace views with appeared count
+        appeared: appearedCount, // Replace views with appeared count
         uniqueViewers: Math.round(appearedCount * 0.8), // Estimate unique viewers from appeared
         viewed: viewedCount, // Real viewed count from engagement tracking (video plays)
         penetrate: penetrateCount, // Real penetrate count from engagement tracking (discussion opens)

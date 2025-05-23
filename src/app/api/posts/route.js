@@ -39,6 +39,7 @@ export async function POST(request) {
     
     // Log incoming status for debugging
     console.log('Creating post with status:', rawData.status);
+    console.log('YouTube channel hashtag:', rawData.youtubeChannelHashtag);
     
     // Connect to MongoDB using the direct client
     const { db } = await connectToDatabase();
@@ -113,7 +114,7 @@ export async function POST(request) {
     // Make sure we explicitly convert to boolean to handle undefined/null cases
     const allowContributions = rawData.allowContributions === false ? false : true;
     
-    // Prepare post data with all fields including creatorLinks and allowContributions
+    // Prepare post data with all fields including creatorLinks, allowContributions, and YouTube channel hashtag
     const postData = {
       userId: user._id,
       username: user.username || user.name.toLowerCase().replace(/\s+/g, '_'),
@@ -131,7 +132,9 @@ export async function POST(request) {
       // Explicitly add allowContributions setting with correct type
       allowContributions: allowContributions,
       // Explicitly handle status with explicit check
-      status: rawData.status === 'draft' ? 'draft' : 'published'
+      status: rawData.status === 'draft' ? 'draft' : 'published',
+      // NEW: Store YouTube channel hashtag for protection during editing
+      youtubeChannelHashtag: rawData.youtubeChannelHashtag || null
     };
     
     // Log final post data for debugging

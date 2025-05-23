@@ -111,6 +111,23 @@ const PostSchema = new mongoose.Schema(
     communityLinks: {
       type: [CommunityLinkSchema],
       default: []
+    },
+    // NEW: Store YouTube channel hashtag for protection during editing
+    youtubeChannelHashtag: {
+      type: String,
+      default: null,
+      trim: true
+    },
+    // Post status (published or draft)
+    status: {
+      type: String,
+      enum: ['published', 'draft'],
+      default: 'published'
+    },
+    // Allow community contributions
+    allowContributions: {
+      type: Boolean,
+      default: true
     }
   },
   { 
@@ -119,6 +136,12 @@ const PostSchema = new mongoose.Schema(
     strict: false 
   }
 );
+
+// Add indexes for better query performance
+PostSchema.index({ userId: 1, createdAt: -1 });
+PostSchema.index({ status: 1, createdAt: -1 });
+PostSchema.index({ hashtags: 1 });
+PostSchema.index({ title: 'text', content: 'text' }); // Text search index
 
 // Clear the model if it exists to prevent overwrite errors
 mongoose.models = {};

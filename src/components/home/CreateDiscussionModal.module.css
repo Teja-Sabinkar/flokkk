@@ -1,4 +1,4 @@
-/* NEW: YouTube restriction notice */
+/* YouTube restriction notice */
 .youtubeNotice {
     display: flex;
     align-items: center;
@@ -18,7 +18,7 @@
     opacity: 0.8;
 }
 
-/* NEW: Disabled button styling */
+/* Disabled button styling */
 .disabledButton {
     opacity: 0.5 !important;
     cursor: not-allowed !important;
@@ -30,7 +30,16 @@
     border-color: inherit !important;
 }
 
+/* NEW: Disabled hashtag remove button */
+.disabledHashtagRemove {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
 
+.disabledHashtagRemove:hover {
+    background-color: inherit !important;
+}
 
 .modalOverlay {
     position: fixed;
@@ -417,7 +426,7 @@
     margin-bottom: 16px;
 }
 
-/* Creator Links styles - NEW */
+/* Creator Links styles */
 .creatorLinksHelp {
     font-size: 12px;
     color: #888;
