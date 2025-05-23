@@ -300,12 +300,7 @@ const ExploreItem = ({ username, timeAgo, title, description, imageUrl, discussi
 
   return (
     <div className={styles.item} ref={itemRef} data-post-id={id}>
-      {/* DEBUG: Show appearance status in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ fontSize: '10px', color: '#666', padding: '2px 4px' }}>
-          Explore - Appeared: {hasAppeared ? 'Yes' : 'No'}
-        </div>
-      )}
+
 
       {/* User Info and Item Header */}
       <div className={styles.itemHeader}>

@@ -497,12 +497,7 @@ export default function Post({ post, onHidePost }) {
         </div>
       )}
 
-      {/* DEBUG: Show appearance status */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ fontSize: '10px', color: '#666', padding: '2px 4px' }}>
-          Appeared: {hasAppeared ? 'Yes' : 'No'}
-        </div>
-      )}
+
 
       {/* Post Title and Content */}
       <h2 className={styles.postTitle}>{post.title}</h2>

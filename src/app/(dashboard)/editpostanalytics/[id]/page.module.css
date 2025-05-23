@@ -1,0 +1,602 @@
+.analyticsPage {
+    min-height: 100vh;
+    background-color: #0f0f0f;
+    color: #ffffff;
+}
+
+.mainContent {
+    display: flex;
+    height: calc(100vh - 60px);
+    margin-top: 60px;
+    /* Space for the fixed header */
+    position: relative;
+    width: 100%;
+}
+
+/* Sidebar container - hidden by default on mobile */
+.sidebarContainer {
+    position: fixed;
+    top: 60px;
+    /* Below the header */
+    left: 0;
+    height: calc(100vh - 60px);
+    z-index: 1000;
+    /* Higher z-index to overlay content */
+    width: 330px;
+    /* Full sidebar width */
+    transform: translateX(-100%);
+    /* Hide sidebar by default */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: none;
+    background-color: #121212;
+    /* Ensure it has a background to cover content */
+}
+
+/* Show sidebar when menu is open */
+.mainContent:has(.contentContainer.menuOpen) .sidebarContainer {
+    transform: translateX(0);
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Main content container */
+.contentContainer {
+    display: flex;
+    flex: 1;
+    height: 100%;
+    width: 100%;
+    transition: opacity 0.3s ease;
+    padding: 24px 32px;
+    overflow-y: auto;
+    /* Added to make content vertically scrollable */
+}
+
+/* Styling when menu is open - applies to all screen sizes */
+.contentContainer.menuOpen {
+    opacity: 0.7;
+    /* Dim the content behind the sidebar */
+    pointer-events: none;
+    /* Prevent interaction with the dimmed content */
+}
+
+/* Mobile overlay for clicking outside */
+.mobileOverlay {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.loadingContainer {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #0f0f0f;
+    color: #fff;
+}
+
+.loadingSpinner {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 16px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top-color: #4169e1;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.errorContainer {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #0f0f0f;
+    color: #fff;
+    padding: 0 24px;
+    text-align: center;
+}
+
+.errorMessage {
+    padding: 12px;
+    margin-bottom: 16px;
+    border-radius: 4px;
+    background-color: rgba(255, 77, 77, 0.1);
+    border: 1px solid rgba(255, 77, 77, 0.2);
+    color: #ff4d4d;
+    font-size: 14px;
+}
+
+.retryButton {
+    background-color: #4169e1;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.retryButton:hover {
+    background-color: #3451b2;
+}
+
+.analyticsContent {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.analyticsHeader {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.backButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: transparent;
+    border: 1px solid #3a3a3a;
+    color: #ddd;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.backButton:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: #555;
+}
+
+.analyticsTitle {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    color: #fff;
+}
+
+.postInfo {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    border: 1px solid #2a2a2a;
+}
+
+.postHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.postTitle {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.3;
+}
+
+.postMeta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.publishedStatus,
+.draftStatus {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+.publishedStatus {
+    background-color: rgba(39, 174, 96, 0.15);
+    color: #27ae60;
+}
+
+.draftStatus {
+    background-color: rgba(255, 184, 0, 0.15);
+    color: #ffb800;
+}
+
+.postDate {
+    font-size: 13px;
+    color: #aaa;
+}
+
+.analyticsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Thumbnail and Engagement Row */
+.thumbnailEngagementRow {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.thumbnailSection {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #2a2a2a;
+}
+
+.sectionTitle {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0 0 16px 0;
+    color: #ddd;
+}
+
+.thumbnailPreview {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: #252525;
+    border: 1px solid #3a3a3a;
+}
+
+.thumbnailImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.thumbnailPlaceholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    gap: 8px;
+}
+
+.thumbnailPlaceholder span {
+    font-size: 13px;
+}
+
+.analyticsCard {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #2a2a2a;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.cardTitle {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0 0 20px 0;
+    color: #ddd;
+}
+
+.metricItem {
+    text-align: center;
+}
+
+.metricItem h3 {
+    font-size: 14px;
+    color: #888;
+    font-weight: 500;
+    margin: 0 0 8px 0;
+}
+
+.metricValue {
+    font-size: 28px;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0 0 4px 0;
+}
+
+.metricSubtext {
+    font-size: 12px;
+    color: #888;
+    margin: 0;
+}
+
+.engagementCard {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #2a2a2a;
+}
+
+.engagementStats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.engagementItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.engagementIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background-color: #252525;
+    border-radius: 50%;
+    color: #4169e1;
+}
+
+.engagementInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.engagementValue {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.engagementLabel {
+    font-size: 13px;
+    color: #888;
+}
+
+.analyticsChartSection {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #2a2a2a;
+}
+
+.viewHistoryChart {
+    display: flex;
+    height: 200px;
+    align-items: flex-end;
+    gap: 16px;
+    padding-top: 20px;
+    position: relative;
+}
+
+.chartBar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    position: relative;
+}
+
+.chartBarFill {
+    width: 100%;
+    background-color: #4169e1;
+    border-radius: 4px 4px 0 0;
+    position: relative;
+    transition: height 0.3s;
+    min-height: 2px;
+}
+
+.chartBarFill:hover .chartTooltip {
+    opacity: 1;
+    transform: translateY(-5px);
+}
+
+.chartTooltip {
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #252525;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 10;
+    border: 1px solid #3a3a3a;
+}
+
+.chartTooltip:after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #252525 transparent transparent transparent;
+}
+
+.chartLabel {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #888;
+}
+
+.recommendationsSection {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #2a2a2a;
+}
+
+.recommendationsList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.recommendationItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #252525;
+    font-size: 14px;
+    color: #ddd;
+}
+
+.recommendationItem:last-child {
+    border-bottom: none;
+}
+
+.recommendationItem svg {
+    color: #4169e1;
+    flex-shrink: 0;
+}
+
+.emptyChartMessage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: #666;
+    background-color: #252525;
+    border-radius: 4px;
+    padding: 24px;
+}
+
+.emptyChartMessage svg {
+    margin-bottom: 16px;
+    opacity: 0.6;
+}
+
+.emptyChartMessage p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+    .analyticsCard {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .metricItem:last-child {
+        grid-column: span 2;
+    }
+
+    .engagementStats {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .contentContainer {
+        padding: 16px;
+    }
+
+    .analyticsHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .postMeta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    /* Mobile: Stack thumbnail and engagement vertically */
+    .thumbnailEngagementRow {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .analyticsCard {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+
+    .metricItem:last-child {
+        grid-column: span 1;
+    }
+
+    .engagementCard,
+    .analyticsChartSection,
+    .recommendationsSection,
+    .thumbnailSection {
+        padding: 20px;
+    }
+
+    .viewHistoryChart {
+        height: 150px;
+        gap: 12px;
+    }
+
+    .engagementIcon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .engagementValue {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .contentContainer {
+        padding: 16px 8px;
+    }
+
+    .postInfo,
+    .analyticsCard,
+    .analyticsChartSection,
+    .engagementCard,
+    .recommendationsSection,
+    .thumbnailSection {
+        padding: 16px;
+    }
+
+    .viewHistoryChart {
+        height: 120px;
+    }
+
+    .metricValue {
+        font-size: 24px;
+    }
+}

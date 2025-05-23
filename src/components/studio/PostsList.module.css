@@ -161,6 +161,7 @@
 .postsList {
   max-height: 600px;
   overflow-y: auto;
+  padding-bottom: 150px;
 }
 
 /* Responsive styles */
