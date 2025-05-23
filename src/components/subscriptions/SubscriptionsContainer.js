@@ -9,7 +9,8 @@ const SubscriptionsContainer = ({
   feedPosts = [],
   onLoadMore,
   hasMore,
-  viewMode = 'grid' // New prop for view mode
+  viewMode = 'grid', // New prop for view mode
+  isExpanded = false // NEW: Prop to indicate if sidebar is hidden (content expanded)
 }) => {
   const hasSubscriptions = subscriptions && subscriptions.length > 0;
   const hasFeedPosts = feedPosts && feedPosts.length > 0;
@@ -60,7 +61,7 @@ const SubscriptionsContainer = ({
   // Render loading state
   if (isLoading && !hasSubscriptions && !hasFeedPosts) {
     return (
-      <div className={styles.container}>
+      <div className={`${styles.container} ${isExpanded ? styles.expanded : ''}`}>
         <div className={styles.loadingState}>
           <div className={styles.spinner}></div>
           <p>Loading subscriptions...</p>
@@ -72,7 +73,7 @@ const SubscriptionsContainer = ({
   // Render empty state
   if (!hasSubscriptions && !visiblePosts.length && !isLoading) {
     return (
-      <div className={styles.container}>
+      <div className={`${styles.container} ${isExpanded ? styles.expanded : ''}`}>
         <div className={styles.emptyState}>
           <div className={styles.emptyStateIcon}>
             <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -93,7 +94,7 @@ const SubscriptionsContainer = ({
   }
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${isExpanded ? styles.expanded : ''}`}>
       
       {/* Subscription feed section */}
       {visiblePosts.length > 0 && (

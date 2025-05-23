@@ -7,7 +7,7 @@
   background-color: #0f0f0f;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid #222;
+  
   position: relative;
   
   /* Smooth transitions for width, transform and opacity */

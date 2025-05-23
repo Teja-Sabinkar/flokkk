@@ -1,4 +1,4 @@
-// src/app/(dashboard)/subscriptions/page.js - Updated (removed DesktopSidebarToggle)
+// src/app/(dashboard)/subscriptions/page.js - Updated with sidebar awareness
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -283,7 +283,7 @@ export default function SubscriptionsPage() {
           </div>
         </div>
         
-        {/* Mobile overlay for sidebar */}
+        {/* Mobile overlay for sidebar toggle */}
         {isSidebarOpen && (
           <div 
             className={styles.mobileOverlay} 
@@ -291,8 +291,8 @@ export default function SubscriptionsPage() {
           />
         )}
         
-        {/* Content area with subscriptions */}
-        <div className={styles.contentContainer}>
+        {/* Content area with subscriptions - FIXED: Apply expandedContent class conditionally */}
+        <div className={`${styles.contentContainer} ${!isRightSidebarVisible || isMobileView ? styles.expandedContent : ''}`}>
           <div className={styles.contentScrollable}>
             <div className={styles.pageHeader}>
               <h1>Subscriptions</h1>
@@ -379,6 +379,7 @@ export default function SubscriptionsPage() {
               onLoadMore={loadMorePosts}
               hasMore={pagination.page < pagination.totalPages}
               viewMode={viewMode}
+              isExpanded={!isRightSidebarVisible || isMobileView}
             />
           </div>
         </div>

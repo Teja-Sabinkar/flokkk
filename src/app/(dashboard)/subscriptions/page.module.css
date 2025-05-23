@@ -71,15 +71,23 @@
   padding-bottom: 20px;
 }
 
-/* Content container - changed to relative positioning */
+/* Content container - FIXED: Account for right sidebar */
 .contentContainer {
   flex: 1;
-  position: relative; /* Changed from absolute */
+  position: relative;
   height: 100%;
   background-color: #0f0f0f;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  /* IMPORTANT: Ensure content doesn't overflow into sidebar */
+  min-width: 0; /* Allow flex item to shrink */
+  max-width: calc(100% - var(--sidebar-width, 330px) - 20px); /* Account for sidebar + padding */
+}
+
+/* When right sidebar is hidden, allow content to expand */
+.contentContainer.expandedContent {
+  max-width: 100%;
 }
 
 .contentScrollable {
@@ -89,6 +97,8 @@
   background-color: #0f0f0f;
   padding-bottom: 40px;
   scrollbar-width: none;
+  /* ADDED: Ensure proper box sizing */
+  box-sizing: border-box;
 }
 
 .contentScrollable::-webkit-scrollbar {
@@ -250,11 +260,6 @@
   backdrop-filter: blur(4px);
 }
 
-/* For when right sidebar is not visible to expand content */
-.expandedContent {
-  width: 100%;
-}
-
 /* Responsive adjustments - switch to absolute positioning for mobile */
 @media (max-width: 1300px) {
   .sidebarContainer {
@@ -271,6 +276,7 @@
 
   .contentContainer {
     width: 100%;
+    max-width: 100%; /* Remove sidebar constraint on mobile */
   }
 
   .mobileOverlay {
