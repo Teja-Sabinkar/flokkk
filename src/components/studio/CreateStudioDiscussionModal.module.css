@@ -739,9 +739,9 @@
 
 @media (max-width: 480px) {
     .modalContent {
-        padding-top: 50px;
         padding-bottom: 50px;
         max-height: 90vh;
+        margin-top: 0px;
     }
 
     .modalHeader {

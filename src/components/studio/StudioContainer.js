@@ -28,7 +28,7 @@ export default function StudioContainer({ user }) {
 
   // Fetch ALL posts initially, then filter locally for tabs
   const fetchPosts = async () => {
-    console.log('Fetching ALL posts regardless of tab');
+    console.log('Fetching ALL posts with enhanced engagement metrics');
     setIsLoading(true);
     setError(null);
     
@@ -49,7 +49,7 @@ export default function StudioContainer({ user }) {
 
       console.log(`Fetching from API with params: ${params.toString()}`);
 
-      // Fetch posts from our API
+      // Fetch posts from our enhanced API
       const response = await fetch(`/api/studio?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -62,7 +62,7 @@ export default function StudioContainer({ user }) {
       }
 
       const data = await response.json();
-      console.log(`Received ${data.posts.length} posts from API`);
+      console.log(`Received ${data.posts.length} posts from API with enhanced metrics`);
       
       // Transform API data to match the expected format for PostItem
       const formattedPosts = data.posts.map(post => {
@@ -75,6 +75,23 @@ export default function StudioContainer({ user }) {
         
         const isPublished = !isDraft;
         
+        // NEW: Use enhanced engagement metrics from the API
+        const enhancedMetrics = {
+          // Use 'appeared' count as 'views' (this aligns with analytics page)
+          views: post.metrics?.appeared || 0,
+          // Use real engagement tracking data
+          comments: post.metrics?.comments || 0,
+          contributions: post.metrics?.contributions || 0,
+          // Additional metrics for potential future use
+          appeared: post.metrics?.appeared || 0,
+          viewed: post.metrics?.viewed || 0,
+          penetrated: post.metrics?.penetrated || 0,
+          saves: post.metrics?.saves || 0,
+          shares: post.metrics?.shares || 0
+        };
+        
+        console.log(`📊 Post "${post.title}" formatted metrics:`, enhancedMetrics);
+        
         return {
           _id: post._id,
           id: post._id,
@@ -86,22 +103,18 @@ export default function StudioContainer({ user }) {
           createdAt: post.createdAt || new Date().toISOString(),
           updatedAt: post.updatedAt || post.createdAt || new Date().toISOString(),
           type: post.contentType === 'communityPost' ? 'post' : 'discussion',
-          metrics: {
-            views: post.views || post.metrics?.views || 0,
-            comments: post.comments || post.metrics?.comments || 0,
-            contributions: post.metrics?.contributions || 
-                         ((post.communityLinks?.length || 0) + (post.creatorLinks?.length || 0)) || 0
-          },
+          // NEW: Use enhanced metrics that align with analytics page
+          metrics: enhancedMetrics,
           // Add our own flags for filtering
           isDraft: isDraft,
           isPublished: isPublished
         };
       });
       
-      // Log post statuses for debugging
-      console.log("Posts with normalized statuses:");
+      // Log post statuses and metrics for debugging
+      console.log("Posts with enhanced metrics:");
       formattedPosts.forEach(post => {
-        console.log(`${post.title}: status=${post.status}, isDraft=${post.isDraft}, isPublished=${post.isPublished}`);
+        console.log(`${post.title}: status=${post.status}, appeared=${post.metrics.appeared}, comments=${post.metrics.comments}, contributions=${post.metrics.contributions}`);
       });
       
       // Store all posts

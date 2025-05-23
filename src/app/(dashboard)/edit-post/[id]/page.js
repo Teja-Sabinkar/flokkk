@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react'; // Added 'use' import
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import DiscussionPageHeader from '@/components/layout/DiscussionPageHeader/DiscussionPageHeader';
@@ -9,7 +9,10 @@ import { getPostById, updatePost } from '@/lib/posts';
 import styles from './page.module.css';
 
 export default function EditPostPage({ params }) {
-  const postId = params?.id;
+  // Fix: Use React.use() to unwrap params Promise
+  const resolvedParams = use(params);
+  const postId = resolvedParams?.id;
+  
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [post, setPost] = useState(null);

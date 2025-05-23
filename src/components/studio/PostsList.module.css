@@ -1,112 +1,37 @@
+/* PostsList.module.css - Fixed table header spacing */
+
 .postsListContainer {
-  background-color: #1a1a1a;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  border: 1px solid #2a2a2a;
-}
-
-.loadingContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
-  color: #888;
-}
-
-.loadingSpinner {
-  width: 30px;
-  height: 30px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  border-top-color: #4169e1;
-  animation: spin 1s ease-in-out infinite;
-  margin-bottom: 16px;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.errorContainer {
-  background-color: rgba(255, 77, 77, 0.1);
-  border: 1px solid rgba(255, 77, 77, 0.2);
-  border-radius: 8px;
-  padding: 16px;
-  margin: 16px 0;
-  color: #ff4d4d;
-  text-align: center;
-}
-
-.errorMessage {
-  margin: 0;
-  font-size: 14px;
-}
-
-.emptyContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 24px;
-  color: #888;
-  text-align: center;
-}
-
-.emptyContainer svg {
-  color: #4169e1;
-  margin-bottom: 16px;
-  opacity: 0.7;
-}
-
-.emptyContainer h3 {
-  margin: 0 0 8px 0;
-  color: #fff;
-  font-size: 18px;
-}
-
-.emptyContainer p {
-  margin: 0;
-  font-size: 14px;
-  max-width: 400px;
-  line-height: 1.5;
+  width: 100%;
 }
 
 .listControls {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
-  border-bottom: 1px solid #2a2a2a;
+  margin-bottom: 20px;
+  padding: 0 4px;
 }
 
 .sortControls {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #888;
+}
+
+.sortControls label {
   font-size: 14px;
+  color: #ddd;
+  font-weight: 500;
 }
 
 .sortSelect {
-  background-color: #252525;
-  color: #fff;
-  border: 1px solid #3a3a3a;
-  border-radius: 4px;
   padding: 8px 12px;
   font-size: 14px;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 16px;
-  padding-right: 32px;
+  background-color: #252525;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
 }
 
 .sortSelect:focus {
@@ -115,80 +40,202 @@
 }
 
 .sortOrderButton {
-  background-color: #252525;
+  background: none;
   border: 1px solid #3a3a3a;
-  color: #888;
-  width: 32px;
-  height: 32px;
+  color: #ddd;
+  padding: 8px;
   border-radius: 4px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   transition: all 0.2s;
 }
 
 .sortOrderButton:hover {
-  background-color: #2a2a2a;
-  color: #fff;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: #555;
 }
 
-.totalCount {
+/* FIXED: Table Header with proper grid layout */
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 120px 80px 100px 120px 80px;
+  /* Adjusted column widths */
+  gap: 16px;
+  /* Added consistent gap */
+  padding: 12px 16px;
+  background-color: #1a1a1a;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid #2a2a2a;
+  border-bottom: none;
+  font-size: 14px;
+  font-weight: 600;
   color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.postTitleHeader {
+  color: #ddd;
+}
+
+.postDateHeader {
+  color: #ddd;
+  text-align: center;
+}
+
+.postStatsHeader {
+  color: #ddd;
+  text-align: center;
+}
+
+.postActionsHeader {
+  color: #ddd;
+  text-align: center;
+}
+
+.postsList {
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+}
+
+.loadingContainer,
+.errorContainer,
+.emptyContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.loadingSpinner {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 16px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: #4169e1;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.errorMessage {
+  color: #ff6b6b;
   font-size: 14px;
   margin: 0;
 }
 
-.tableHeader {
-  display: grid;
-  grid-template-columns: 2fr 1fr repeat(3, 80px) 120px;
-  padding: 12px 24px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #aaa;
-  border-bottom: 1px solid #2a2a2a;
-  background-color: #1f1f1f;
+.emptyContainer svg {
+  color: #666;
+  margin-bottom: 16px;
 }
 
-.postTitleHeader,
-.postDateHeader,
-.postStatsHeader,
-.postActionsHeader {
+.emptyContainer h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #ddd;
+}
+
+.emptyContainer p {
+  margin: 0;
+  font-size: 14px;
+  color: #888;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.pagination {
   display: flex;
+  justify-content: center;
   align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 20px;
 }
 
-.postsList {
-  max-height: 600px;
-  overflow-y: auto;
-  padding-bottom: 150px;
+.paginationButton {
+  background-color: #252525;
+  border: 1px solid #3a3a3a;
+  color: #ddd;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
 }
 
-/* Responsive styles */
+.paginationButton:hover:not(:disabled) {
+  background-color: #333;
+  border-color: #555;
+}
+
+.paginationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginationInfo {
+  font-size: 14px;
+  color: #888;
+}
+
+/* RESPONSIVE: Mobile adjustments */
 @media (max-width: 1024px) {
   .tableHeader {
-    grid-template-columns: 2fr 1fr repeat(3, 60px) 80px;
-    padding: 12px 16px;
-    font-size: 12px;
+    grid-template-columns: 2fr 100px 70px 80px 100px 70px;
+    /* Slightly smaller on tablets */
+    gap: 12px;
+    padding: 12px;
+    font-size: 13px;
   }
 }
 
 @media (max-width: 768px) {
   .tableHeader {
     display: none;
+    /* Hide table header on mobile - PostItem handles mobile layout */
   }
-  
+
   .listControls {
     flex-direction: column;
-    align-items: flex-start;
     gap: 12px;
+    align-items: flex-start;
   }
-  
+
   .sortControls {
-    width: 100%;
+    order: 2;
   }
-  
-  .sortSelect {
-    flex: 1;
+
+  .postsList {
+    border-radius: 8px;
+    /* Full radius on mobile since no header */
+  }
+}
+
+@media (max-width: 480px) {
+  .listControls {
+    padding: 0;
+  }
+
+  .postsListContainer {
+    padding: 0 0 50px 0;
   }
 }

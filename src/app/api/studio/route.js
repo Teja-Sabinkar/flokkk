@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import { ObjectId } from 'mongodb';
 import dbConnect from '@/lib/mongoose';
+import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import Post from '@/models/Post';
 import CommunityPost from '@/models/CommunityPost';
+import PostEngagement from '@/models/PostEngagement';
 
 export async function GET(request) {
   try {
@@ -24,7 +27,7 @@ export async function GET(request) {
     const skip = (page - 1) * limit;
     
     // Verify authentication
-    const headersList = headers();
+    const headersList = await headers();
     const authHeader = headersList.get('Authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -49,6 +52,7 @@ export async function GET(request) {
     
     // Connect to database
     await dbConnect();
+    const { db } = await connectToDatabase();
     
     // Find user by id from token
     const user = await User.findById(decoded.id);
@@ -88,19 +92,92 @@ export async function GET(request) {
     
     console.log(`Found ${posts.length} posts matching criteria`);
     
-    // Format posts for response
-    const formattedPosts = posts.map(post => ({
-      ...post,
-      contentType: 'discussion',
-      metrics: {
-        views: post.views || 0,
-        comments: post.comments || 0,
-        contributions: (post.communityLinks?.length || 0) + (post.creatorLinks?.length || 0)
-      }
-    }));
+    // NEW: Enhanced metrics calculation using PostEngagement model
+    const postsWithEngagement = await Promise.all(
+      posts.map(async (post) => {
+        try {
+          // Get comment count
+          const commentsCount = await db.collection('comments').countDocuments({
+            postId: new ObjectId(post._id)
+          });
+          
+          // Get all engagement counts from PostEngagement collection
+          const [appearedCount, saveCount, shareCount, viewedCount, penetrateCount] = await Promise.all([
+            PostEngagement.countDocuments({ 
+              postId: new ObjectId(post._id), 
+              hasAppeared: true 
+            }),
+            PostEngagement.countDocuments({ 
+              postId: new ObjectId(post._id), 
+              hasSaved: true 
+            }),
+            PostEngagement.countDocuments({ 
+              postId: new ObjectId(post._id), 
+              hasShared: true 
+            }),
+            PostEngagement.countDocuments({ 
+              postId: new ObjectId(post._id), 
+              hasViewed: true 
+            }),
+            PostEngagement.countDocuments({ 
+              postId: new ObjectId(post._id), 
+              hasPenetrated: true 
+            })
+          ]);
+          
+          // Calculate contributions from links
+          const contributions = (post.communityLinks?.length || 0) + (post.creatorLinks?.length || 0);
+          
+          console.log(`📊 Post "${post.title}" engagement:`, {
+            appeared: appearedCount,
+            viewed: viewedCount,
+            penetrated: penetrateCount,
+            comments: commentsCount,
+            contributions: contributions,
+            saves: saveCount,
+            shares: shareCount
+          });
+          
+          return {
+            ...post,
+            contentType: 'discussion',
+            // NEW: Enhanced metrics using engagement tracking
+            metrics: {
+              appeared: appearedCount, // Use appeared instead of views
+              viewed: viewedCount,     // Real video plays
+              penetrated: penetrateCount, // Discussion opens
+              comments: commentsCount,    // Real comment count
+              contributions: contributions, // Link contributions
+              saves: saveCount,          // Real saves
+              shares: shareCount,        // Real shares
+              // Legacy support - map appeared to views for backward compatibility
+              views: appearedCount
+            }
+          };
+        } catch (engagementError) {
+          console.error(`Error calculating engagement for post ${post._id}:`, engagementError);
+          
+          // Fallback to basic metrics
+          return {
+            ...post,
+            contentType: 'discussion',
+            metrics: {
+              appeared: 0,
+              viewed: 0,
+              penetrated: 0,
+              comments: 0,
+              contributions: (post.communityLinks?.length || 0) + (post.creatorLinks?.length || 0),
+              saves: 0,
+              shares: 0,
+              views: 0 // Legacy support
+            }
+          };
+        }
+      })
+    );
     
     return NextResponse.json({
-      posts: formattedPosts,
+      posts: postsWithEngagement,
       pagination: {
         page,
         limit,

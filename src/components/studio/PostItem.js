@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -9,6 +9,8 @@ import styles from './PostItem.module.css';
 export default function PostItem({ post, onEdit, onDelete }) {
   const router = useRouter();
   const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const actionButtonRef = useRef(null);
 
   // Add debug information about this post
   console.log(`Rendering PostItem: ${post.title}, status=${post.status}, isDraft=${post.isDraft}, isPublished=${post.isPublished}`);
@@ -29,12 +31,28 @@ export default function PostItem({ post, onEdit, onDelete }) {
     setIsActionsOpen(!isActionsOpen);
   };
 
-  // Close dropdown when clicking outside
-  const handleClickOutside = () => {
-    if (isActionsOpen) {
-      setIsActionsOpen(false);
-    }
+  // Close dropdown
+  const closeDropdown = () => {
+    setIsActionsOpen(false);
   };
+
+  // Handle clicks outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isActionsOpen && 
+          dropdownRef.current && 
+          !dropdownRef.current.contains(event.target) &&
+          actionButtonRef.current &&
+          !actionButtonRef.current.contains(event.target)) {
+        closeDropdown();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isActionsOpen]);
 
   // Navigate to post view
   const handleViewPost = () => {
@@ -44,7 +62,21 @@ export default function PostItem({ post, onEdit, onDelete }) {
   // Navigate to analytics page
   const handleViewAnalytics = () => {
     router.push(`/editpostanalytics/${post._id}`);
-    setIsActionsOpen(false);
+    closeDropdown(); // Close dropdown after action
+  };
+
+  // Handle edit action
+  const handleEditClick = (e) => {
+    e.stopPropagation();
+    window.open(`/edit-post/${post._id}`, '_blank');
+    closeDropdown(); // Close dropdown after action
+  };
+
+  // Handle delete action
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    onDelete();
+    closeDropdown(); // Close dropdown after action
   };
 
   // Generate a status badge based on post status
@@ -65,7 +97,6 @@ export default function PostItem({ post, onEdit, onDelete }) {
   return (
     <div 
       className={`${styles.postItem} ${process.env.NODE_ENV === 'development' ? `debug-status-${post.status}` : ''}`} 
-      onClick={handleClickOutside}
       data-status={post.status}
     >
       <div className={styles.postContent}>
@@ -133,6 +164,7 @@ export default function PostItem({ post, onEdit, onDelete }) {
 
         <div className={styles.postActions}>
           <button
+            ref={actionButtonRef}
             className={styles.actionButton}
             onClick={toggleActions}
             aria-label="Post actions"
@@ -145,16 +177,10 @@ export default function PostItem({ post, onEdit, onDelete }) {
           </button>
 
           {isActionsOpen && (
-            <div className={styles.actionsDropdown}>
+            <div ref={dropdownRef} className={styles.actionsDropdown}>
               <button
                 className={styles.actionItem}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Instead of calling onEdit(), navigate to dedicated edit page
-                  window.open(`/edit-post/${post._id}`, '_blank'); // Opens in new tab
-                  // Alternatively use router.push for same window navigation:
-                  // router.push(`/edit-post/${post._id}`);
-                }}
+                onClick={handleEditClick}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 20h9"></path>
@@ -180,10 +206,7 @@ export default function PostItem({ post, onEdit, onDelete }) {
 
               <button
                 className={`${styles.actionItem} ${styles.deleteAction}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete();
-                }}
+                onClick={handleDeleteClick}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="3 6 5 6 21 6"></polyline>

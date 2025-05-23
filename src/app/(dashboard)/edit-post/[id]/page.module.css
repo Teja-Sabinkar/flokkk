@@ -365,7 +365,6 @@
 
 .editPostContent {
     width: 100%;
-    max-width: 800px; /* UPDATED: Reduced max-width since no analytics sidebar */
     margin: 0 auto;
 }
 

@@ -127,9 +127,6 @@ export default function PostsList({
           </button>
         </div>
         
-        <p className={styles.totalCount}>
-          {posts.length} {activeTab !== 'all' ? activeTab : ''} post{posts.length !== 1 ? 's' : ''}
-        </p>
       </div>
 
       <div className={styles.tableHeader}>

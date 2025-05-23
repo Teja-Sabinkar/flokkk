@@ -466,15 +466,66 @@ export async function PATCH(request, { params }) {
       shared: shareCount
     });
     
-    // Generate view history data for the updated post based on appeared
-    let viewsHistory = updatedPost.viewsHistory || [];
+    // NEW: Generate all three history types from real engagement data (same as GET endpoint)
+    let appearedHistory = [];
+    let viewedHistory = [];
+    let penetrationHistory = [];
     
-    // If no view history exists, generate sample data
-    if (!viewsHistory || viewsHistory.length === 0) {
-      viewsHistory = generateSampleViewHistory(appearedCount);
+    try {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      
+      // Get all engagements for this post in the last 7 days
+      const recentEngagements = await PostEngagement.find({
+        postId: new ObjectId(id),
+        $or: [
+          { 
+            hasAppeared: true,
+            lastAppearedAt: { $gte: sevenDaysAgo }
+          },
+          { 
+            hasViewed: true,
+            lastViewedAt: { $gte: sevenDaysAgo }
+          },
+          { 
+            hasPenetrated: true,
+            lastPenetratedAt: { $gte: sevenDaysAgo }
+          }
+        ]
+      }).select('lastAppearedAt lastViewedAt lastPenetratedAt hasAppeared hasViewed hasPenetrated').lean();
+      
+      console.log(`📈 Found ${recentEngagements.length} recent engagements for updated post ${id}`);
+      
+      // Generate appeared history
+      const appearedEngagements = recentEngagements.filter(e => e.hasAppeared);
+      appearedHistory = generateEngagementHistory(appearedEngagements, 'lastAppearedAt');
+      
+      // Generate viewed history
+      const viewedEngagements = recentEngagements.filter(e => e.hasViewed);
+      viewedHistory = generateEngagementHistory(viewedEngagements, 'lastViewedAt');
+      
+      // Generate penetration history
+      const penetratedEngagements = recentEngagements.filter(e => e.hasPenetrated);
+      penetrationHistory = generateEngagementHistory(penetratedEngagements, 'lastPenetratedAt');
+      
+      console.log(`📊 Generated histories for updated post - Appeared: ${appearedHistory.length}, Viewed: ${viewedHistory.length}, Penetration: ${penetrationHistory.length}`);
+      
+    } catch (engagementError) {
+      console.error('Error fetching engagement history for updated post:', engagementError);
+      
+      // Fallback: create empty 7-day histories with all zeros
+      const today = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        appearedHistory.push({ date: dateStr, views: 0 });
+        viewedHistory.push({ date: dateStr, views: 0 });
+        penetrationHistory.push({ date: dateStr, views: 0 });
+      }
     }
     
-    // Format post with appeared-based engagement metrics
+    // Format post with appeared-based engagement metrics and all histories
     const formattedPost = {
       ...updatedPost,
       metrics: {
@@ -487,10 +538,19 @@ export async function PATCH(request, { params }) {
         saves: saveCount, // Real save count from engagement tracking
         shares: shareCount // Real share count from engagement tracking
       },
-      viewsHistory: viewsHistory
+      // NEW: Include all three history types
+      appearedHistory: appearedHistory,
+      viewedHistory: viewedHistory,
+      penetrationHistory: penetrationHistory,
+      // DEPRECATED: Keep for backward compatibility
+      viewsHistory: appearedHistory
     };
     
-    console.log(`📈 Updated post ${id} formatted metrics:`, formattedPost.metrics);
+    console.log(`📈 Updated post ${id} formatted with all histories:`, {
+      appearedHistory: formattedPost.appearedHistory.length,
+      viewedHistory: formattedPost.viewedHistory.length,
+      penetrationHistory: formattedPost.penetrationHistory.length
+    });
     
     return NextResponse.json({
       message: 'Post updated successfully',
