@@ -13,7 +13,7 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
         todaysPosts: '2,847',
         trendingTopic: 'AI & Technology'
     });
-    
+
     // Rotating News State
     const [newsItems, setNewsItems] = useState([]);
     const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
@@ -32,8 +32,9 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
     const textareaRef = useRef(null);
 
     // Constants
-    const NEWS_ITEM_DURATION = 30000; // 30 seconds per item
-    const PROGRESS_UPDATE_INTERVAL = 100; // Update progress every 100ms
+    const NEWS_ITEM_DURATION = 60000; // Changed from 30000 to 60000 (60 seconds per item)
+    const PROGRESS_UPDATE_INTERVAL = 100; // Keep same (100ms for smooth progress bar)
+
 
     // Fetch rotating news batch
     const fetchRotatingNews = async () => {
@@ -42,26 +43,26 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
             setNewsError(null);
 
             const response = await fetch('/api/rotating-rss?status=true');
-            
+
             if (!response.ok) {
                 throw new Error(`Failed to fetch rotating news: ${response.status}`);
             }
 
             const data = await response.json();
-            
+
             if (data.success && data.items && data.items.length > 0) {
                 setNewsItems(data.items);
                 setCurrentNewsIndex(0);
                 setProgress(0);
                 setHasCompletedCycle(false);
-                
+
                 // Set next batch timing if available
                 if (data.status && data.status.nextRefreshIn) {
                     setNextBatchIn(data.status.nextRefreshIn);
                 }
-                
+
                 console.log(`📰 Loaded ${data.items.length} rotating news items`);
-                
+
                 // Start rotation if not paused
                 if (!isPaused) {
                     startNewsRotation();
@@ -73,13 +74,13 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
         } catch (error) {
             console.error('Error fetching rotating news:', error);
             setNewsError(error.message);
-            
+
             // Set fallback news if needed
             if (newsItems.length === 0) {
-                setNewsItems([{
+                setNewsItems([{                          // ← Keep setNewsItems (not setRssNews)
                     id: 'fallback',
-                    title: 'Unable to load latest news',
-                    description: 'Please check your internet connection and try again.',
+                    title: 'Unable to load daily news',         // ← CHANGED
+                    description: 'Daily news batch not available. Please try again later.',  // ← CHANGED
                     source: 'System',
                     link: '#',
                     rotationIndex: 0
@@ -115,7 +116,7 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
     const goToNextItem = () => {
         setCurrentNewsIndex(prevIndex => {
             const nextIndex = prevIndex + 1;
-            
+
             if (nextIndex >= newsItems.length) {
                 // Completed full cycle
                 setHasCompletedCycle(true);
@@ -132,7 +133,7 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
     const skipToNext = () => {
         clearTimers();
         goToNextItem();
-        
+
         // Restart rotation if not paused and not completed cycle
         if (!isPaused && !hasCompletedCycle) {
             setTimeout(() => startNewsRotation(), 100);
@@ -148,7 +149,7 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
             setHasCompletedCycle(false);
             return newIndex;
         });
-        
+
         // Restart rotation if not paused
         if (!isPaused) {
             setTimeout(() => startNewsRotation(), 100);
@@ -159,13 +160,13 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
     const togglePause = () => {
         setIsPaused(prev => {
             const newPaused = !prev;
-            
+
             if (newPaused) {
                 clearTimers();
             } else if (!hasCompletedCycle) {
                 startNewsRotation();
             }
-            
+
             return newPaused;
         });
     };
@@ -209,14 +210,14 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
         if (!isPaused && !hasCompletedCycle && newsItems.length > 0) {
             startNewsRotation();
         }
-        
+
         return () => clearTimers();
     }, [currentNewsIndex, isPaused, hasCompletedCycle, newsItems.length]);
 
     // Initial fetch on component mount
     useEffect(() => {
         fetchRotatingNews();
-        
+
         // Cleanup timers on unmount
         return () => {
             clearTimers();
@@ -250,7 +251,7 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
             const baseUsers = 12400;
             const basePosts = 2847;
             const variance = Math.floor(Math.random() * 100);
-            
+
             setPlatformStats({
                 activeUsers: `${((baseUsers + variance) / 1000).toFixed(1)}K`,
                 todaysPosts: (basePosts + variance).toLocaleString(),
@@ -385,14 +386,14 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
                     <div className={styles.rotatingNewsContainer}>
                         <div className={styles.newsHeader}>
                             <h4 className={styles.newsTitle}>
-                                <svg 
-                                    width="16" 
-                                    height="16" 
-                                    viewBox="0 0 24 24" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    strokeWidth="2" 
-                                    strokeLinecap="round" 
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
                                     strokeLinejoin="round"
                                     className={styles.radioIcon}
                                 >
@@ -401,11 +402,7 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
                                 </svg>
                                 Live Radio
                             </h4>
-                            <div className={styles.newsCounter}>
-                                {newsItems.length > 0 && (
-                                    <span>{currentNewsIndex + 1} of {newsItems.length}</span>
-                                )}
-                            </div>
+
                         </div>
 
                         {newsLoading && newsItems.length === 0 ? (
@@ -424,14 +421,14 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
                             <div className={styles.currentNewsItem}>
                                 {/* Progress Bar */}
                                 <div className={styles.progressContainer}>
-                                    <div 
+                                    <div
                                         className={styles.progressBar}
                                         style={{ width: `${progress}%` }}
                                     ></div>
                                 </div>
 
                                 {/* News Content */}
-                                <div 
+                                <div
                                     className={styles.newsContent}
                                     onClick={handleNewsClick}
                                 >
@@ -447,7 +444,7 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
 
                                 {/* Controls */}
                                 <div className={styles.newsControls}>
-                                    <button 
+                                    <button
                                         className={styles.controlButton}
                                         onClick={skipToPrevious}
                                         title="Previous"
@@ -457,8 +454,8 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
                                             <line x1="5" y1="19" x2="5" y2="5"></line>
                                         </svg>
                                     </button>
-                                    
-                                    <button 
+
+                                    <button
                                         className={styles.controlButton}
                                         onClick={togglePause}
                                         title={isPaused ? "Resume" : "Pause"}
@@ -474,8 +471,8 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
                                             </svg>
                                         )}
                                     </button>
-                                    
-                                    <button 
+
+                                    <button
                                         className={styles.controlButton}
                                         onClick={skipToNext}
                                         title="Next"
@@ -488,9 +485,9 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
                                 </div>
 
                                 {/* Next Batch Info */}
-                                {hasCompletedCycle && nextBatchIn && (
+                                {hasCompletedCycle && (
                                     <div className={styles.nextBatchInfo}>
-                                        <span>Next batch in: {formatDuration(nextBatchIn)}</span>
+                                        <span>Next daily batch: Tomorrow at 6 AM</span>
                                     </div>
                                 )}
                             </div>
@@ -501,7 +498,7 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
                     <div className={styles.quickActions}>
                         <h4 className={styles.actionTitle}>Quick Actions</h4>
                         <div className={styles.actionButtons}>
-                            <button 
+                            <button
                                 className={styles.actionButton}
                                 onClick={() => handleQuickAction('explore')}
                             >
@@ -511,7 +508,7 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
                                 </svg>
                                 Explore
                             </button>
-                            <button 
+                            <button
                                 className={styles.actionButton}
                                 onClick={() => handleQuickAction('trending')}
                             >
@@ -522,7 +519,7 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
                                 </svg>
                                 Trending
                             </button>
-                            <button 
+                            <button
                                 className={styles.actionButton}
                                 onClick={() => handleQuickAction('create')}
                             >
