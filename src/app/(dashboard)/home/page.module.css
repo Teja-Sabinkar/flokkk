@@ -543,6 +543,163 @@
   box-sizing: border-box;
 }
 
+/* HomePage-specific wrapper for ClaudeSidebar integration */
+.homePageSidebarWrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+/* Claude Sidebar wrapper within HomePage */
+.claudeSidebarWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Chat divider to separate RecentlyViewed from AI messages */
+.chatDivider {
+  padding: 8px 16px;
+  margin: 12px 0;
+}
+
+.chatDividerLine {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #333, transparent);
+  opacity: 0.5;
+}
+
+/* Enhanced recently viewed wrapper for HomePage */
+.recentlyViewedWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Greeting section styles for HomePage */
+.sectionHeader {
+  color: #a1a1a1;
+  padding: 10px 14px;
+  background-color: transparent;
+  font-size: 13px;
+  text-align: center;
+  max-width: 80%;
+  margin: 0px auto 16px auto;
+}
+
+.sectionHeader span {
+  display: block;
+  margin-top: 8px;
+  color: #a1a1a1;
+}
+
+/* Show More Button Styles for HomePage ClaudeSidebar */
+.claudeSidebarWrapper :global(.show-more-results) {
+  color: #4ca0ff !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  font-size: 13px !important;
+  padding: 2px 4px !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
+  display: inline-block !important;
+  margin-top: 5px !important;
+}
+
+.claudeSidebarWrapper :global(.show-more-results:hover) {
+  background-color: rgba(76, 160, 255, 0.1) !important;
+  color: #5577ff !important;
+}
+
+.claudeSidebarWrapper :global(.show-more-results:active) {
+  transform: translateY(1px) !important;
+}
+
+/* Take Me Button Styles in HomePage AI Responses */
+.claudeSidebarWrapper :global(a[href*="/discussion"]) {
+  background-color: #111111 !important;
+  color: #aaaaaa !important;
+  border: none !important;
+  padding: 2px 10px !important;
+  border-radius: 12px !important;
+  font-size: 11px !important;
+  text-decoration: none !important;
+  display: inline-block !important;
+  transition: all 0.2s ease !important;
+}
+
+.claudeSidebarWrapper :global(a[href*="/discussion"]:hover) {
+  background-color: #2a2a2a !important;
+  color: #fff !important;
+}
+
+/* External Link Styles in HomePage AI Responses */
+.claudeSidebarWrapper :global(a[target="_blank"]) {
+  background-color: #111111 !important;
+  color: #aaaaaa !important;
+  border: none !important;
+  padding: 2px 10px !important;
+  border-radius: 12px !important;
+  font-size: 11px !important;
+  text-decoration: none !important;
+  display: inline-block !important;
+  transition: all 0.2s ease !important;
+}
+
+.claudeSidebarWrapper :global(a[target="_blank"]:hover) {
+  background-color: #2a2a2a !important;
+  color: #fff !important;
+}
+
+/* Link Container Styles from AI Responses in HomePage */
+.claudeSidebarWrapper :global(div[style*="border: 1px solid #2e88ff"]) {
+  margin: 8px 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.claudeSidebarWrapper :global(div[style*="border: 1px solid #2e88ff"]:hover) {
+  border-color: #4ca0ff !important;
+  background-color: rgba(76, 160, 255, 0.05) !important;
+}
+
+/* Ensure global styles are applied correctly in HomePage */
+.claudeSidebarWrapper :global(*) {
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+/* HomePage specific responsive adjustments */
+@media (max-width: 480px) {
+  .homePageSidebarWrapper {
+    padding: 0;
+  }
+
+  .recentlyViewedWrapper {
+    padding-bottom: 8px;
+  }
+
+  .chatDivider {
+    padding: 4px 12px;
+    margin: 8px 0;
+  }
+
+  .sectionHeader {
+    font-size: 12px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+  }
+
+  .claudeSidebarWrapper :global(.show-more-results) {
+    font-size: 12px !important;
+  }
+}
+
 
 /* Responsive adjustments */
 @media (max-width: 1300px) {
