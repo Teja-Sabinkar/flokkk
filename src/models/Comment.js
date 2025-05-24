@@ -1,4 +1,4 @@
-// Ensure proper imports
+// src/models/Comment.js - Updated with soft delete support
 import mongoose from 'mongoose';
 const { Schema, model, models } = mongoose;
 
@@ -57,6 +57,19 @@ const CommentSchema = new Schema(
     replyToUsername: {
       type: String,
       default: null
+    },
+    // NEW: Soft delete support
+    isDeleted: {
+      type: Boolean,
+      default: false
+    },
+    deletedAt: {
+      type: Date,
+      default: null
+    },
+    originalContent: {
+      type: String,
+      default: null
     }
   },
   { timestamps: true }
@@ -65,6 +78,17 @@ const CommentSchema = new Schema(
 // Ensure indexes for efficient queries
 CommentSchema.index({ postId: 1, createdAt: -1 });
 CommentSchema.index({ parentId: 1 });
+CommentSchema.index({ userId: 1 });
+CommentSchema.index({ isDeleted: 1 });
+
+// Virtual to check if comment is available (not deleted)
+CommentSchema.virtual('isAvailable').get(function () {
+  return !this.isDeleted;
+});
+
+// Ensure virtuals are included in JSON output
+CommentSchema.set('toJSON', { virtuals: true });
+CommentSchema.set('toObject', { virtuals: true });
 
 // Handle model compilation more safely
 export default models.Comment || model('Comment', CommentSchema);

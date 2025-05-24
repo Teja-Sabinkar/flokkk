@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import NestedCommentBoxPreview from './NestedCommentBoxPreview';
 import ReportModal from '@/components/report/ReportModal'; // Import ReportModal
+import DeleteCommentModal from './DeleteCommentModal'; // NEW: Import delete modal
 import { submitReport } from '@/components/report/reportService'; // Import report service
 import styles from './DiscussionPageCenterBottom.module.css';
 import Link from 'next/link';
@@ -73,6 +74,11 @@ export default function DiscussionPageCenterBottom({
   // New state for report modal
   const [showReportModal, setShowReportModal] = useState(false);
   const [commentToReport, setCommentToReport] = useState(null);
+
+  // NEW: Add state for delete confirmation modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Debug comments received
   useEffect(() => {
@@ -170,6 +176,93 @@ export default function DiscussionPageCenterBottom({
   const handleOpenReportModal = (comment) => {
     setCommentToReport(comment);
     setShowReportModal(true);
+  };
+
+  // NEW: Function to handle opening delete confirmation modal
+  const handleOpenDeleteModal = (comment) => {
+    setCommentToDelete(comment);
+    setShowDeleteModal(true);
+  };
+
+  // NEW: Function to handle closing delete confirmation modal
+  const handleCloseDeleteModal = () => {
+    if (!isDeleting) {
+      setShowDeleteModal(false);
+      setCommentToDelete(null);
+    }
+  };
+
+  // NEW: Function to handle comment deletion
+  const handleDeleteComment = async () => {
+    if (!commentToDelete) return;
+
+    try {
+      setIsDeleting(true);
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please log in to delete comments');
+        return;
+      }
+
+      console.log('Deleting comment:', commentToDelete.id);
+
+      const response = await fetch(`/api/comments/${commentToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete comment');
+      }
+
+      const result = await response.json();
+      console.log('Comment deleted successfully:', result);
+
+      // Update the comment in the local state to show as deleted
+      const updateCommentInState = (commentsList) => {
+        return commentsList.map(comment => {
+          if (comment.id === commentToDelete.id) {
+            return {
+              ...comment,
+              text: '[deleted]',
+              isDeleted: true,
+              username: '[deleted]'
+            };
+          }
+
+          // Recursively update nested comments
+          if (comment.replies && comment.replies.length > 0) {
+            return {
+              ...comment,
+              replies: updateCommentInState(comment.replies)
+            };
+          }
+
+          return comment;
+        });
+      };
+
+      // Update both comments and originalComments
+      setComments(prevComments => updateCommentInState(prevComments));
+      setOriginalComments(prevComments => updateCommentInState(prevComments));
+
+      // Close modal and reset state
+      setShowDeleteModal(false);
+      setCommentToDelete(null);
+
+      // Show success message (optional)
+      // You could add a toast notification here if you have one implemented
+
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      alert('Error deleting comment: ' + error.message);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Handler for report submission
@@ -675,6 +768,9 @@ export default function DiscussionPageCenterBottom({
 
     console.log(`Comment by ${comment.user.username} - Current user: ${currentUser?.username} - Match: ${isCurrentUserComment}`);
 
+    // NEW: Check if comment is deleted
+    const isDeletedComment = comment.isDeleted || comment.text === '[deleted]';
+
     // Determine the profile path based on whether it's the current user or not
     const profilePath = isCurrentUserComment
       ? `/currentprofile/${comment.user.username}`
@@ -688,8 +784,8 @@ export default function DiscussionPageCenterBottom({
     // Prepare content based on search highlighting and HTML content
     let commentContent = sanitizeHtml(comment.text);
 
-    // Apply search highlighting if this comment is in search results
-    if (searchText && highlightedComments[comment.id]?.isHighlighted && !hasHTML) {
+    // Apply search highlighting if this comment is in search results and not deleted
+    if (searchText && highlightedComments[comment.id]?.isHighlighted && !hasHTML && !isDeletedComment) {
       commentContent = highlightText(commentContent, searchText);
     }
 
@@ -715,21 +811,20 @@ export default function DiscussionPageCenterBottom({
 
             <div className={styles.commentHeader}>
               <div className={styles.avatar}>
-                {comment.user.avatar && comment.user.avatar !== '/profile-placeholder.jpg' ? (
-                  // Display user profile image if available and not the default placeholder
+                {/* Only show avatar if comment is not deleted */}
+                {!isDeletedComment && comment.user.avatar && comment.user.avatar !== '/profile-placeholder.jpg' ? (
                   <img
                     src={comment.user.avatar}
                     alt={comment.user.username}
                     className={styles.avatarImage}
                   />
                 ) : (
-                  // Fallback to placeholder with initial
                   <div
                     className={styles.avatarPlaceholder}
-                    style={{ backgroundColor: generateColorFromUsername(comment.user.username) }}
+                    style={{ backgroundColor: isDeletedComment ? '#666' : generateColorFromUsername(comment.user.username) }}
                   >
                     <span className={styles.avatarInitial}>
-                      {comment.user.username ? comment.user.username.charAt(0).toUpperCase() : 'U'}
+                      {isDeletedComment ? '?' : (comment.user.username ? comment.user.username.charAt(0).toUpperCase() : 'U')}
                     </span>
                   </div>
                 )}
@@ -738,30 +833,41 @@ export default function DiscussionPageCenterBottom({
               {/* Add a debug output to inspect username comparison */}
               {console.log(`Checking username: comment=${comment.user.username}, currentUser=${currentUser?.username}`)}
 
-              {/* Use simple string comparison to determine link path */}
-              <Link
-                href={profilePath}
-                className={styles.username}
-              >
-                {comment.user.username}
-              </Link>
-
-              {comment.user.isMod && (
-                <span className={styles.userIsMod}>MOD</span>
+              {/* Show username or [deleted] based on deletion status */}
+              {isDeletedComment ? (
+                <span className={styles.username} style={{ color: '#666', fontStyle: 'italic' }}>
+                  [deleted]
+                </span>
+              ) : (
+                <Link
+                  href={profilePath}
+                  className={styles.username}
+                >
+                  {comment.user.username}
+                </Link>
               )}
 
-              {comment.user.isAdmin && (
-                <span className={styles.userIsAdmin}>ADMIN</span>
+              {/* Only show badges if comment is not deleted */}
+              {!isDeletedComment && (
+                <>
+                  {comment.user.isMod && (
+                    <span className={styles.userIsMod}>MOD</span>
+                  )}
+
+                  {comment.user.isAdmin && (
+                    <span className={styles.userIsAdmin}>ADMIN</span>
+                  )}
+                </>
               )}
 
               <span className={styles.timestamp}>{formatTimestamp(comment.timestamp)}</span>
 
-              {comment.isEdited && (
+              {!isDeletedComment && comment.isEdited && (
                 <span className={styles.edited}>edited</span>
               )}
 
-              {/* Make sure replyToId and replyToUser fields are checked for null/undefined before rendering */}
-              {comment.replyToUser && comment.replyToId && (
+              {/* Only show reply-to information if comment is not deleted */}
+              {!isDeletedComment && comment.replyToUser && comment.replyToId && (
                 <span className={styles.replyingTo}>
                   replying to
                   <a
@@ -778,7 +884,7 @@ export default function DiscussionPageCenterBottom({
               )}
 
               {/* Show continuation thread indicator if this comment has continuation threads */}
-              {hasContinuationThreads && (
+              {!isDeletedComment && hasContinuationThreads && (
                 <span className={styles.continuationIndicator}>
                   <a
                     href="#"
@@ -825,15 +931,15 @@ export default function DiscussionPageCenterBottom({
               )}
             </div>
 
-            {/* Comment content with different rendering based on content type and search status */}
+            {/* Comment content with different rendering based on content type, search status, and deletion status */}
             {hasHTML ? (
               <div
                 className={`${styles.commentContent} ${highlightedComments[comment.id]?.isHighlighted ? styles.currentHighlight : ''
                   } ${highlightedComments[comment.id]?.isCurrent ? styles.currentHighlight : ''
-                  }`}
+                  } ${isDeletedComment ? styles.deletedComment : ''}`}
                 dangerouslySetInnerHTML={{ __html: commentContent }}
               />
-            ) : searchText && highlightedComments[comment.id]?.isHighlighted ? (
+            ) : searchText && highlightedComments[comment.id]?.isHighlighted && !isDeletedComment ? (
               <div
                 className={`${styles.commentContent} ${styles.currentHighlight} ${highlightedComments[comment.id]?.isCurrent ? styles.currentHighlight : ''
                   }`}
@@ -843,58 +949,72 @@ export default function DiscussionPageCenterBottom({
               <div
                 className={`${styles.commentContent} ${highlightedComments[comment.id]?.isHighlighted ? styles.currentHighlight : ''
                   } ${highlightedComments[comment.id]?.isCurrent ? styles.currentHighlight : ''
-                  }`}
+                  } ${isDeletedComment ? styles.deletedComment : ''}`}
               >
                 {commentContent}
               </div>
             )}
 
             <div className={styles.commentActions}>
-              {/* Vote buttons */}
-              <div className={styles.actionVoteButtons}>
-                <button
-                  className={`${styles.actionButton} ${comment.isLiked ? styles.actionUpvoted : ''}`}
-                  onClick={() => toggleVote(comment.id, 'up')}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill={comment.isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" className={styles.voteIcon}>
-                    <path d="M12 4l8 8h-16l8-8z" />
-                  </svg>
-                </button>
+              {/* Only show vote and action buttons if comment is not deleted */}
+              {!isDeletedComment && (
+                <>
+                  {/* Vote buttons */}
+                  <div className={styles.actionVoteButtons}>
+                    <button
+                      className={`${styles.actionButton} ${comment.isLiked ? styles.actionUpvoted : ''}`}
+                      onClick={() => toggleVote(comment.id, 'up')}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill={comment.isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" className={styles.voteIcon}>
+                        <path d="M12 4l8 8h-16l8-8z" />
+                      </svg>
+                    </button>
 
-                <span className={`${styles.actionVoteCount} ${comment.isLiked ? styles.upvoted : ''} ${comment.isDownvoted ? styles.downvoted : ''}`}>
-                  {comment.likes}
-                </span>
+                    <span className={`${styles.actionVoteCount} ${comment.isLiked ? styles.upvoted : ''} ${comment.isDownvoted ? styles.downvoted : ''}`}>
+                      {comment.likes}
+                    </span>
 
-                <button
-                  className={`${styles.actionButton} ${comment.isDownvoted ? styles.actionDownvoted : ''}`}
-                  onClick={() => toggleVote(comment.id, 'down')}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill={comment.isDownvoted ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" className={styles.voteIcon}>
-                    <path d="M12 20l-8-8h16l-8 8z" />
-                  </svg>
-                </button>
-              </div>
+                    <button
+                      className={`${styles.actionButton} ${comment.isDownvoted ? styles.actionDownvoted : ''}`}
+                      onClick={() => toggleVote(comment.id, 'down')}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill={comment.isDownvoted ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" className={styles.voteIcon}>
+                        <path d="M12 20l-8-8h16l-8 8z" />
+                      </svg>
+                    </button>
+                  </div>
 
-              <button
-                className={styles.actionButton}
-                onClick={() => showReplyBox(comment.id)}
-              >
-                <span className={styles.actionIcon}>↪</span>
-                Reply
-              </button>
+                  <button
+                    className={styles.actionButton}
+                    onClick={() => showReplyBox(comment.id)}
+                  >
+                    <span className={styles.actionIcon}>↪</span>
+                    Reply
+                  </button>
 
-              {/* Report button - now with functionality */}
-              <button
-                className={styles.actionButton}
-                onClick={() => handleOpenReportModal(comment)}
-              >
-                Report
-              </button>
+                  <button
+                    className={styles.actionButton}
+                    onClick={() => handleOpenReportModal(comment)}
+                  >
+                    Report
+                  </button>
+
+                  {/* NEW: Delete button - only show if current user is the comment creator */}
+                  {isCurrentUserComment && (
+                    <button
+                      className={styles.actionButton}
+                      onClick={() => handleOpenDeleteModal(comment)}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </>
+              )}
             </div>
 
             <div className={`${styles.nestedComments} ${comment.isCollapsed ? styles.collapsed : ''}`}>
-              {/* Reply box */}
-              {comment.showReplyBox && (
+              {/* Reply box - only show if comment is not deleted */}
+              {!isDeletedComment && comment.showReplyBox && (
                 <div className={styles.commentBoxContainer}>
                   <NestedCommentBoxPreview
                     onChange={() => { }}
@@ -917,7 +1037,7 @@ export default function DiscussionPageCenterBottom({
                 onClick={() => toggleCollapse(comment.id)}
               >
                 <span className={styles.collapsedIndicator}>[+]</span>
-                <span className={styles.collapsedUsername}>{comment.user.username}</span>
+                <span className={styles.collapsedUsername}>{isDeletedComment ? '[deleted]' : comment.user.username}</span>
                 <span>{totalReplies} more {totalReplies === 1 ? 'reply' : 'replies'}</span>
               </div>
             )}
@@ -971,6 +1091,15 @@ export default function DiscussionPageCenterBottom({
 
         {!loading && !error && comments.map(comment => renderComment(comment))}
       </div>
+
+      {/* NEW: Delete Confirmation Modal */}
+      <DeleteCommentModal
+        isOpen={showDeleteModal}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleDeleteComment}
+        commentPreview={commentToDelete?.text}
+        isDeleting={isDeleting}
+      />
 
       {/* Report Modal */}
       <ReportModal

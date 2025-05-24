@@ -1,0 +1,238 @@
+/* src/components/discussionpage/DiscussionPageCenterBar/DeleteCommentModal.module.css */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modalContent {
+    background-color: #1a1a1b;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    max-width: 450px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 1px solid #333;
+    animation: slideIn 0.2s ease-out;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 0 20px;
+    border-bottom: 1px solid #333;
+    margin-bottom: 20px;
+}
+
+.modalTitle {
+    color: #e0e0e0;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.closeButton {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.closeButton:hover {
+    color: #e0e0e0;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.modalBody {
+    padding: 0 20px 20px 20px;
+}
+
+.confirmationText {
+    color: #e0e0e0;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+.commentPreview {
+    background-color: #2a2a2b;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 16px;
+    border-left: 3px solid #4169e1;
+}
+
+.previewLabel {
+    color: #888;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.previewText {
+    color: #c0c0c0;
+    font-size: 13px;
+    line-height: 1.4;
+    font-style: italic;
+    word-break: break-word;
+}
+
+.warningText {
+    background-color: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: #ffc107;
+    font-size: 12px;
+    line-height: 1.4;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.warningText::before {
+    content: "⚠";
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.modalFooter {
+    display: flex;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid #333;
+    justify-content: flex-end;
+}
+
+.cancelButton {
+    background-color: transparent;
+    border: 1px solid #555;
+    color: #e0e0e0;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.cancelButton:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: #777;
+}
+
+.cancelButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.deleteButton {
+    background-color: #dc3545;
+    border: 1px solid #dc3545;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 130px;
+    justify-content: center;
+}
+
+.deleteButton:hover:not(:disabled) {
+    background-color: #c82333;
+    border-color: #c82333;
+    transform: translateY(-1px);
+}
+
+.deleteButton:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+    .modalContent {
+        width: 95%;
+        margin: 20px;
+    }
+
+    .modalHeader {
+        padding: 16px 16px 0 16px;
+    }
+
+    .modalBody {
+        padding: 0 16px 16px 16px;
+    }
+
+    .modalFooter {
+        padding: 16px;
+        flex-direction: column-reverse;
+    }
+
+    .cancelButton,
+    .deleteButton {
+        width: 100%;
+        justify-content: center;
+    }
+}

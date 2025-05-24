@@ -1,15 +1,27 @@
+// src/app/api/comments/[id]/route.js
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import { ObjectId } from 'mongodb';
 import dbConnect from '@/lib/mongoose';
 import Comment from '@/models/Comment';
 
-export async function GET(request, { params }) {
+// DELETE endpoint to soft delete a comment
+export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     
-    // Get auth token from header
-    const headersList = headers();
+    // Check comment ID format
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { message: 'Invalid comment ID format' },
+        { status: 400 }
+      );
+    }
+    
+    // Verify authentication
+    const headersList = await headers();
     const authHeader = headersList.get('Authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -22,8 +34,9 @@ export async function GET(request, { params }) {
     const token = authHeader.split(' ')[1];
     
     // Verify JWT token
+    let decoded;
     try {
-      jwt.verify(token, process.env.NEXTAUTH_SECRET);
+      decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET);
     } catch (error) {
       return NextResponse.json(
         { message: 'Invalid or expired token' },
@@ -44,19 +57,51 @@ export async function GET(request, { params }) {
       );
     }
     
-    // Return comment data with postId
+    // Check if user has permission to delete this comment
+    if (comment.userId.toString() !== decoded.id) {
+      return NextResponse.json(
+        { message: 'You do not have permission to delete this comment' },
+        { status: 403 }
+      );
+    }
+    
+    // Check if comment is already deleted
+    if (comment.isDeleted) {
+      return NextResponse.json(
+        { message: 'Comment is already deleted' },
+        { status: 400 }
+      );
+    }
+    
+    // Soft delete: Update comment to mark as deleted
+    const updatedComment = await Comment.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          // Keep original content for admin purposes but replace display content
+          originalContent: comment.content,
+          content: '[deleted]'
+        }
+      },
+      { new: true }
+    );
+    
     return NextResponse.json({
-      _id: comment._id,
-      postId: comment.postId,
-      content: comment.content,
-      userId: comment.userId,
-      username: comment.username
+      message: 'Comment deleted successfully',
+      comment: {
+        _id: updatedComment._id,
+        isDeleted: updatedComment.isDeleted,
+        content: updatedComment.content,
+        deletedAt: updatedComment.deletedAt
+      }
     }, { status: 200 });
     
   } catch (error) {
-    console.error('Error fetching comment:', error);
+    console.error('Error deleting comment:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { message: 'Internal server error: ' + error.message },
       { status: 500 }
     );
   }

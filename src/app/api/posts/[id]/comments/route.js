@@ -32,7 +32,7 @@ export async function POST(request, { params }) {
     console.log('Comment POST API called with params:', params);
     
     // Get auth token from header
-    const headersList = headers();
+    const headersList = await headers();
     const authHeader = headersList.get('Authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -60,7 +60,8 @@ export async function POST(request, { params }) {
     await dbConnect();
     
     // Get post ID from route params
-    const { id: postId } = params;
+    const resolvedParams = await params;
+    const { id: postId } = resolvedParams;
     console.log('Post ID:', postId);
     
     // Find user by id from token
@@ -109,7 +110,11 @@ export async function POST(request, { params }) {
       votes: [{
         userId: user._id,
         vote: 1 // Auto upvote your own comment
-      }]
+      }],
+      // NEW: Initialize soft delete fields
+      isDeleted: false,
+      deletedAt: null,
+      originalContent: null
     };
     
     // Handle direct replies to comments (normal threading)
@@ -227,20 +232,22 @@ export async function GET(request, { params }) {
     console.log('Comment GET API called with params:', params);
     
     // Get post ID from route params
-    const { id: postId } = params;
+    const resolvedParams = await params;
+    const { id: postId } = resolvedParams;
     
     // Connect to database
     await dbConnect();
     
     console.log('Fetching comments for post:', postId);
     
-    // Find all comments for this post
+    // NEW: Find all comments for this post (including soft deleted ones)
+    // We still show deleted comments in the thread structure
     const comments = await Comment.find({ postId }).sort({ createdAt: -1 }).lean();
     
     console.log(`Found ${comments.length} comments for post ${postId}`);
     
     // Get the current authenticated user if any
-    const headersList = headers();
+    const headersList = await headers();
     const authHeader = headersList.get('Authorization');
     let currentUserId = null;
     
@@ -254,8 +261,12 @@ export async function GET(request, { params }) {
       }
     }
     
-    // NEW CODE: Collect all unique user IDs from comments
-    const userIds = [...new Set(comments.map(comment => comment.userId.toString()))];
+    // NEW CODE: Collect all unique user IDs from comments (excluding deleted ones for profile pictures)
+    const userIds = [...new Set(
+      comments
+        .filter(comment => !comment.isDeleted) // Only get profile pictures for non-deleted comments
+        .map(comment => comment.userId.toString())
+    )];
     
     // NEW CODE: Fetch user profile pictures in a single query
     const users = await User.find(
@@ -288,35 +299,44 @@ export async function GET(request, { params }) {
         }
       }
       
-      // NEW CODE: Get the user's profile picture from our map
-      const userProfilePicture = userMap[comment.userId.toString()]?.profilePicture || '/profile-placeholder.jpg';
+      // NEW: Handle soft deleted comments
+      const isDeletedComment = comment.isDeleted || false;
+      
+      // NEW CODE: Get the user's profile picture from our map (only for non-deleted comments)
+      const userProfilePicture = !isDeletedComment 
+        ? (userMap[comment.userId.toString()]?.profilePicture || '/profile-placeholder.jpg')
+        : null; // No profile picture for deleted comments
       
       // Log the comment to debug
-      console.log(`Processing comment ID: ${comment._id}, parentId: ${comment.parentId || 'null'}`);
+      console.log(`Processing comment ID: ${comment._id}, parentId: ${comment.parentId || 'null'}, isDeleted: ${isDeletedComment}`);
       
-      // Clean content when returning it too
-      const cleanedContent = sanitizeCommentContent(comment.content);
+      // NEW: Handle content and username based on deletion status
+      const displayContent = isDeletedComment ? '[deleted]' : sanitizeCommentContent(comment.content);
+      const displayUsername = isDeletedComment ? '[deleted]' : comment.username;
       
       return {
         id: comment._id.toString(),
         parentId: comment.parentId ? comment.parentId.toString() : null,
-        text: cleanedContent, // Use cleaned content
+        text: displayContent, // Show [deleted] for deleted comments
         user: {
-          username: comment.username,
-          avatar: userProfilePicture, // UPDATED: Use the real profile picture
+          id: comment.userId.toString(),
+          username: displayUsername, // Show [deleted] for deleted comments
+          avatar: userProfilePicture, // Null for deleted comments
           isMod: false,
           isAdmin: false
         },
         timestamp: comment.createdAt,
         likes: comment.likes || 0,
-        isLiked,
-        isDownvoted,
+        isLiked: !isDeletedComment && isLiked, // No voting state for deleted comments
+        isDownvoted: !isDeletedComment && isDownvoted, // No voting state for deleted comments
         isCollapsed: false,
-        isEdited: comment.isEdited || false,
+        isEdited: !isDeletedComment && (comment.isEdited || false), // No edit indicator for deleted comments
         level: comment.level || 0,
-        replyToUser: comment.replyToUsername,
-        replyToId: comment.replyToId ? comment.replyToId.toString() : null,
-        replies: []
+        replyToUser: !isDeletedComment ? comment.replyToUsername : null, // No reply-to info for deleted comments
+        replyToId: !isDeletedComment && comment.replyToId ? comment.replyToId.toString() : null,
+        replies: [],
+        // NEW: Include deletion status
+        isDeleted: isDeletedComment
       };
     });
     

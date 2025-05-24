@@ -612,6 +612,44 @@
   background-color: rgba(92, 126, 228, 0.355);
 }
 
+/* Deleted comment styles */
+.deletedComment {
+  color: #666 !important;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* Deleted comment content should be muted */
+.commentContent.deletedComment {
+  background-color: rgba(128, 128, 128, 0.05);
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin: 4px 0;
+}
+
+/* Deleted username styling */
+.username[style*="color: #666"] {
+  font-weight: 400;
+  text-decoration: none;
+  cursor: default;
+}
+
+/* Deleted avatar placeholder */
+.avatarPlaceholder[style*="background-color: #666"] {
+  background-color: #666 !important;
+  opacity: 0.6;
+}
+
+/* Hide voting and actions for deleted comments */
+.comment .commentActions:empty {
+  display: none;
+}
+
+/* Ensure deleted comment content doesn't have hover effects */
+.deletedComment:hover {
+  background-color: transparent;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
