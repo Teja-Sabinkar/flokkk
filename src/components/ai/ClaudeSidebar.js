@@ -13,43 +13,244 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
         todaysPosts: '2,847',
         trendingTopic: 'AI & Technology'
     });
-    const [dailyInsight, setDailyInsight] = useState('');
 
+    // Rotating News State
+    const [newsItems, setNewsItems] = useState([]);
+    const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
+    const [newsLoading, setNewsLoading] = useState(false);
+    const [newsError, setNewsError] = useState(null);
+    const [isPaused, setIsPaused] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const [nextBatchIn, setNextBatchIn] = useState(null);
+    const [hasCompletedCycle, setHasCompletedCycle] = useState(false);
+
+    // Refs for timers
+    const newsTimerRef = useRef(null);
+    const progressTimerRef = useRef(null);
+    const batchTimerRef = useRef(null);
     const messagesEndRef = useRef(null);
     const textareaRef = useRef(null);
 
+    // Constants
+    const NEWS_ITEM_DURATION = 30000; // 30 seconds per item
+    const PROGRESS_UPDATE_INTERVAL = 100; // Update progress every 100ms
 
+    // Fetch rotating news batch
+    const fetchRotatingNews = async () => {
+        try {
+            setNewsLoading(true);
+            setNewsError(null);
 
-    // Generate daily insight based on time of day and user activity
-    const generateDailyInsight = () => {
-        const insights = [
-            "💡 Did you know? Users who engage with 3+ discussions daily are 40% more likely to discover interesting content!",
-            "🌟 Today's tip: Try exploring a new category you haven't visited before - you might find your next favorite topic!",
-            "🚀 Platform insight: Video discussions get 25% more engagement than text-only posts on average.",
-            "🎯 Quick tip: Using specific keywords in your searches helps you find exactly what you're looking for.",
-            "📊 Fun fact: The most active discussion time is between 2-4 PM - perfect for engaging conversations!",
-            "🔥 Today's trend: AI and technology discussions are seeing unprecedented engagement this week.",
-            "💬 Community insight: Users who comment thoughtfully get more meaningful responses and connections.",
-            "⭐ Did you know? Saving posts to playlists helps you build your personal knowledge library over time."
-        ];
-        
-        const today = new Date();
-        const dayIndex = today.getDate() % insights.length;
-        return insights[dayIndex];
+            const response = await fetch('/api/rotating-rss?status=true');
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch rotating news: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.items && data.items.length > 0) {
+                setNewsItems(data.items);
+                setCurrentNewsIndex(0);
+                setProgress(0);
+                setHasCompletedCycle(false);
+
+                // Set next batch timing if available
+                if (data.status && data.status.nextRefreshIn) {
+                    setNextBatchIn(data.status.nextRefreshIn);
+                }
+
+                console.log(`📰 Loaded ${data.items.length} rotating news items`);
+
+                // Start rotation if not paused
+                if (!isPaused) {
+                    startNewsRotation();
+                }
+            } else {
+                throw new Error(data.message || 'No news items received');
+            }
+
+        } catch (error) {
+            console.error('Error fetching rotating news:', error);
+            setNewsError(error.message);
+
+            // Set fallback news if needed
+            if (newsItems.length === 0) {
+                setNewsItems([{
+                    id: 'fallback',
+                    title: 'Unable to load latest news',
+                    description: 'Please check your internet connection and try again.',
+                    source: 'System',
+                    link: '#',
+                    rotationIndex: 0
+                }]);
+            }
+        } finally {
+            setNewsLoading(false);
+        }
     };
 
-    // Update daily insight when user changes
-    useEffect(() => {
-        setDailyInsight(generateDailyInsight());
-    }, [user]);
+    // Start the news rotation timer
+    const startNewsRotation = () => {
+        if (newsItems.length === 0 || isPaused) return;
 
-    // Simulated platform stats update (in real app, this would come from API)
+        // Clear existing timers
+        clearTimers();
+
+        // Start progress timer
+        const startTime = Date.now();
+        progressTimerRef.current = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            const newProgress = Math.min((elapsed / NEWS_ITEM_DURATION) * 100, 100);
+            setProgress(newProgress);
+        }, PROGRESS_UPDATE_INTERVAL);
+
+        // Start news rotation timer
+        newsTimerRef.current = setTimeout(() => {
+            goToNextItem();
+        }, NEWS_ITEM_DURATION);
+    };
+
+    // Go to next news item
+    const goToNextItem = () => {
+        setCurrentNewsIndex(prevIndex => {
+            const nextIndex = prevIndex + 1;
+
+            if (nextIndex >= newsItems.length) {
+                // Completed full cycle
+                setHasCompletedCycle(true);
+                setProgress(100);
+                return 0; // Reset to first item
+            } else {
+                setProgress(0);
+                return nextIndex;
+            }
+        });
+    };
+
+    // Manual skip to next item
+    const skipToNext = () => {
+        clearTimers();
+        goToNextItem();
+
+        // Restart rotation if not paused and not completed cycle
+        if (!isPaused && !hasCompletedCycle) {
+            setTimeout(() => startNewsRotation(), 100);
+        }
+    };
+
+    // Manual skip to previous item
+    const skipToPrevious = () => {
+        clearTimers();
+        setCurrentNewsIndex(prevIndex => {
+            const newIndex = prevIndex > 0 ? prevIndex - 1 : newsItems.length - 1;
+            setProgress(0);
+            setHasCompletedCycle(false);
+            return newIndex;
+        });
+
+        // Restart rotation if not paused
+        if (!isPaused) {
+            setTimeout(() => startNewsRotation(), 100);
+        }
+    };
+
+    // Toggle pause/play
+    const togglePause = () => {
+        setIsPaused(prev => {
+            const newPaused = !prev;
+
+            if (newPaused) {
+                clearTimers();
+            } else if (!hasCompletedCycle) {
+                startNewsRotation();
+            }
+
+            return newPaused;
+        });
+    };
+
+    // Clear all timers
+    const clearTimers = () => {
+        if (newsTimerRef.current) {
+            clearTimeout(newsTimerRef.current);
+            newsTimerRef.current = null;
+        }
+        if (progressTimerRef.current) {
+            clearInterval(progressTimerRef.current);
+            progressTimerRef.current = null;
+        }
+    };
+
+    // Update next batch countdown
+    useEffect(() => {
+        if (nextBatchIn && hasCompletedCycle) {
+            batchTimerRef.current = setInterval(() => {
+                setNextBatchIn(prev => {
+                    if (prev <= 1000) {
+                        // Time to fetch new batch
+                        fetchRotatingNews();
+                        return null;
+                    }
+                    return prev - 1000;
+                });
+            }, 1000);
+        }
+
+        return () => {
+            if (batchTimerRef.current) {
+                clearInterval(batchTimerRef.current);
+            }
+        };
+    }, [nextBatchIn, hasCompletedCycle]);
+
+    // Restart rotation when current index changes (unless paused or completed)
+    useEffect(() => {
+        if (!isPaused && !hasCompletedCycle && newsItems.length > 0) {
+            startNewsRotation();
+        }
+
+        return () => clearTimers();
+    }, [currentNewsIndex, isPaused, hasCompletedCycle, newsItems.length]);
+
+    // Initial fetch on component mount
+    useEffect(() => {
+        fetchRotatingNews();
+
+        // Cleanup timers on unmount
+        return () => {
+            clearTimers();
+            if (batchTimerRef.current) {
+                clearInterval(batchTimerRef.current);
+            }
+        };
+    }, []);
+
+    // Handle news item click
+    const handleNewsClick = () => {
+        const currentItem = newsItems[currentNewsIndex];
+        if (currentItem && currentItem.link && currentItem.link !== '#') {
+            window.open(currentItem.link, '_blank', 'noopener,noreferrer');
+        }
+    };
+
+    // Format time duration
+    const formatDuration = (milliseconds) => {
+        const minutes = Math.floor(milliseconds / 60000);
+        const seconds = Math.floor((milliseconds % 60000) / 1000);
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    // Current news item
+    const currentNewsItem = newsItems[currentNewsIndex];
+
+    // Platform stats update (keeping existing logic)
     useEffect(() => {
         const updateStats = () => {
             const baseUsers = 12400;
             const basePosts = 2847;
             const variance = Math.floor(Math.random() * 100);
-            
+
             setPlatformStats({
                 activeUsers: `${((baseUsers + variance) / 1000).toFixed(1)}K`,
                 todaysPosts: (basePosts + variance).toLocaleString(),
@@ -58,26 +259,23 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
         };
 
         updateStats();
-        const interval = setInterval(updateStats, 30000); // Update every 30 seconds
+        const interval = setInterval(updateStats, 30000);
         return () => clearInterval(interval);
     }, []);
 
-    // Scroll to bottom when messages change
+    // Existing AI chat functionality (keeping all existing logic)
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // Handle input change
     const handleInputChange = (e) => {
         setInputText(e.target.value);
     };
 
-    // Handle form submit
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!inputText.trim() || isLoading) return;
 
-        // Add user message
         const userMessage = {
             id: Date.now(),
             type: 'user',
@@ -91,14 +289,12 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
         setHasInteracted(true);
 
         try {
-            // Get token for authentication
             const token = localStorage.getItem('token');
             const headers = {
                 'Content-Type': 'application/json',
                 ...(token ? { 'Authorization': `Bearer ${token}` } : {})
             };
 
-            // Prepare the request
             const response = await fetch('/api/ai/claude', {
                 method: 'POST',
                 headers,
@@ -119,7 +315,6 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
 
             const data = await response.json();
 
-            // Add AI response message
             const aiResponse = {
                 id: Date.now() + 1,
                 type: 'ai',
@@ -132,7 +327,6 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
             console.error('Error communicating with AI:', err);
             setError(err.message || 'Failed to get a response');
 
-            // Add error message
             const errorMessage = {
                 id: Date.now() + 1,
                 type: 'error',
@@ -145,7 +339,6 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
         }
     };
 
-    // Suggest questions for the AI
     const getSuggestedQuestions = () => {
         return [
             "What discussions are trending right now?",
@@ -155,7 +348,6 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
         ];
     };
 
-    // Use a suggested question
     const useSuggestion = (suggestion) => {
         setInputText(suggestion);
         if (textareaRef.current) {
@@ -163,7 +355,6 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
         }
     };
 
-    // Handle quick action buttons
     const handleQuickAction = (action) => {
         switch (action) {
             case 'explore':
@@ -185,41 +376,16 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
 
     return (
         <div className={styles.rightSidebarScrollable}>
-            {/* Chat messages with new dashboard section */}
             <div className={styles.chatMessages}>
-                {/* New Dashboard Section */}
+                {/* Dashboard Section */}
                 <div className={styles.dashboardSection}>
-                    {/* Platform Stats */}
-                    <div className={styles.statsContainer}>
-                        <h3 className={styles.sectionTitle}>Platform Pulse</h3>
-                        <div className={styles.statsGrid}>
-                            <div className={styles.statItem}>
-                                <div className={styles.statNumber}>{platformStats.activeUsers}</div>
-                                <div className={styles.statLabel}>Active Now</div>
-                            </div>
-                            <div className={styles.statItem}>
-                                <div className={styles.statNumber}>{platformStats.todaysPosts}</div>
-                                <div className={styles.statLabel}>Today's Posts</div>
-                            </div>
-                        </div>
-                        <div className={styles.trendingTopic}>
-                            <span className={styles.trendingLabel}>🔥 Trending:</span>
-                            <span className={styles.trendingText}>{platformStats.trendingTopic}</span>
-                        </div>
-                    </div>
 
-                    {/* Daily Insight */}
-                    <div className={styles.insightContainer}>
-                        <div className={styles.dailyInsight}>
-                            {dailyInsight}
-                        </div>
-                    </div>
 
                     {/* Quick Actions */}
                     <div className={styles.quickActions}>
                         <h4 className={styles.actionTitle}>Quick Actions</h4>
                         <div className={styles.actionButtons}>
-                            <button 
+                            <button
                                 className={styles.actionButton}
                                 onClick={() => handleQuickAction('explore')}
                             >
@@ -229,7 +395,7 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
                                 </svg>
                                 Explore
                             </button>
-                            <button 
+                            <button
                                 className={styles.actionButton}
                                 onClick={() => handleQuickAction('trending')}
                             >
@@ -240,7 +406,7 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
                                 </svg>
                                 Trending
                             </button>
-                            <button 
+                            <button
                                 className={styles.actionButton}
                                 onClick={() => handleQuickAction('create')}
                             >
@@ -252,9 +418,128 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
                             </button>
                         </div>
                     </div>
+
+
+                    {/* Rotating News Section */}
+                    <div className={styles.rotatingNewsContainer}>
+                        <div className={styles.newsHeader}>
+                            <h4 className={styles.newsTitle}>
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className={styles.radioIcon}
+                                >
+                                    <circle cx="12" cy="12" r="2"></circle>
+                                    <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path>
+                                </svg>
+                                Live Radio
+                            </h4>
+                            <div className={styles.newsCounter}>
+                                {newsItems.length > 0 && (
+                                    <span>{currentNewsIndex + 1} of {newsItems.length}</span>
+                                )}
+                            </div>
+                        </div>
+
+                        {newsLoading && newsItems.length === 0 ? (
+                            <div className={styles.newsLoading}>
+                                <div className={styles.loadingSpinner}></div>
+                                <span>Loading news rotation...</span>
+                            </div>
+                        ) : newsError && newsItems.length === 0 ? (
+                            <div className={styles.newsError}>
+                                <span>Failed to load news</span>
+                                <button onClick={fetchRotatingNews} className={styles.retryButton}>
+                                    Retry
+                                </button>
+                            </div>
+                        ) : currentNewsItem ? (
+                            <div className={styles.currentNewsItem}>
+                                {/* Progress Bar */}
+                                <div className={styles.progressContainer}>
+                                    <div
+                                        className={styles.progressBar}
+                                        style={{ width: `${progress}%` }}
+                                    ></div>
+                                </div>
+
+                                {/* News Content */}
+                                <div
+                                    className={styles.newsContent}
+                                    onClick={handleNewsClick}
+                                >
+                                    <div className={styles.newsItemTitle}>
+                                        {currentNewsItem.title}
+                                    </div>
+                                    <div className={styles.newsItemMeta}>
+                                        <span className={styles.newsSource}>{currentNewsItem.source}</span>
+                                        <span className={styles.newsDot}>•</span>
+                                        <span className={styles.newsCategory}>{currentNewsItem.category}</span>
+                                    </div>
+                                </div>
+
+                                {/* Controls */}
+                                <div className={styles.newsControls}>
+                                    <button
+                                        className={styles.controlButton}
+                                        onClick={skipToPrevious}
+                                        title="Previous"
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <polygon points="19,20 9,12 19,4"></polygon>
+                                            <line x1="5" y1="19" x2="5" y2="5"></line>
+                                        </svg>
+                                    </button>
+
+                                    <button
+                                        className={styles.controlButton}
+                                        onClick={togglePause}
+                                        title={isPaused ? "Resume" : "Pause"}
+                                    >
+                                        {isPaused ? (
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <polygon points="5,3 19,12 5,21"></polygon>
+                                            </svg>
+                                        ) : (
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <rect x="6" y="4" width="4" height="16"></rect>
+                                                <rect x="14" y="4" width="4" height="16"></rect>
+                                            </svg>
+                                        )}
+                                    </button>
+
+                                    <button
+                                        className={styles.controlButton}
+                                        onClick={skipToNext}
+                                        title="Next"
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <polygon points="5,4 15,12 5,20"></polygon>
+                                            <line x1="19" y1="5" x2="19" y2="19"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                {/* Next Batch Info */}
+                                {hasCompletedCycle && nextBatchIn && (
+                                    <div className={styles.nextBatchInfo}>
+                                        <span>Next batch in: {formatDuration(nextBatchIn)}</span>
+                                    </div>
+                                )}
+                            </div>
+                        ) : null}
+                    </div>
+
+
                 </div>
 
-                {/* AI messages */}
+                {/* AI messages (keeping existing functionality) */}
                 {messages.map((message) => (
                     message.type !== 'system' && (
                         <div
@@ -296,7 +581,7 @@ export default function ClaudeSidebar({ user, containerRef, rightSidebarWidth, i
                 </div>
             )}
 
-            {/* Chat input at the bottom of the sidebar */}
+            {/* Chat input (keeping existing functionality) */}
             <form onSubmit={handleSubmit} className={styles.chatInputContainer}>
                 <div className={styles.chatInputWrapper}>
                     <textarea

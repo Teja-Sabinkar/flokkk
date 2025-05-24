@@ -382,3 +382,389 @@
     }
 
 }
+
+/* Rotating News Container */
+.rotatingNewsContainer {
+    background-color: #171717;
+    border-radius: 8px;
+    padding: 16px 16px 8px 16px;
+    border: 1px solid #2a2a2a;
+    min-height: 120px;
+}
+
+.newsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.newsTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.newsCounter {
+    font-size: 11px;
+    color: #888;
+    background-color: #2a2a2a;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+/* Current News Item */
+.currentNewsItem {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Progress Bar */
+.progressContainer {
+    width: 100%;
+    height: 3px;
+    background-color: #333;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progressBar {
+    height: 100%;
+    background: linear-gradient(90deg, #4169e1, #5577ff);
+    border-radius: 2px;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 8px rgba(65, 105, 225, 0.4);
+}
+
+/* News Content */
+.newsContent {
+    padding: 12px;
+    background-color: #1e1e1e;
+    border-radius: 6px;
+    border: 1px solid #333;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.newsContent:hover {
+    background-color: #252525;
+    border-color: #4169e1;
+    transform: translateY(-1px);
+}
+
+.newsItemTitle {
+    font-size: 13px;
+    color: #e0e0e0;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    font-weight: 500;
+    
+    /* Limit to 3 lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.newsItemMeta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    gap: 8px;
+}
+
+.newsMetaLeft {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0; /* Allows text to truncate if needed */
+}
+
+.newsSource {
+    color: #4169e1;
+    font-weight: 500;
+}
+
+.newsDot {
+    color: #666;
+}
+
+.newsCategory {
+    color: #aaa;
+}
+
+.clickToReadButton {
+    background-color: rgba(65, 105, 225, 0.15);
+    color: #4169e1;
+    border: 1px solid rgba(65, 105, 225, 0.3);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.clickToReadButton:hover {
+    background-color: rgba(65, 105, 225, 0.25);
+    border-color: rgba(65, 105, 225, 0.5);
+    color: #5577ff;
+    transform: translateY(-1px);
+}
+
+.clickToReadButton:focus {
+    outline: 2px solid #4169e1;
+    outline-offset: 1px;
+}
+
+.clickToReadButton:active {
+    transform: translateY(0);
+}
+
+/* News Controls */
+.newsControls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.controlButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 50%;
+    color: #ccc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.controlButton:hover {
+    background-color: #4169e1;
+    border-color: #5577ff;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.controlButton:active {
+    transform: scale(0.95);
+}
+
+/* Next Batch Info */
+.nextBatchInfo {
+    text-align: center;
+    padding: 8px 12px;
+    background-color: rgba(65, 105, 225, 0.1);
+    border: 1px solid rgba(65, 105, 225, 0.2);
+    border-radius: 6px;
+    font-size: 12px;
+    color: #4169e1;
+    font-weight: 500;
+}
+
+/* Loading and Error States */
+.newsLoading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 40px 20px;
+    color: #aaa;
+    font-size: 13px;
+}
+
+.loadingSpinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #333;
+    border-top: 2px solid #4169e1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.newsError {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 40px 20px;
+    color: #ff6b6b;
+    font-size: 13px;
+    text-align: center;
+}
+
+.retryButton {
+    background-color: rgba(65, 105, 225, 0.2);
+    color: #4169e1;
+    border: 1px solid rgba(65, 105, 225, 0.3);
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.retryButton:hover {
+    background-color: rgba(65, 105, 225, 0.3);
+}
+
+/* Animations */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.currentNewsItem {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .rotatingNewsContainer {
+        padding: 12px;
+    }
+
+    .newsHeader {
+        margin-bottom: 10px;
+    }
+
+    .newsTitle {
+        font-size: 13px;
+    }
+
+    .newsCounter {
+        font-size: 10px;
+        padding: 1px 6px;
+    }
+
+    .newsContent {
+        padding: 10px;
+    }
+
+    .newsItemTitle {
+        font-size: 12px;
+        -webkit-line-clamp: 2; /* Reduce to 2 lines on mobile */
+    }
+
+    .newsItemMeta {
+        font-size: 10px;
+        gap: 6px;
+    }
+
+    .newsMetaLeft {
+        gap: 4px;
+    }
+
+    .clickToReadButton {
+        padding: 2px 6px;
+        font-size: 9px;
+    }
+
+    .controlButton {
+        width: 28px;
+        height: 28px;
+    }
+
+    .controlButton svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .newsControls {
+        gap: 8px;
+    }
+
+    .nextBatchInfo {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+}
+
+/* Dark mode enhancements */
+.progressBar {
+    /* Add subtle glow effect */
+    box-shadow: 
+        0 0 8px rgba(65, 105, 225, 0.4),
+        0 0 16px rgba(65, 105, 225, 0.2);
+}
+
+/* Hover effects for better UX */
+.newsContent {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.newsContent::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(65, 105, 225, 0.1),
+        transparent
+    );
+    transition: left 0.5s ease;
+}
+
+.newsContent:hover::before {
+    left: 100%;
+}
+
+/* Accessibility improvements */
+.controlButton:focus {
+    outline: 2px solid #4169e1;
+    outline-offset: 2px;
+}
+
+.newsContent:focus {
+    outline: 2px solid #4169e1;
+    outline-offset: 2px;
+}
+
+/* Smooth transitions for state changes */
+.rotatingNewsContainer * {
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Progress bar active state */
+.progressBar.active {
+    background: linear-gradient(90deg, #4169e1, #5577ff, #4169e1);
+    background-size: 200% 100%;
+    animation: progressShimmer 2s linear infinite;
+}
+
+@keyframes progressShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
