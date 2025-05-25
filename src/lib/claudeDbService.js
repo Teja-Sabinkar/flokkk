@@ -5,6 +5,7 @@ import User from '@/models/User';
 import Post from '@/models/Post';
 import CommunityPost from '@/models/CommunityPost';
 import Forum from '@/models/Forum';
+import LinkContribution from '@/models/LinkContribution';
 
 /**
  * Service to safely query MongoDB for Claude AI
@@ -27,6 +28,369 @@ export const claudeDbService = {
       console.error('Error initializing Claude DB service:', error);
       return false;
     }
+  },
+
+  /**
+   * NEW: Find similar content by keywords with relevance scoring (70% match)
+   * @param {Array} keywords - Array of keywords to search for
+   * @param {number} limit - Maximum number of results to return
+   */
+  async findSimilarByKeywords(keywords, limit = 10) {
+    try {
+      if (!keywords || keywords.length === 0) return { posts: [], links: [], comments: [] };
+
+      await this.init();
+
+      const { db } = await connectToDatabase();
+      const requiredMatches = Math.ceil(keywords.length * 0.7); // 70% threshold
+
+      console.log(`Searching with ${keywords.length} keywords, requiring ${requiredMatches} matches`);
+
+      // Create regex patterns for each keyword
+      const keywordRegexes = keywords.map(keyword => new RegExp(keyword, 'i'));
+
+      // Build aggregation pipeline for posts
+      const postsAggregation = [
+        {
+          $match: {
+            $or: [
+              { title: { $in: keywordRegexes } },
+              { content: { $in: keywordRegexes } },
+              { hashtags: { $in: keywords.map(k => k.toLowerCase()) } }
+            ]
+          }
+        },
+        {
+          $addFields: {
+            relevanceScore: {
+              $add: [
+                // Score for title matches
+                {
+                  $size: {
+                    $filter: {
+                      input: keywordRegexes,
+                      cond: { $regexMatch: { input: "$title", regex: "$$this" } }
+                    }
+                  }
+                },
+                // Score for content matches
+                {
+                  $size: {
+                    $filter: {
+                      input: keywordRegexes,
+                      cond: { $regexMatch: { input: "$content", regex: "$$this" } }
+                    }
+                  }
+                },
+                // Score for hashtag matches
+                {
+                  $size: {
+                    $setIntersection: [
+                      "$hashtags",
+                      keywords.map(k => k.toLowerCase())
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          $match: {
+            relevanceScore: { $gte: requiredMatches }
+          }
+        },
+        {
+          $sort: { relevanceScore: -1, createdAt: -1 }
+        },
+        {
+          $limit: limit
+        }
+      ];
+
+      const posts = await db.collection('posts').aggregate(postsAggregation).toArray();
+
+      // Format posts
+      const formattedPosts = posts.map(post => ({
+        id: post._id.toString(),
+        title: post.title,
+        content: post.content?.substring(0, 200) + (post.content?.length > 200 ? '...' : ''),
+        username: post.username,
+        hashtags: post.hashtags,
+        createdAt: post.createdAt,
+        discussions: post.discussions || 0,
+        linkCount: (post.creatorLinks?.length || 0) + (post.communityLinks?.length || 0),
+        relevanceScore: post.relevanceScore
+      }));
+
+      // Search for relevant links in LinkContribution collection
+      const linkContributions = await db.collection('linkcontributions').aggregate([
+        {
+          $match: {
+            $or: [
+              { title: { $in: keywordRegexes } },
+              { description: { $in: keywordRegexes } },
+              { url: { $in: keywordRegexes } }
+            ],
+            status: 'approved'
+          }
+        },
+        {
+          $addFields: {
+            relevanceScore: {
+              $add: [
+                {
+                  $size: {
+                    $filter: {
+                      input: keywordRegexes,
+                      cond: { $regexMatch: { input: "$title", regex: "$$this" } }
+                    }
+                  }
+                },
+                {
+                  $size: {
+                    $filter: {
+                      input: keywordRegexes,
+                      cond: { $regexMatch: { input: "$description", regex: "$$this" } }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          $match: {
+            relevanceScore: { $gte: Math.max(1, Math.ceil(keywords.length * 0.5)) } // Lower threshold for links
+          }
+        },
+        {
+          $sort: { relevanceScore: -1, createdAt: -1 }
+        },
+        {
+          $limit: limit
+        }
+      ]).toArray();
+
+      // Format links
+      const formattedLinks = linkContributions.map(link => ({
+        id: link._id.toString(),
+        title: link.title,
+        url: link.url,
+        description: link.description || '',
+        contributorUsername: link.contributorUsername,
+        votes: 0, // LinkContribution doesn't have votes, would need to look up in post
+        postId: link.postId?.toString(),
+        relevanceScore: link.relevanceScore
+      }));
+
+      // Search for relevant comments
+      const comments = await this.searchComments(keywords.join(' '), Math.min(5, limit));
+
+      console.log(`Found ${formattedPosts.length} posts, ${formattedLinks.length} links, ${comments.length} comments`);
+
+      return {
+        posts: formattedPosts,
+        links: formattedLinks,
+        comments: comments
+      };
+    } catch (error) {
+      console.error('Error finding similar content by keywords:', error);
+      return { posts: [], links: [], comments: [] };
+    }
+  },
+
+  /**
+   * NEW: Find top discussions based on engagement metrics
+   * @param {Array} keywords - Keywords to filter by
+   * @param {number} limit - Maximum number of results
+   */
+  async findTopDiscussions(keywords, limit = 5) {
+    try {
+      if (!keywords || keywords.length === 0) return [];
+
+      await this.init();
+      const { db } = await connectToDatabase();
+      
+      const keywordRegexes = keywords.map(keyword => new RegExp(keyword, 'i'));
+      const requiredMatches = Math.ceil(keywords.length * 0.7);
+
+      const discussions = await db.collection('posts').aggregate([
+        {
+          $match: {
+            $or: [
+              { title: { $in: keywordRegexes } },
+              { content: { $in: keywordRegexes } },
+              { hashtags: { $in: keywords.map(k => k.toLowerCase()) } }
+            ]
+          }
+        },
+        {
+          $addFields: {
+            relevanceScore: {
+              $add: [
+                {
+                  $size: {
+                    $filter: {
+                      input: keywordRegexes,
+                      cond: { $regexMatch: { input: "$title", regex: "$$this" } }
+                    }
+                  }
+                },
+                {
+                  $size: {
+                    $filter: {
+                      input: keywordRegexes,
+                      cond: { $regexMatch: { input: "$content", regex: "$$this" } }
+                    }
+                  }
+                },
+                {
+                  $size: {
+                    $setIntersection: [
+                      "$hashtags",
+                      keywords.map(k => k.toLowerCase())
+                    ]
+                  }
+                }
+              ]
+            },
+            engagementScore: {
+              $add: [
+                { $ifNull: ["$discussions", 0] },
+                { $multiply: [{ $size: { $ifNull: ["$creatorLinks", []] } }, 2] },
+                { $multiply: [{ $size: { $ifNull: ["$communityLinks", []] } }, 2] }
+              ]
+            }
+          }
+        },
+        {
+          $match: {
+            relevanceScore: { $gte: requiredMatches }
+          }
+        },
+        {
+          $sort: { engagementScore: -1, relevanceScore: -1 }
+        },
+        {
+          $limit: limit
+        }
+      ]).toArray();
+
+      return discussions.map(post => ({
+        id: post._id.toString(),
+        title: post.title,
+        username: post.username,
+        discussions: post.discussions || 0,
+        linkCount: (post.creatorLinks?.length || 0) + (post.communityLinks?.length || 0),
+        engagementScore: post.engagementScore,
+        relevanceScore: post.relevanceScore,
+        createdAt: post.createdAt
+      }));
+    } catch (error) {
+      console.error('Error finding top discussions:', error);
+      return [];
+    }
+  },
+
+  /**
+   * NEW: Find top links based on vote count and relevance
+   * @param {Array} keywords - Keywords to filter by
+   * @param {number} limit - Maximum number of results
+   */
+  async findTopLinks(keywords, limit = 5) {
+    try {
+      if (!keywords || keywords.length === 0) return [];
+
+      await this.init();
+      const { db } = await connectToDatabase();
+
+      // Search in both post creatorLinks and communityLinks
+      const posts = await db.collection('posts').find({
+        $or: [
+          { "creatorLinks.title": { $in: keywords.map(k => new RegExp(k, 'i')) } },
+          { "creatorLinks.description": { $in: keywords.map(k => new RegExp(k, 'i')) } },
+          { "communityLinks.title": { $in: keywords.map(k => new RegExp(k, 'i')) } },
+          { "communityLinks.description": { $in: keywords.map(k => new RegExp(k, 'i')) } }
+        ]
+      }).toArray();
+
+      const allLinks = [];
+
+      posts.forEach(post => {
+        // Process creator links
+        if (post.creatorLinks && Array.isArray(post.creatorLinks)) {
+          post.creatorLinks.forEach((link, index) => {
+            const relevanceScore = this.calculateLinkRelevance(link, keywords);
+            if (relevanceScore >= Math.ceil(keywords.length * 0.5)) { // 50% threshold for links
+              allLinks.push({
+                id: `${post._id.toString()}-creator-${index}`,
+                title: link.title,
+                url: link.url,
+                description: link.description || '',
+                votes: link.voteCount || 0,
+                contributorUsername: post.username,
+                postId: post._id.toString(),
+                type: 'creator',
+                relevanceScore
+              });
+            }
+          });
+        }
+
+        // Process community links
+        if (post.communityLinks && Array.isArray(post.communityLinks)) {
+          post.communityLinks.forEach((link, index) => {
+            const relevanceScore = this.calculateLinkRelevance(link, keywords);
+            if (relevanceScore >= Math.ceil(keywords.length * 0.5)) {
+              allLinks.push({
+                id: `${post._id.toString()}-community-${index}`,
+                title: link.title,
+                url: link.url,
+                description: link.description || '',
+                votes: link.votes || 0,
+                contributorUsername: link.contributorUsername,
+                postId: post._id.toString(),
+                type: 'community',
+                relevanceScore
+              });
+            }
+          });
+        }
+      });
+
+      // Sort by votes (descending) and then by relevance
+      allLinks.sort((a, b) => {
+        if (b.votes !== a.votes) return b.votes - a.votes;
+        return b.relevanceScore - a.relevanceScore;
+      });
+
+      return allLinks.slice(0, limit);
+    } catch (error) {
+      console.error('Error finding top links:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Helper function to calculate link relevance score
+   * @param {Object} link - Link object
+   * @param {Array} keywords - Keywords to match against
+   */
+  calculateLinkRelevance(link, keywords) {
+    let score = 0;
+    const title = (link.title || '').toLowerCase();
+    const description = (link.description || '').toLowerCase();
+    const url = (link.url || '').toLowerCase();
+
+    keywords.forEach(keyword => {
+      const keywordLower = keyword.toLowerCase();
+      if (title.includes(keywordLower)) score++;
+      if (description.includes(keywordLower)) score++;
+      if (url.includes(keywordLower)) score += 0.5; // URL matches are less relevant
+    });
+
+    return score;
   },
 
   /**

@@ -29,6 +29,9 @@ export default function DiscussionPageRightBar(props) {
   // Enhanced postData for recommendations
   const [enhancedPostData, setEnhancedPostData] = useState(null);
   
+  // NEW: Add suggestion tracking state
+  const [currentSuggestionType, setCurrentSuggestionType] = useState(null);
+  
   // Function to get time-based greeting
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
@@ -68,6 +71,120 @@ export default function DiscussionPageRightBar(props) {
   const [dbDataAvailable, setDbDataAvailable] = useState([]);
   const [hasInteracted, setHasInteracted] = useState(false); 
   const messagesEndRef = useRef(null);
+
+  // NEW: Client-side content extraction functions
+  const extractPageContent = () => {
+    try {
+      // Extract post title
+      const titleElement = document.querySelector('[class*="DiscussionPageCenterTop_postTitle"]') || 
+                          document.querySelector('h1[class*="postTitle"]');
+      const postTitle = titleElement ? titleElement.textContent.trim() : '';
+
+      // Extract post content
+      const contentElement = document.querySelector('[class*="DiscussionPageCenterTop_postContent"]') || 
+                            document.querySelector('[class*="postContent"] p');
+      const postContent = contentElement ? contentElement.textContent.trim() : '';
+
+      // Extract link titles and descriptions
+      const linkTitles = [];
+      const linkDescriptions = [];
+      
+      // Look for link modals or link items
+      const linkTitleElements = document.querySelectorAll('[class*="LinkItemModal_linkTitle"], [class*="linkTitle"]');
+      const linkDescriptionElements = document.querySelectorAll('[class*="LinkItemModal_linkDescription"], [class*="linkDescription"]');
+      
+      linkTitleElements.forEach(element => {
+        if (element.textContent.trim()) {
+          linkTitles.push(element.textContent.trim());
+        }
+      });
+      
+      linkDescriptionElements.forEach(element => {
+        if (element.textContent.trim()) {
+          linkDescriptions.push(element.textContent.trim());
+        }
+      });
+
+      // Extract comment content
+      const commentElements = document.querySelectorAll('[class*="DiscussionPageCenterBottom_commentContent"], [class*="commentContent"]');
+      const comments = [];
+      
+      commentElements.forEach(element => {
+        if (element.textContent.trim() && element.textContent.trim() !== '[deleted]') {
+          comments.push(element.textContent.trim());
+        }
+      });
+
+      return {
+        postTitle,
+        postContent,
+        linkTitles,
+        linkDescriptions,
+        comments: comments.slice(0, 10) // Limit to first 10 comments to avoid huge payloads
+      };
+    } catch (error) {
+      console.error('Error extracting page content:', error);
+      return {
+        postTitle: '',
+        postContent: '',
+        linkTitles: [],
+        linkDescriptions: [],
+        comments: []
+      };
+    }
+  };
+
+  // NEW: Enhanced keyword extraction function
+  const extractKeywordsFromContent = (title, content, hashtags = []) => {
+    if (!title && !content) return [];
+    
+    const STOP_WORDS = new Set([
+      'a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 'to', 'by',
+      'in', 'of', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has',
+      'had', 'do', 'does', 'did', 'can', 'could', 'will', 'would', 'should', 'i',
+      'you', 'he', 'she', 'it', 'we', 'they', 'this', 'that', 'these', 'those',
+      'with', 'from', 'up', 'about', 'into', 'through', 'during', 'before', 'after',
+      'above', 'below', 'between', 'among', 'through', 'during', 'before', 'after'
+    ]);
+    
+    // Combine title, content, and hashtags
+    let combinedText = (title || '') + ' ' + (content || '');
+    if (hashtags && Array.isArray(hashtags)) {
+      combinedText += ' ' + hashtags.join(' ');
+    }
+
+    // Extract words and filter
+    const words = combinedText.toLowerCase()
+      .replace(/[^\w\s]/g, ' ') // Replace punctuation with spaces
+      .split(/\s+/)
+      .filter(word => 
+        word.length > 2 && // At least 3 characters
+        !STOP_WORDS.has(word) && 
+        !(/^\d+$/.test(word)) // Not just numbers
+      );
+
+    // Count word frequency
+    const wordCounts = {};
+    words.forEach(word => {
+      wordCounts[word] = (wordCounts[word] || 0) + 1;
+    });
+
+    // Sort by frequency, then by length
+    const sortedWords = Object.keys(wordCounts).sort((a, b) => {
+      const countDiff = wordCounts[b] - wordCounts[a];
+      return countDiff !== 0 ? countDiff : b.length - a.length;
+    });
+
+    // Prioritize hashtags
+    const hashtagKeywords = hashtags
+      .map(tag => tag.replace(/^#/, '').toLowerCase())
+      .filter(tag => tag.length > 1);
+      
+    // Combine and deduplicate
+    const combinedKeywords = [...new Set([...hashtagKeywords, ...sortedWords])];
+    
+    return combinedKeywords.slice(0, 15); // Return up to 15 keywords
+  };
 
   // Effect to check and update mobile view state
   useEffect(() => {
@@ -114,8 +231,7 @@ export default function DiscussionPageRightBar(props) {
       hashtags: mergedData.hashtags || mergedData.tags || [],
       tags: mergedData.tags || mergedData.hashtags || [],
       // Map username and author to each other
-      username: mergedData.username || mergedData.author || '',
-      author: mergedData.author || mergedData.username || ''
+      username: mergedData.username || mergedData.author || ''
     };
     
     setEnhancedPostData(normalizedData);
@@ -285,9 +401,9 @@ export default function DiscussionPageRightBar(props) {
           try {
             // Send the same query again but with appropriate showMore flags
             if (type === 'db') {
-              await sendMessageToAI(originalQuery, true, false);
+              await sendMessageToAI(originalQuery, true, false, 'manual');
             } else if (type === 'ai') {
-              await sendMessageToAI(originalQuery, false, true);
+              await sendMessageToAI(originalQuery, false, true, 'manual');
             }
           } catch (err) {
             console.error('Error loading more results:', err);
@@ -403,6 +519,14 @@ export default function DiscussionPageRightBar(props) {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    
+    // Determine source based on suggestion tracking
+    const source = currentSuggestionType ? 'suggestion' : 'manual';
+    const suggestionType = currentSuggestionType || null;
+    
+    // Clear suggestion tracking
+    setCurrentSuggestionType(null);
+    
     setInputText('');
     setIsLoading(true);
     setError(null);
@@ -418,7 +542,7 @@ export default function DiscussionPageRightBar(props) {
     }
 
     try {
-      await sendMessageToAI(inputText);
+      await sendMessageToAI(inputText, false, false, source, suggestionType);
     } catch (err) {
       console.error('Error communicating with AI:', err);
       setError(err.message || 'Failed to get a response from Claude AI');
@@ -436,7 +560,7 @@ export default function DiscussionPageRightBar(props) {
     }
   };
 
-  const sendMessageToAI = async (message, showMoreDb = false, showMoreAi = false) => {
+  const sendMessageToAI = async (message, showMoreDb = false, showMoreAi = false, source = 'manual', suggestionType = null) => {
     // Enhanced context preparation using both passed postData and enhanced data
     let context = '';
     const contextData = enhancedPostData || postData;
@@ -460,8 +584,28 @@ export default function DiscussionPageRightBar(props) {
       }
     }
 
-    // Extract potential database commands from the message
-    const dataCommands = extractDataCommands(message);
+    // NEW: Add extracted content for suggestions
+    let extractedContent = null;
+    if (source === 'suggestion') {
+      extractedContent = extractPageContent();
+    }
+
+    // NEW: Extract keywords for suggestions and manual queries
+    let keywords = [];
+    if (source === 'suggestion' && suggestionType === 'similar') {
+      // For similar topics suggestion, extract keywords from post
+      keywords = extractKeywordsFromContent(
+        contextData?.title || '', 
+        contextData?.content || '', 
+        contextData?.hashtags || contextData?.tags || []
+      );
+    } else if (source === 'manual') {
+      // For manual queries, extract keywords from user message
+      keywords = extractKeywordsFromContent(message, '', []);
+    }
+
+    // Extract potential database commands from the message (only for non-suggestion queries)
+    const dataCommands = source === 'suggestion' ? [] : extractDataCommands(message);
 
     // Get authentication token
     const token = localStorage.getItem('token');
@@ -479,7 +623,12 @@ export default function DiscussionPageRightBar(props) {
         username: user?.username || 'Anonymous User',
         dataCommands: dataCommands,
         showMoreDb: showMoreDb,
-        showMoreAi: showMoreAi
+        showMoreAi: showMoreAi,
+        // NEW: Add suggestion tracking and extracted content
+        source: source,
+        suggestionType: suggestionType,
+        extractedContent: extractedContent,
+        keywords: keywords
       })
     };
 
@@ -554,7 +703,7 @@ export default function DiscussionPageRightBar(props) {
     }
   };
 
-  // Suggest questions based on post content
+  // MODIFIED: Suggest questions based on post content (removed 2 suggestions)
   const getSuggestedQuestions = () => {
     const contextData = enhancedPostData || postData;
     if (!contextData) return [];
@@ -565,17 +714,22 @@ export default function DiscussionPageRightBar(props) {
 
     const suggestions = [
       `Can you summarize ${titleFragment}?`,
-      "What are the key points in this discussion?",
-      "Can you help me understand this topic better?",
       "What similar topics might I be interested in?"
     ];
 
     return suggestions;
   };
 
-  // Use a suggested question
+  // MODIFIED: Use a suggested question with tracking
   const useSuggestion = (suggestion) => {
     setInputText(suggestion);
+    
+    // NEW: Track suggestion type
+    if (suggestion.includes('summarize')) {
+      setCurrentSuggestionType('summarize');
+    } else if (suggestion.includes('similar topics')) {
+      setCurrentSuggestionType('similar');
+    }
     
     // Expand the input for the suggestion
     setIsExpanded(true);
