@@ -13,6 +13,7 @@
     "@vercel/analytics": "^1.5.0",
     "@vercel/blob": "^1.0.1",
     "bcryptjs": "^3.0.2",
+    "crypto": "^1.0.1",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "jsonwebtoken": "^9.0.2",

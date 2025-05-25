@@ -1,5 +1,9 @@
-// src/app/api/cron/daily-rss/route.js - Daily RSS Cron Job
+// src/app/api/cron/daily-rss/route.js - Daily RSS Cron Job with Cleanup
 import { NextResponse } from 'next/server';
+
+// NEW: Import cleanup services
+import { rateLimiter } from '@/lib/rateLimiting';
+import { responseCache } from '@/lib/responseCache';
 
 export async function GET(request) {
     try {
@@ -34,12 +38,41 @@ export async function GET(request) {
         }
 
         const data = await response.json();
+        
+        // NEW: Add cleanup tasks after RSS fetch
+        console.log('🧹 Running daily cleanup tasks...');
+        const cleanupResults = {
+            rateLimit: 'completed',
+            cache: 0,
+            errors: []
+        };
+
+        try {
+            // Clean up rate limiting records
+            await rateLimiter.cleanup();
+            console.log('✅ Rate limit cleanup completed');
+        } catch (rateLimitError) {
+            console.error('❌ Rate limit cleanup failed:', rateLimitError);
+            cleanupResults.errors.push(`Rate limit cleanup: ${rateLimitError.message}`);
+        }
+
+        try {
+            // Clean up expired cache entries
+            const deletedCacheCount = await responseCache.cleanup();
+            cleanupResults.cache = deletedCacheCount;
+            console.log(`✅ Cache cleanup completed: ${deletedCacheCount} entries removed`);
+        } catch (cacheError) {
+            console.error('❌ Cache cleanup failed:', cacheError);
+            cleanupResults.errors.push(`Cache cleanup: ${cacheError.message}`);
+        }
+
         const duration = Date.now() - startTime;
 
         if (data.success) {
             console.log('✅ Daily RSS Cron Job Completed Successfully');
             console.log(`📊 Duration: ${duration}ms, Items: ${data.totalItems}`);
             console.log(`🔄 Rotation: ${data.rotationTime?.totalHours}h total, ${data.rotationTime?.secondsPerItem}s per item`);
+            console.log(`🧹 Cleanup: ${cleanupResults.cache} cache entries removed, ${cleanupResults.errors.length} errors`);
 
             return NextResponse.json({
                 success: true,
@@ -52,6 +85,8 @@ export async function GET(request) {
                 sourceBreakdown: data.sourceBreakdown,
                 categoryBreakdown: data.categoryBreakdown,
                 nextFetch: data.nextFetch,
+                // NEW: Add cleanup results to response
+                cleanup: cleanupResults,
                 timestamp: new Date().toISOString()
             });
 
@@ -64,6 +99,8 @@ export async function GET(request) {
                 error: 'Failed to update daily RSS batch',
                 message: data.message,
                 duration: `${duration}ms`,
+                // NEW: Include cleanup results even on failure
+                cleanup: cleanupResults,
                 timestamp: new Date().toISOString()
             }, { status: 500 });
         }
@@ -97,12 +134,28 @@ export async function POST(request) {
 
         const data = await response.json();
 
+        // NEW: Also run cleanup on manual trigger
+        console.log('🧹 Running manual cleanup...');
+        let cleanupResults = { rateLimit: 'completed', cache: 0, errors: [] };
+        
+        try {
+            await rateLimiter.cleanup();
+            const deletedCacheCount = await responseCache.cleanup();
+            cleanupResults.cache = deletedCacheCount;
+            console.log(`🧹 Manual cleanup: ${deletedCacheCount} cache entries removed`);
+        } catch (cleanupError) {
+            console.error('Manual cleanup error:', cleanupError);
+            cleanupResults.errors.push(cleanupError.message);
+        }
+
         return NextResponse.json({
             success: data.success,
             message: data.success ? 'Manual daily refresh completed' : 'Manual daily refresh failed',
             totalItems: data.totalItems || 0,
             rotationTime: data.rotationTime || null,
             sourceBreakdown: data.sourceBreakdown || {},
+            // NEW: Include cleanup results
+            cleanup: cleanupResults,
             error: data.message || null
         });
 
