@@ -1,5 +1,6 @@
-// src/components/ai/ClaudeSidebar.js - Enhanced with full feature parity
+// src/components/ai/ClaudeSidebar.js - Enhanced with home page elements integrated and two-line prompt
 import { useState, useEffect, useRef } from 'react';
+import RecentlyViewed from '@/components/home/RecentlyViewed';
 import styles from './ClaudeSidebar.module.css';
 
 export default function ClaudeSidebar({ 
@@ -49,6 +50,33 @@ export default function ClaudeSidebar({
     // Constants
     const NEWS_ITEM_DURATION = 60000;
     const PROGRESS_UPDATE_INTERVAL = 100;
+
+    // Check if we're on the home page
+    const isHomePage = homePageContext && homePageContext.isHomePage;
+
+    // HomePage-specific: Function to get time-based greeting
+    const getTimeBasedGreeting = () => {
+        const hour = new Date().getHours();
+
+        if (hour >= 5 && hour < 12) {
+            return "Good Morning";
+        } else if (hour >= 12 && hour < 17) {
+            return "Good Afternoon";
+        } else if (hour >= 17 && hour < 21) {
+            return "Good Evening";
+        } else if (hour >= 21 && hour < 24) {
+            return "Good Late Evening";
+        } else {
+            return "Good Early Morning";
+        }
+    };
+
+    // HomePage-specific: Format username for greeting with larger time-based greeting
+    const getUserGreeting = () => {
+        const username = user?.username || 'there';
+        const timeGreeting = getTimeBasedGreeting();
+        return `Hi @${username}<br/><span style="font-size: 2em; font-weight: 500;">${timeGreeting}</span>`;
+    };
 
     // NEW: Build enhanced context for ClaudeSidebar with HomePage-specific additions
     const buildEnhancedContext = () => {
@@ -614,6 +642,7 @@ export default function ClaudeSidebar({
     };
 
     // NEW: Enhanced suggested questions based on context with HomePage-specific suggestions
+    // (Function kept for potential future use but currently not used)
     const getSuggestedQuestions = () => {
         let baseQuestions = [];
         
@@ -655,6 +684,7 @@ export default function ClaudeSidebar({
         return baseQuestions.slice(0, 4); // Keep only 4 suggestions
     };
 
+    // Function kept for potential future use but currently not used
     const useSuggestion = (suggestion) => {
         setInputText(suggestion);
         if (textareaRef.current) {
@@ -684,8 +714,28 @@ export default function ClaudeSidebar({
     return (
         <div className={styles.rightSidebarScrollable}>
             <div className={styles.chatMessages}>
+                {/* NEW: Home Page Specific Elements - Only show on home page */}
+                {isHomePage && (
+                    <>
+                        {/* Recently Viewed Section */}
+                        <div className={styles.homePageRecentlyViewed}>
+                            <RecentlyViewed initialItemCount={3} />
+                        </div>
+
+                        {/* Chat Divider */}
+                        <div className={styles.homePageChatDivider}>
+                            <div className={styles.chatDividerLine}></div>
+                        </div>
+
+                        {/* Time-based Greeting */}
+                        <div className={styles.homePageSectionHeader}>
+                            <div dangerouslySetInnerHTML={{ __html: getUserGreeting() }} />
+                        </div>
+                    </>
+                )}
+
                 {/* Conditionally render Dashboard Section - Hide on HomePage when RecentlyViewed is external */}
-                {!hideRecentlyViewed && (
+                {!isHomePage && (
                     <div className={styles.dashboardSection}>
                         {/* Rotating News Section */}
                         <div className={styles.rotatingNewsContainer}>
@@ -873,19 +923,12 @@ export default function ClaudeSidebar({
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Enhanced suggested questions when no interaction yet */}
+            {/* Simple prompt text when no interaction yet */}
             {!hasInteracted && !isLoading && (
                 <div className={styles.suggestionsContainer}>
-                    <div className={styles.suggestionsList}>
-                        {getSuggestedQuestions().map((question, index) => (
-                            <button
-                                key={index}
-                                className={styles.suggestionButton}
-                                onClick={() => useSuggestion(question)}
-                            >
-                                {question}
-                            </button>
-                        ))}
+                    <div className={styles.promptText}>
+                        <div className={styles.promptFirstLine}>Something on your mind?</div>
+                        <div className={styles.promptSecondLine}>Ask Flock</div>
                     </div>
                 </div>
             )}

@@ -140,14 +140,6 @@
   /* Ensure padding is included in width calculation */
 }
 
-/* Section title for sidebar components */
-.sectionTitle {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 16px 0;
-  color: #fff;
-}
-
 /* Mobile overlay for sidebar toggle */
 .mobileOverlay {
   display: none;
@@ -189,274 +181,6 @@
   height: 100px;
   background-color: #4169e1;
   border-radius: 4px;
-}
-
-/* Chat Messages CSS */
-.chatMessages {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  margin-bottom: 0;
-  flex: 1;
-  overflow-y: auto;
-  width: 100%;
-  box-sizing: border-box;
-  /* Ensure padding is included in width calculation */
-  scrollbar-width: none;
-}
-
-.recentlyViewedWrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-bottom: 12px;
-}
-
-
-
-/* Fix any padding issues in the right sidebar elements */
-.rightSidebarScrollable>* {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Chat divider to separate RecentlyViewed from AI messages */
-
-.chatMessage {
-  padding: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  animation: fadeIn 0.3s ease;
-  border-radius: 12px;
-  position: relative;
-}
-
-.system {
-  color: #a1a1a1;
-  padding: 10px 14px;
-  background-color: transparent;
-  font-size: 13px;
-  text-align: center;
-  max-width: 80%;
-  margin: 0px auto;
-}
-
-.user {
-  background-color: #2962FF;
-  align-self: flex-end;
-  max-width: 85%;
-  padding: 12px 16px;
-  color: white;
-}
-
-.ai {
-  background-color: #181818;
-  align-self: flex-start;
-  color: #fff;
-  border: 1px solid #333;
-  padding: 12px 16px;
-}
-
-.error {
-  background-color: rgba(220, 53, 69, 0.2);
-  color: #ff6b6b;
-  border: 1px solid rgba(220, 53, 69, 0.3);
-  padding: 12px 16px;
-  border-radius: 12px;
-  max-width: 85%;
-}
-
-.avatarContainer {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #1e1e1e;
-  border-radius: 50%;
-  position: absolute;
-  top: 10px;
-  left: -16px;
-}
-
-.messageContent {
-  padding-left: 12px;
-}
-
-/* Typing indicator */
-.typingIndicator {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 24px;
-  padding: 16px;
-}
-
-.typingIndicator span {
-  width: 6px;
-  height: 6px;
-  background-color: #6e6e6e;
-  border-radius: 50%;
-  display: inline-block;
-  animation: typing 1.4s infinite ease-in-out both;
-}
-
-.typingIndicator span:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.typingIndicator span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.typingIndicator span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes typing {
-
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.5;
-  }
-
-  50% {
-    transform: translateY(-6px);
-    opacity: 1;
-  }
-}
-
-/* Chat input styles */
-.chatInputContainer {
-  padding: 12px;
-  margin-top: auto;
-  /* Push to bottom */
-  margin-bottom: 0;
-  /* Remove bottom margin */
-}
-
-.chatInputWrapper {
-  display: flex;
-  position: relative;
-  border: 1px solid #333;
-  border-radius: 8px;
-  background-color: #252525;
-  overflow: hidden;
-  transition: all 0.2s ease;
-  min-height: 46px;
-}
-
-.chatInput {
-  flex: 1;
-  padding: 12px 16px;
-  border: none;
-  background-color: transparent;
-  color: #d1d1d1;
-  font-size: 14px;
-  outline: none;
-  width: 100%;
-  resize: none;
-  overflow-y: auto;
-  line-height: 1.4;
-}
-
-.chatInput::placeholder {
-  color: #6e6e6e;
-}
-
-.chatControls {
-  display: flex;
-  align-items: flex-end;
-  padding-right: 4px;
-  padding-bottom: 4px;
-  padding-top: 4px;
-  background-color: #252525;
-  align-self: flex-end;
-}
-
-.sendButton {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background-color: #4169e1;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.sendButton:hover:not(:disabled) {
-  background-color: #365bd6;
-}
-
-.sendButton:disabled {
-  background-color: #333;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-/* Suggestions */
-.suggestionsContainer {
-  padding: 12px 16px;
-  margin-bottom: 8px;
-}
-
-.suggestionsList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.suggestionButton {
-  background-color: transparent;
-  color: rgb(148, 148, 148);
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 5px 14px;
-  font-size: 14px;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  line-height: 1.4;
-}
-
-.suggestionButton:hover {
-  color: rgb(255, 255, 255);
-  background-color: #1e50e0;
-}
-
-/* Greeting section styles */
-.sectionHeader {
-  color: #a1a1a1;
-  padding: 10px 14px;
-  background-color: transparent;
-  font-size: 13px;
-  text-align: center;
-  max-width: 80%;
-  margin: 0px auto;
-}
-
-.sectionHeader span {
-  display: block;
-  margin-top: 8px;
-  color: #a1a1a1;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Right sidebar toggle button */
@@ -523,8 +247,6 @@
   }
 }
 
-
-
 /* Flock AI text in button */
 .aiText {
   writing-mode: vertical-rl;
@@ -534,172 +256,6 @@
   font-weight: 500;
   letter-spacing: 2px;
 }
-
-/* Wrapper for RecentlyViewed */
-.recentlyViewedWrapper {
-  width: 100%;
-  max-width: 100%;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* HomePage-specific wrapper for ClaudeSidebar integration */
-.homePageSidebarWrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-}
-
-/* Claude Sidebar wrapper within HomePage */
-.claudeSidebarWrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Chat divider to separate RecentlyViewed from AI messages */
-.chatDivider {
-  padding: 8px 16px;
-  margin: 12px 0;
-}
-
-.chatDividerLine {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #333, transparent);
-  opacity: 0.5;
-}
-
-/* Enhanced recently viewed wrapper for HomePage */
-.recentlyViewedWrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-bottom: 12px;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-/* Greeting section styles for HomePage */
-.sectionHeader {
-  color: #a1a1a1;
-  padding: 10px 14px;
-  background-color: transparent;
-  font-size: 13px;
-  text-align: center;
-  max-width: 80%;
-  margin: 0px auto 16px auto;
-}
-
-.sectionHeader span {
-  display: block;
-  margin-top: 8px;
-  color: #a1a1a1;
-}
-
-/* Show More Button Styles for HomePage ClaudeSidebar */
-.claudeSidebarWrapper :global(.show-more-results) {
-  color: #4ca0ff !important;
-  cursor: pointer !important;
-  text-decoration: none !important;
-  font-size: 13px !important;
-  padding: 2px 4px !important;
-  border-radius: 4px !important;
-  transition: all 0.2s ease !important;
-  display: inline-block !important;
-  margin-top: 5px !important;
-}
-
-.claudeSidebarWrapper :global(.show-more-results:hover) {
-  background-color: rgba(76, 160, 255, 0.1) !important;
-  color: #5577ff !important;
-}
-
-.claudeSidebarWrapper :global(.show-more-results:active) {
-  transform: translateY(1px) !important;
-}
-
-/* Take Me Button Styles in HomePage AI Responses */
-.claudeSidebarWrapper :global(a[href*="/discussion"]) {
-  background-color: #111111 !important;
-  color: #aaaaaa !important;
-  border: none !important;
-  padding: 2px 10px !important;
-  border-radius: 12px !important;
-  font-size: 11px !important;
-  text-decoration: none !important;
-  display: inline-block !important;
-  transition: all 0.2s ease !important;
-}
-
-.claudeSidebarWrapper :global(a[href*="/discussion"]:hover) {
-  background-color: #2a2a2a !important;
-  color: #fff !important;
-}
-
-/* External Link Styles in HomePage AI Responses */
-.claudeSidebarWrapper :global(a[target="_blank"]) {
-  background-color: #111111 !important;
-  color: #aaaaaa !important;
-  border: none !important;
-  padding: 2px 10px !important;
-  border-radius: 12px !important;
-  font-size: 11px !important;
-  text-decoration: none !important;
-  display: inline-block !important;
-  transition: all 0.2s ease !important;
-}
-
-.claudeSidebarWrapper :global(a[target="_blank"]:hover) {
-  background-color: #2a2a2a !important;
-  color: #fff !important;
-}
-
-/* Link Container Styles from AI Responses in HomePage */
-.claudeSidebarWrapper :global(div[style*="border: 1px solid #2e88ff"]) {
-  margin: 8px 0 !important;
-  transition: all 0.2s ease !important;
-}
-
-.claudeSidebarWrapper :global(div[style*="border: 1px solid #2e88ff"]:hover) {
-  border-color: #4ca0ff !important;
-  background-color: rgba(76, 160, 255, 0.05) !important;
-}
-
-/* Ensure global styles are applied correctly in HomePage */
-.claudeSidebarWrapper :global(*) {
-  max-width: 100%;
-  word-wrap: break-word;
-}
-
-/* HomePage specific responsive adjustments */
-@media (max-width: 480px) {
-  .homePageSidebarWrapper {
-    padding: 0;
-  }
-
-  .recentlyViewedWrapper {
-    padding-bottom: 8px;
-  }
-
-  .chatDivider {
-    padding: 4px 12px;
-    margin: 8px 0;
-  }
-
-  .sectionHeader {
-    font-size: 12px;
-    padding: 8px 12px;
-    margin-bottom: 12px;
-  }
-
-  .claudeSidebarWrapper :global(.show-more-results) {
-    font-size: 12px !important;
-  }
-}
-
 
 /* Responsive adjustments */
 @media (max-width: 1300px) {
@@ -789,8 +345,6 @@
     flex-direction: column;
   }
 
-
-
   /* Update overlay left position to match sidebar width */
   .open~.mobileOverlay,
   .open+.mobileOverlay,
@@ -811,7 +365,6 @@
   .sidebarContainer {
     width: 72px;
   }
-
 
   /* Update overlay left position to match sidebar width */
   .open~.mobileOverlay,
@@ -839,11 +392,6 @@
     padding-bottom: 40px;
   }
 
-}
-
-
-@media (max-width: 480px) {
-
   .rightSidebarContainer {
     width: 330px !important;
     /* Use fixed width in mobile view */
@@ -859,5 +407,4 @@
   .rightSidebarScrollable {
     padding-bottom: 60px;
   }
-
 }

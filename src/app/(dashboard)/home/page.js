@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import Header from '@/components/layout/Header/Header';
 import SidebarNavigation from '@/components/layout/SidebarNavigation/SidebarNavigation';
 import HomeFeed from '@/components/home/HomeFeed';
-import RecentlyViewed from '@/components/home/RecentlyViewed';
 import ClaudeSidebar from '@/components/ai/ClaudeSidebar';
 import styles from './page.module.css';
 
@@ -27,30 +26,6 @@ export default function HomePage() {
   const [isMobileView, setIsMobileView] = useState(false);
 
   const containerRef = useRef(null);
-
-  // HomePage-specific: Function to get time-based greeting
-  const getTimeBasedGreeting = () => {
-    const hour = new Date().getHours();
-
-    if (hour >= 5 && hour < 12) {
-      return "Good Morning";
-    } else if (hour >= 12 && hour < 17) {
-      return "Good Afternoon";
-    } else if (hour >= 17 && hour < 21) {
-      return "Good Evening";
-    } else if (hour >= 21 && hour < 24) {
-      return "Good Late Evening";
-    } else {
-      return "Good Early Morning";
-    }
-  };
-
-  // HomePage-specific: Format username for greeting with larger time-based greeting
-  const getUserGreeting = () => {
-    const username = user?.username || 'there';
-    const timeGreeting = getTimeBasedGreeting();
-    return `Hi @${username}<br/><span style="font-size: 2em; font-weight: 500;">${timeGreeting}</span>`;
-  };
 
   useEffect(() => {
     const checkMobileView = () => {
@@ -206,7 +181,6 @@ export default function HomePage() {
   const homePageContext = {
     isHomePage: true,
     pageType: 'home',
-    greeting: getUserGreeting(),
     hasRecentlyViewed: true,
     specialBehavior: {
       emphasizeFeed: true,
@@ -261,7 +235,7 @@ export default function HomePage() {
           </button>
         )}
 
-        {/* Right sidebar with HomePage-specific layout */}
+        {/* Right sidebar with ClaudeSidebar integrated with Home Page specific elements */}
         <div
           className={`${styles.rightSidebarContainer} ${isRightSidebarVisible ? styles.visible : ''}`}
           ref={containerRef}
@@ -281,38 +255,17 @@ export default function HomePage() {
           </div>
 
           <div className={styles.rightSidebarScrollable}>
-            {/* HomePage-specific wrapper to maintain layout structure */}
-            <div className={styles.homePageSidebarWrapper}>
-              {/* RecentlyViewed component at the top (HomePage-specific) */}
-              <div className={styles.recentlyViewedWrapper}>
-                <RecentlyViewed initialItemCount={3} />
-              </div>
-
-              {/* Chat divider to separate RecentlyViewed from AI messages */}
-              <div className={styles.chatDivider}>
-                <div className={styles.chatDividerLine}></div>
-              </div>
-
-              {/* HomePage-specific time-based greeting */}
-              <div className={styles.sectionHeader}>
-                <div dangerouslySetInnerHTML={{ __html: getUserGreeting() }} />
-              </div>
-
-              {/* Enhanced ClaudeSidebar with HomePage-specific context */}
-              <div className={styles.claudeSidebarWrapper}>
-                <ClaudeSidebar 
-                  user={userWithFallback}
-                  containerRef={containerRef}
-                  rightSidebarWidth={rightSidebarWidth}
-                  isResizing={isResizing}
-                  startResizing={startResizing}
-                  homePageContext={homePageContext}
-                  customGreeting={getUserGreeting()}
-                  hideDefaultGreeting={true}
-                  hideRecentlyViewed={true}
-                />
-              </div>
-            </div>
+            {/* ClaudeSidebar with HomePage-specific context - all elements now handled internally */}
+            <ClaudeSidebar 
+              user={userWithFallback}
+              containerRef={containerRef}
+              rightSidebarWidth={rightSidebarWidth}
+              isResizing={isResizing}
+              startResizing={startResizing}
+              homePageContext={homePageContext}
+              hideDefaultGreeting={false}
+              hideRecentlyViewed={false}
+            />
           </div>
         </div>
       </div>

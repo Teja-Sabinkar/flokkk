@@ -1,4 +1,4 @@
-/* src/components/ai/ClaudeSidebar.module.css - Enhanced with full functionality */
+/* src/components/ai/ClaudeSidebar.module.css - Enhanced with DiscussionPageRightBar message styling */
 .rightSidebarScrollable {
     position: absolute;
     top: 0;
@@ -26,7 +26,46 @@
     scrollbar-width: none;
 }
 
-/* New Dashboard Section */
+/* NEW: Home Page Specific Elements Inside Chat Messages */
+.homePageRecentlyViewed {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 0;
+}
+
+.homePageChatDivider {
+    padding: 8px 0;
+    margin: 12px 0;
+}
+
+.chatDividerLine {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #333, transparent);
+    opacity: 0.5;
+}
+
+.homePageSectionHeader {
+    color: #a1a1a1;
+    padding: 10px 14px;
+    background-color: transparent;
+    font-size: 13px;
+    text-align: center;
+    max-width: 80%;
+    margin: 0px auto 16px auto;
+}
+
+.homePageSectionHeader span {
+    display: block;
+    margin-top: 8px;
+    color: #a1a1a1;
+}
+
+/* Dashboard Section - Now only for non-home pages */
 .dashboardSection {
     display: flex;
     flex-direction: column;
@@ -170,7 +209,7 @@
     height: 18px;
 }
 
-/* Chat Message Styles */
+/* Chat Message Styles - UPDATED to match DiscussionPageRightBar */
 .chatMessage {
     padding: 0;
     font-size: 14px;
@@ -178,6 +217,11 @@
     animation: fadeIn 0.3s ease;
     border-radius: 12px;
     position: relative;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: visible;
+    margin-bottom: 12px;
 }
 
 /* Enhanced System Messages */
@@ -202,7 +246,7 @@
     color: white;
 }
 
-/* AI Message with Avatar Support */
+/* AI Message with Avatar Support - UPDATED */
 .ai {
     background-color: #181818;
     align-self: flex-start;
@@ -212,6 +256,9 @@
     display: flex;
     align-items: flex-start;
     gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* Avatar Container for AI Messages */
@@ -240,11 +287,77 @@
     max-width: 85%;
 }
 
-/* Message Content with Enhanced Styling */
+/* Message Content with Enhanced Styling - UPDATED to match DiscussionPageRightBar */
 .messageContent {
     flex: 1;
     line-height: 1.4;
     padding: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    overflow-x: hidden;
+    overflow-y: visible;
+}
+
+/* NEW: Style headings within messages - Copied from DiscussionPageRightBar */
+.messageContent h3 {
+    color: #ffffff !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    margin: 15px 0 8px 0 !important;
+    padding-bottom: 5px !important;
+    border-bottom: 1px solid #333 !important;
+    line-height: 1.3 !important;
+}
+
+.messageContent h4 {
+    color: #cccccc !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    margin: 12px 0 6px 0 !important;
+    line-height: 1.3 !important;
+}
+
+/* NEW: Fix bullet points to stay within container - Copied from DiscussionPageRightBar */
+.messageContent ul {
+    margin: 8px 0 12px 0 !important;
+    padding-left: 18px !important;
+    list-style-type: disc !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+.messageContent li {
+    margin: 4px 0 !important;
+    color: #ffffff !important;
+    line-height: 1.4 !important;
+    word-wrap: break-word !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* NEW: Style paragraphs - Copied from DiscussionPageRightBar */
+.messageContent p {
+    margin: 8px 0 !important;
+    line-height: 1.5 !important;
+    color: #ffffff !important;
+    word-wrap: break-word !important;
+    max-width: 100% !important;
+}
+
+/* NEW: Style emphasis - Copied from DiscussionPageRightBar */
+.messageContent strong {
+    color: #4ca0ff !important;
+    font-weight: 600 !important;
+}
+
+/* NEW: Additional containment for nested elements - Copied from DiscussionPageRightBar */
+.messageContent * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 /* CRITICAL: Show More Button Styles - Essential for functionality */
@@ -314,12 +427,6 @@
 .messageContent :global(div[style*="border: 1px solid #2e88ff"]:hover) {
     border-color: #4ca0ff !important;
     background-color: rgba(76, 160, 255, 0.05) !important;
-}
-
-/* Ensure global styles are applied correctly */
-.messageContent :global(*) {
-    max-width: 100%;
-    word-wrap: break-word;
 }
 
 /* Enhanced Typing Indicator */
@@ -481,6 +588,26 @@
 
 .suggestionButton:active {
     transform: translateY(0);
+}
+
+/* NEW: Simple prompt text style */
+.promptText {
+    text-align: center;
+    padding: 16px 8px;
+    line-height: 1.4;
+}
+
+.promptFirstLine {
+    color: #888;
+    font-size: 14px;
+    font-style: italic;
+    margin-bottom: 4px;
+}
+
+.promptSecondLine {
+    color: #4169e1;
+    font-size: 16px;
+    font-weight: 600;
 }
 
 /* Rotating News Container */
@@ -856,6 +983,20 @@
         font-size: 13px;
     }
 
+    /* Responsive adjustment for prompt text */
+    .promptText {
+        padding: 12px 6px;
+    }
+
+    .promptFirstLine {
+        font-size: 13px;
+        margin-bottom: 3px;
+    }
+
+    .promptSecondLine {
+        font-size: 15px;
+    }
+
     .rotatingNewsContainer {
         padding: 12px;
     }
@@ -913,5 +1054,21 @@
     .nextBatchInfo {
         padding: 6px 10px;
         font-size: 11px;
+    }
+
+    /* Home Page Element Responsive Adjustments */
+    .homePageSectionHeader {
+        font-size: 12px;
+        padding: 8px 12px;
+        margin-bottom: 12px;
+    }
+
+    .homePageChatDivider {
+        padding: 4px 0;
+        margin: 8px 0;
+    }
+
+    .homePageRecentlyViewed {
+        padding-bottom: 8px;
     }
 }
