@@ -207,15 +207,40 @@ async function handleSummarizeRequest(message, extractedContent, context, userna
     // Create Claude API request for summarization
     const claudeRequest = {
       model: "claude-3-haiku-20240307",
-      system: `You are Claude, an AI assistant that provides concise and informative summaries. You are helping ${username} understand a discussion.
+      system: `You are Claude, an AI assistant that provides well-structured summaries with clear formatting. You are helping ${username} understand a discussion.
       
-      Provide a clear, well-structured summary that captures:
-      1. The main topic and key points
-      2. Important insights from the content
-      3. Notable perspectives from comments (if any)
-      4. Any actionable information or resources mentioned
+      IMPORTANT: Format your response using HTML structure with:
+      - Use <h3> for main sections
+      - Use <h4> for subsections  
+      - Use <ul> and <li> for bullet points
+      - Use <strong> for emphasis
+      - Use <p> for paragraphs
       
-      Keep the summary engaging and easy to understand.`,
+      Provide a clear, well-structured summary that includes:
+      
+      <h3>🎯 Main Topic</h3>
+      <p>Brief overview of what this discussion is about</p>
+      
+      <h3>📋 Key Points</h3>
+      <ul>
+        <li>Important insight 1</li>
+        <li>Important insight 2</li>
+        <li>Important insight 3</li>
+      </ul>
+      
+      <h3>💬 Community Insights</h3>
+      <ul>
+        <li>Notable perspective from comments</li>
+        <li>User feedback or questions</li>
+      </ul>
+      
+      <h3>🔗 Resources & Actions</h3>
+      <ul>
+        <li>Links or tools mentioned</li>
+        <li>Actionable takeaways</li>
+      </ul>
+      
+      Keep the summary engaging and well-organized with clear visual hierarchy.`,
       messages: [
         {
           role: "user",
@@ -306,13 +331,31 @@ async function handleSimilarTopicsRequest(message, keywords, context, username) 
       model: "claude-3-haiku-20240307",
       system: `You are Claude, an AI assistant helping ${username} discover similar topics and content.
       
-      Based on the provided similar content from the database, create a brief overview of related topics that might interest the user.
-      Focus on:
-      1. Common themes and patterns
-      2. Related areas of interest
-      3. Key insights from similar discussions
+      IMPORTANT: Format your response using HTML structure with:
+      - Use <h3> for main sections
+      - Use <h4> for subsections
+      - Use <ul> and <li> for bullet points
+      - Use <strong> for emphasis
+      - Use <p> for paragraphs
       
-      Keep it engaging and informative.`,
+      Based on the provided content, create a well-structured overview:
+      
+      <h3>🔍 Related Topics</h3>
+      <ul>
+        <li><strong>Topic 1:</strong> Brief description</li>
+        <li><strong>Topic 2:</strong> Brief description</li>
+      </ul>
+      
+      <h3>🎯 Key Themes</h3>
+      <ul>
+        <li>Common pattern or theme 1</li>
+        <li>Common pattern or theme 2</li>
+      </ul>
+      
+      <h3>💡 Areas of Interest</h3>
+      <p>Explanation of why these topics might interest the user</p>
+      
+      Keep it engaging, well-organized, and insightful.`,
       messages: [
         {
           role: "user",
@@ -566,9 +609,34 @@ async function handleManualQuery(message, context, username, dataCommands, showM
           
           ${context ? `Context about the current discussion: ${context}` : ''}
           
-          The user has requested a more detailed response to their question. Please provide an expanded, more comprehensive answer.
+          IMPORTANT: Format your response using HTML structure with:
+          - Use <h3> for main sections
+          - Use <h4> for subsections
+          - Use <ul> and <li> for bullet points
+          - Use <strong> for emphasis
+          - Use <p> for paragraphs
           
-          Keep your responses helpful, thorough, and conversational.`,
+          The user has requested a more detailed response. Structure your answer like:
+          
+          <h3>📊 Detailed Analysis</h3>
+          <p>Comprehensive explanation of the topic</p>
+          
+          <h4>Key Components</h4>
+          <ul>
+            <li><strong>Component 1:</strong> Detailed explanation</li>
+            <li><strong>Component 2:</strong> Detailed explanation</li>
+          </ul>
+          
+          <h4>Practical Applications</h4>
+          <ul>
+            <li>Real-world example 1</li>
+            <li>Real-world example 2</li>
+          </ul>
+          
+          <h3>🎯 Next Steps</h3>
+          <p>Actionable recommendations or further exploration</p>
+          
+          Keep your responses helpful, thorough, and conversational with clear visual hierarchy.`,
           messages: [
             {
               role: "user",
@@ -637,7 +705,27 @@ async function handleManualQuery(message, context, username, dataCommands, showM
           
           ${dbContext}
           
-          Keep your responses helpful, concise, and conversational. Provide insights based on the available information.`,
+          IMPORTANT: Format your response using HTML structure with:
+          - Use <h3> for main sections (when appropriate)
+          - Use <h4> for subsections (when appropriate)
+          - Use <ul> and <li> for bullet points or lists
+          - Use <strong> for emphasis
+          - Use <p> for paragraphs
+          
+          For shorter responses, focus on:
+          <p>Clear, direct answer to the question</p>
+          
+          For longer responses, structure like:
+          <h3>🔍 Overview</h3>
+          <p>Brief explanation</p>
+          
+          <h4>Key Points</h4>
+          <ul>
+            <li><strong>Point 1:</strong> Explanation</li>
+            <li><strong>Point 2:</strong> Explanation</li>
+          </ul>
+          
+          Keep responses helpful, concise, and conversational. Provide insights based on available information with clear visual hierarchy.`,
           messages: [
             {
               role: "user",

@@ -811,26 +811,12 @@ export default function DiscussionPageRightBar(props) {
             key={message.id}
             className={`${styles.chatMessage} ${styles[message.type]}`}
           >
-            {message.type === 'ai' && (
-              <div className={styles.avatarContainer}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 16.5a4.5 4.5 0 004.5-4.5H7.5a4.5 4.5 0 004.5 4.5zM10 10a1 1 0 100-2 1 1 0 000 2zm4 0a1 1 0 100-2 1 1 0 000 2z" fill="#D1D1D1" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="#D1D1D1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            )}
             <div className={styles.messageContent} dangerouslySetInnerHTML={{ __html: message.content }}></div>
           </div>
         ))}
 
         {isLoading && (
           <div className={`${styles.chatMessage} ${styles.ai}`}>
-            <div className={styles.avatarContainer}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 16.5a4.5 4.5 0 004.5-4.5H7.5a4.5 4.5 0 004.5 4.5zM10 10a1 1 0 100-2 1 1 0 000 2zm4 0a1 1 0 100-2 1 1 0 000 2z" fill="#D1D1D1" />
-                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="#D1D1D1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
             <div className={styles.typingIndicator}>
               <span></span>
               <span></span>
