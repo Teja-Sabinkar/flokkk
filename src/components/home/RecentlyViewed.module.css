@@ -1,5 +1,5 @@
 .recentlyViewedContainer {
-  padding: 0 0 0 16px;
+  padding: 0 16px 0 0;
   /* Added left padding to prevent text being cut off */
   background-color: transparent;
   width: 100%;

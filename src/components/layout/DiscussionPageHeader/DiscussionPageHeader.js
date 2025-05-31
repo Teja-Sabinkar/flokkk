@@ -308,6 +308,38 @@ export default function DiscussionPageHeader({ user, onMenuToggle, isMobileMenuO
 
   // Handle notification click
   const handleNotificationClick = (notification) => {
+    // Only mark as read if notification is currently unread
+    if (!notification.read) {
+      // Update local state immediately (optimistic update)
+      setRecentNotifications(prev =>
+        prev.map(notif =>
+          notif._id === notification._id
+            ? { ...notif, read: true }
+            : notif
+        )
+      );
+
+      // Decrease unread count
+      setUnreadCount(prev => Math.max(0, prev - 1));
+
+      // Make API call asynchronously to mark as read
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetch(`/api/notifications/${notification._id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ read: true })
+        }).catch(error => {
+          console.error('Error marking notification as read:', error);
+          // Could optionally revert local state on error, but for now just log
+        });
+      }
+    }
+
+    // Close dropdown
     setIsNotificationDropdownOpen(false);
 
     // Navigate based on notification type
@@ -329,10 +361,24 @@ export default function DiscussionPageHeader({ user, onMenuToggle, isMobileMenuO
         router.push(`/otheruserprofile/${notification.senderUsername}`);
         break;
       case 'like':
-        router.push(`/discussion?id=${notification.relatedId}`);
+        // For likes/votes, we need special handling based on what was liked
+        if (notification.onModel === 'Comment') {
+          // For comment votes, redirect to our intermediate page that will find the right post
+          router.push(`/comment-redirect?id=${notification.relatedId}`);
+        } else {
+          // For post votes, use relatedId directly
+          router.push(`/discussion?id=${notification.relatedId}`);
+        }
         break;
       case 'contribution':
-        router.push(`/currentprofile/${userState.username}?tab=contributions`);
+        // For contribution notifications, check content to determine redirect
+        if (notification.content && (
+          notification.content.includes('approved your link contribution') ||
+          notification.content.includes('declined your link contribution'))) {
+          router.push(`/discussion?id=${notification.relatedId}`);
+        } else {
+          router.push(`/currentprofile/${userState.username}?tab=contributions`);
+        }
         break;
       default:
         router.push('/notificationpage');
@@ -663,7 +709,7 @@ export default function DiscussionPageHeader({ user, onMenuToggle, isMobileMenuO
           {/* Logo on the left */}
           <div className={styles.logoContainer}>
             <Link href="/home" className={styles.logo}>
-              flock
+              flokkk
             </Link>
           </div>
         </div>

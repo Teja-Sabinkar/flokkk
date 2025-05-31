@@ -3,39 +3,36 @@
 import { useState, useRef, useEffect } from 'react';
 import { useUser } from '@/context/UserContext';
 import styles from './DiscussionPageRightBar.module.css';
+import aiChatStyles from '@/components/aichat/AiChat.module.css'; // Import AiChat styles
 import RecommendationItems from './RecommendationItems';
+import AiChat from '@/components/aichat/AiChat'; // Correct path to the AiChat component
 
 export default function DiscussionPageRightBar(props) {
   // Extract postData safely with better fallback handling
   const postData = props.postData || null;
   const { user } = useUser();
-  
+
   // Refs for elements
   const containerRef = useRef(null);
-  const textareaRef = useRef(null);
-  
+  const messagesEndRef = useRef(null);
+
   // State for resize functionality
   const [isResizing, setIsResizing] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(330);
   const [initialX, setInitialX] = useState(0);
   const [initialWidth, setInitialWidth] = useState(0);
   const [isMobileView, setIsMobileView] = useState(false);
-  
-  // Add state for input expansion
-  const [textareaHeight, setTextareaHeight] = useState('auto');
-  const [inputRows, setInputRows] = useState(1);
-  const [isExpanded, setIsExpanded] = useState(false);
-  
+
   // Enhanced postData for recommendations
   const [enhancedPostData, setEnhancedPostData] = useState(null);
-  
+
   // NEW: Add suggestion tracking state
   const [currentSuggestionType, setCurrentSuggestionType] = useState(null);
-  
+
   // Function to get time-based greeting
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
-    
+
     if (hour >= 5 && hour < 12) {
       return "Good Morning";
     } else if (hour >= 12 && hour < 17) {
@@ -48,14 +45,14 @@ export default function DiscussionPageRightBar(props) {
       return "Good Early Morning";
     }
   };
-  
+
   // Format username for greeting with larger time-based greeting
   const getUserGreeting = () => {
     const username = user?.username || 'there';
     const timeGreeting = getTimeBasedGreeting();
     return `Hi @${username}<br/><span style="font-size: 2em; font-weight: 500;">${timeGreeting}</span>`;
   };
-  
+
   const [messages, setMessages] = useState([
     {
       id: 2,
@@ -64,140 +61,23 @@ export default function DiscussionPageRightBar(props) {
     }
   ]);
 
-  const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isFocused, setIsFocused] = useState(false);
   const [dbDataAvailable, setDbDataAvailable] = useState([]);
-  const [hasInteracted, setHasInteracted] = useState(false); 
-  const messagesEndRef = useRef(null);
-
-  // NEW: Client-side content extraction functions
-  const extractPageContent = () => {
-    try {
-      // Extract post title
-      const titleElement = document.querySelector('[class*="DiscussionPageCenterTop_postTitle"]') || 
-                          document.querySelector('h1[class*="postTitle"]');
-      const postTitle = titleElement ? titleElement.textContent.trim() : '';
-
-      // Extract post content
-      const contentElement = document.querySelector('[class*="DiscussionPageCenterTop_postContent"]') || 
-                            document.querySelector('[class*="postContent"] p');
-      const postContent = contentElement ? contentElement.textContent.trim() : '';
-
-      // Extract link titles and descriptions
-      const linkTitles = [];
-      const linkDescriptions = [];
-      
-      // Look for link modals or link items
-      const linkTitleElements = document.querySelectorAll('[class*="LinkItemModal_linkTitle"], [class*="linkTitle"]');
-      const linkDescriptionElements = document.querySelectorAll('[class*="LinkItemModal_linkDescription"], [class*="linkDescription"]');
-      
-      linkTitleElements.forEach(element => {
-        if (element.textContent.trim()) {
-          linkTitles.push(element.textContent.trim());
-        }
-      });
-      
-      linkDescriptionElements.forEach(element => {
-        if (element.textContent.trim()) {
-          linkDescriptions.push(element.textContent.trim());
-        }
-      });
-
-      // Extract comment content
-      const commentElements = document.querySelectorAll('[class*="DiscussionPageCenterBottom_commentContent"], [class*="commentContent"]');
-      const comments = [];
-      
-      commentElements.forEach(element => {
-        if (element.textContent.trim() && element.textContent.trim() !== '[deleted]') {
-          comments.push(element.textContent.trim());
-        }
-      });
-
-      return {
-        postTitle,
-        postContent,
-        linkTitles,
-        linkDescriptions,
-        comments: comments.slice(0, 10) // Limit to first 10 comments to avoid huge payloads
-      };
-    } catch (error) {
-      console.error('Error extracting page content:', error);
-      return {
-        postTitle: '',
-        postContent: '',
-        linkTitles: [],
-        linkDescriptions: [],
-        comments: []
-      };
-    }
-  };
-
-  // NEW: Enhanced keyword extraction function
-  const extractKeywordsFromContent = (title, content, hashtags = []) => {
-    if (!title && !content) return [];
-    
-    const STOP_WORDS = new Set([
-      'a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 'to', 'by',
-      'in', 'of', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has',
-      'had', 'do', 'does', 'did', 'can', 'could', 'will', 'would', 'should', 'i',
-      'you', 'he', 'she', 'it', 'we', 'they', 'this', 'that', 'these', 'those',
-      'with', 'from', 'up', 'about', 'into', 'through', 'during', 'before', 'after',
-      'above', 'below', 'between', 'among', 'through', 'during', 'before', 'after'
-    ]);
-    
-    // Combine title, content, and hashtags
-    let combinedText = (title || '') + ' ' + (content || '');
-    if (hashtags && Array.isArray(hashtags)) {
-      combinedText += ' ' + hashtags.join(' ');
-    }
-
-    // Extract words and filter
-    const words = combinedText.toLowerCase()
-      .replace(/[^\w\s]/g, ' ') // Replace punctuation with spaces
-      .split(/\s+/)
-      .filter(word => 
-        word.length > 2 && // At least 3 characters
-        !STOP_WORDS.has(word) && 
-        !(/^\d+$/.test(word)) // Not just numbers
-      );
-
-    // Count word frequency
-    const wordCounts = {};
-    words.forEach(word => {
-      wordCounts[word] = (wordCounts[word] || 0) + 1;
-    });
-
-    // Sort by frequency, then by length
-    const sortedWords = Object.keys(wordCounts).sort((a, b) => {
-      const countDiff = wordCounts[b] - wordCounts[a];
-      return countDiff !== 0 ? countDiff : b.length - a.length;
-    });
-
-    // Prioritize hashtags
-    const hashtagKeywords = hashtags
-      .map(tag => tag.replace(/^#/, '').toLowerCase())
-      .filter(tag => tag.length > 1);
-      
-    // Combine and deduplicate
-    const combinedKeywords = [...new Set([...hashtagKeywords, ...sortedWords])];
-    
-    return combinedKeywords.slice(0, 15); // Return up to 15 keywords
-  };
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   // Effect to check and update mobile view state
   useEffect(() => {
     const checkMobileView = () => {
       setIsMobileView(window.innerWidth < 1300);
     };
-    
+
     // Initial check
     checkMobileView();
-    
+
     // Add listener for resize events
     window.addEventListener('resize', checkMobileView);
-    
+
     // Cleanup
     return () => {
       window.removeEventListener('resize', checkMobileView);
@@ -210,17 +90,17 @@ export default function DiscussionPageRightBar(props) {
       setEnhancedPostData(null);
       return;
     }
-    
+
     // Search for DiscussionPageCenterTop post data from parent elements
     const centerTopPostData = findCenterTopPostData();
-    
+
     // Merge any found data with our existing postData
     const mergedData = {
       ...postData,
       // Allow centerTopData to override if available
       ...(centerTopPostData || {})
     };
-    
+
     // Normalize property names for consistency (different components use different names)
     const normalizedData = {
       ...mergedData,
@@ -233,7 +113,7 @@ export default function DiscussionPageRightBar(props) {
       // Map username and author to each other
       username: mergedData.username || mergedData.author || ''
     };
-    
+
     setEnhancedPostData(normalizedData);
   }, [postData]);
 
@@ -242,23 +122,23 @@ export default function DiscussionPageRightBar(props) {
     try {
       // Look for an element that might contain the current post title
       const titleElement = document.querySelector('h1.postTitle') || document.querySelector('.postTitle');
-      
+
       if (!titleElement) return null;
-      
+
       const title = titleElement.textContent || '';
-      
+
       // Find author element nearby
       const authorElement = document.querySelector('.authorLink') || document.querySelector('.creatorInfo span');
       const author = authorElement ? (authorElement.textContent || '').trim() : '';
-      
+
       // Find tags if available
       const tagElements = document.querySelectorAll('.tag');
       const tags = Array.from(tagElements).map(el => (el.textContent || '').trim());
-      
+
       // Find content
       const contentElement = document.querySelector('.postContent p');
       const content = contentElement ? (contentElement.textContent || '').trim() : '';
-      
+
       // Only return data if we found at least a title
       if (title) {
         return {
@@ -268,7 +148,7 @@ export default function DiscussionPageRightBar(props) {
           content
         };
       }
-      
+
       return null;
     } catch (error) {
       console.warn('Error finding center top post data:', error);
@@ -280,21 +160,21 @@ export default function DiscussionPageRightBar(props) {
   const startResizing = (e) => {
     // Skip resizing if in mobile view
     if (isMobileView) return;
-    
+
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Store initial positions
     setInitialX(e.clientX);
     setInitialWidth(sidebarWidth);
-    
+
     // Update state
     setIsResizing(true);
-    
+
     // Apply global styles
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
-    
+
     // Add a debug class to the body
     document.body.classList.add('resizing-active');
   };
@@ -303,22 +183,22 @@ export default function DiscussionPageRightBar(props) {
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isResizing) return;
-      
+
       // Calculate the width from the window width, not relative to the parent
       const windowWidth = window.innerWidth;
       const newWidth = windowWidth - e.clientX;
-      
+
       // Apply constraints
       const minWidth = 250;
       const maxWidth = Math.min(600, windowWidth * 0.4);
       const constrainedWidth = Math.min(Math.max(newWidth, minWidth), maxWidth);
-      
+
       // Update state
       setSidebarWidth(constrainedWidth);
-      
+
       // Store the width in localStorage
       localStorage.setItem('rightBarWidth', constrainedWidth.toString());
-      
+
       // Update the parent element directly via class selector
       const rightBarWrapper = document.querySelector('.rightBarWrapper');
       if (rightBarWrapper) {
@@ -330,7 +210,7 @@ export default function DiscussionPageRightBar(props) {
 
     const handleMouseUp = () => {
       if (!isResizing) return;
-      
+
       // Clean up
       setIsResizing(false);
       document.body.style.cursor = '';
@@ -357,7 +237,7 @@ export default function DiscussionPageRightBar(props) {
     if (savedWidth) {
       const width = Number(savedWidth);
       setSidebarWidth(width);
-      
+
       // Initialize parent element too
       setTimeout(() => {
         const rightBarWrapper = document.querySelector('.rightBarWrapper');
@@ -377,36 +257,47 @@ export default function DiscussionPageRightBar(props) {
 
   useEffect(() => {
     const handleShowMoreClick = async (e) => {
-      // Check if the click was on a show-more-results button
-      if (e.target.classList.contains('show-more-results')) {
+      // Check for the new button types
+      if (
+        e.target.classList.contains('show-more-discussions-links') ||
+        e.target.classList.contains('show-more-insights') ||
+        e.target.classList.contains('show-more-insights-links') ||
+        e.target.classList.contains('show-more-results') // Keep existing support
+      ) {
         e.preventDefault();
 
-        // Get the original query from the data attribute
+        // Get data from the clicked element
         const originalQuery = decodeURIComponent(e.target.dataset.query || '');
-        // Get the type of show more (db or ai)
-        const type = e.target.dataset.type || 'db'; // Default to db for backward compatibility
+        const showMoreType = e.target.dataset.type || '';
+        const postIdFromButton = e.target.dataset.postId || '';
 
-        if (originalQuery) {
-          // Add a system message indicating expanded results are being loaded
+        // Use postId from button or from context
+        const targetPostId = postIdFromButton || (enhancedPostData?.id || enhancedPostData?._id) || null;
+
+        console.log('Show more clicked:', {
+          originalQuery,
+          showMoreType,
+          targetPostId,
+          buttonClass: e.target.className
+        });
+
+        if (originalQuery && showMoreType) {
+          // Add a system message indicating loading
           const systemMessage = {
             id: Date.now(),
             type: 'system',
-            content: `Loading expanded ${type === 'db' ? 'database' : 'AI'} information...`
+            content: `Loading additional ${showMoreType.includes('insights') ? 'insights' : 'content'}...`
           };
 
           setMessages(prev => [...prev, systemMessage]);
           setIsLoading(true);
-          setHasInteracted(true); // Mark as interacted when showing more results
+          setHasInteracted(true);
 
           try {
-            // Send the same query again but with appropriate showMore flags
-            if (type === 'db') {
-              await sendMessageToAI(originalQuery, true, false, 'manual');
-            } else if (type === 'ai') {
-              await sendMessageToAI(originalQuery, false, true, 'manual');
-            }
+            // Send the request with showMoreType
+            await sendMessageToAI(originalQuery, false, false, 'manual', null, showMoreType, targetPostId);
           } catch (err) {
-            console.error('Error loading more results:', err);
+            console.error('Error loading more content:', err);
 
             // Replace the "Loading..." message with an error message
             setMessages(prev => {
@@ -416,7 +307,7 @@ export default function DiscussionPageRightBar(props) {
                   newMessages[i] = {
                     id: systemMessage.id,
                     type: 'error',
-                    content: 'Sorry, I encountered an error loading more results.'
+                    content: 'Sorry, I encountered an error loading additional content.'
                   };
                   return newMessages;
                 }
@@ -426,6 +317,8 @@ export default function DiscussionPageRightBar(props) {
           } finally {
             setIsLoading(false);
           }
+        } else {
+          console.warn('Missing data for show more action:', { originalQuery, showMoreType });
         }
       }
     };
@@ -442,43 +335,7 @@ export default function DiscussionPageRightBar(props) {
         messagesContainer.removeEventListener('click', handleShowMoreClick);
       }
     };
-  }, []);
-
-  // Handle input change
-  const handleInputChange = (e) => {
-    const text = e.target.value;
-    setInputText(text);
-    
-    // Check if we should expand the input
-    if (text.trim().length > 0) {
-      setIsExpanded(true);
-      
-      // Count rows to determine height
-      const rows = text.split('\n').length;
-      const newRows = Math.min(5, Math.max(1, rows)); // Limit to 5 rows max
-      setInputRows(newRows);
-      
-      // Dynamically adjust height using scrollHeight
-      if (textareaRef.current) {
-        // Reset height temporarily to get accurate scrollHeight
-        textareaRef.current.style.height = 'auto';
-        const scrollHeight = textareaRef.current.scrollHeight;
-        
-        // Set a min and max height (between default height and 120px)
-        const newHeight = Math.min(120, Math.max(43, scrollHeight));
-        setTextareaHeight(`${newHeight}px`);
-        textareaRef.current.style.height = `${newHeight}px`;
-      }
-    } else {
-      // Reset to default size when empty
-      setIsExpanded(false);
-      setInputRows(1);
-      setTextareaHeight('auto');
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
-    }
-  };
+  }, [enhancedPostData]); // Add enhancedPostData as dependency
 
   // Process message text to identify database commands
   const extractDataCommands = (message) => {
@@ -506,43 +363,33 @@ export default function DiscussionPageRightBar(props) {
     return commands;
   };
 
-  // Handle form submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!inputText.trim() || isLoading) return;
+  // Handle form submit for AiChat
+  const handleAiChatSubmit = async (message) => {
+    if (!message.trim() || isLoading) return;
 
     // Add user message
     const userMessage = {
       id: Date.now(),
       type: 'user',
-      content: inputText,
+      content: message,
     };
 
     setMessages(prev => [...prev, userMessage]);
-    
+
     // Determine source based on suggestion tracking
     const source = currentSuggestionType ? 'suggestion' : 'manual';
     const suggestionType = currentSuggestionType || null;
-    
+
     // Clear suggestion tracking
     setCurrentSuggestionType(null);
-    
-    setInputText('');
+
     setIsLoading(true);
     setError(null);
     setDbDataAvailable([]);
-    setHasInteracted(true); // Mark as interacted when a message is submitted
-    
-    // Reset textarea height
-    setIsExpanded(false);
-    setInputRows(1);
-    setTextareaHeight('auto');
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
+    setHasInteracted(true);
 
     try {
-      await sendMessageToAI(inputText, false, false, source, suggestionType);
+      await sendMessageToAI(message, false, false, source, suggestionType);
     } catch (err) {
       console.error('Error communicating with AI:', err);
       setError(err.message || 'Failed to get a response from Claude AI');
@@ -560,23 +407,23 @@ export default function DiscussionPageRightBar(props) {
     }
   };
 
-  const sendMessageToAI = async (message, showMoreDb = false, showMoreAi = false, source = 'manual', suggestionType = null) => {
+  const sendMessageToAI = async (message, showMoreDb = false, showMoreAi = false, source = 'manual', suggestionType = null, showMoreType = null, postId = null) => {
     // Enhanced context preparation using both passed postData and enhanced data
     let context = '';
     const contextData = enhancedPostData || postData;
-    
+
     if (contextData) {
       context = `The current discussion is titled "${contextData.title || 'Untitled'}". `;
       if (contextData.content) {
         context += `The post content is: "${contextData.content}". `;
       }
-      
+
       // Use either hashtags or tags, depending on what's available
       const tags = contextData.hashtags || contextData.tags;
       if (tags && tags.length > 0) {
         context += `The discussion has these hashtags: ${tags.join(', ')}. `;
       }
-      
+
       // Use either username or author, depending on what's available
       const creator = contextData.username || contextData.author;
       if (creator) {
@@ -584,31 +431,14 @@ export default function DiscussionPageRightBar(props) {
       }
     }
 
-    // NEW: Add extracted content for suggestions
-    let extractedContent = null;
-    if (source === 'suggestion') {
-      extractedContent = extractPageContent();
-    }
-
-    // NEW: Extract keywords for suggestions and manual queries
-    let keywords = [];
-    if (source === 'suggestion' && suggestionType === 'similar') {
-      // For similar topics suggestion, extract keywords from post
-      keywords = extractKeywordsFromContent(
-        contextData?.title || '', 
-        contextData?.content || '', 
-        contextData?.hashtags || contextData?.tags || []
-      );
-    } else if (source === 'manual') {
-      // For manual queries, extract keywords from user message
-      keywords = extractKeywordsFromContent(message, '', []);
-    }
-
     // Extract potential database commands from the message (only for non-suggestion queries)
     const dataCommands = source === 'suggestion' ? [] : extractDataCommands(message);
 
     // Get authentication token
     const token = localStorage.getItem('token');
+
+    // Get the correct post ID
+    const targetPostId = postId || (contextData?.id || contextData?._id) || null;
 
     // Prepare request
     const requestOptions = {
@@ -624,13 +454,22 @@ export default function DiscussionPageRightBar(props) {
         dataCommands: dataCommands,
         showMoreDb: showMoreDb,
         showMoreAi: showMoreAi,
-        // NEW: Add suggestion tracking and extracted content
         source: source,
         suggestionType: suggestionType,
-        extractedContent: extractedContent,
-        keywords: keywords
+        // NEW: Add the show more parameters
+        showMoreType: showMoreType,
+        originalQuery: showMoreType ? message : null,
+        postId: targetPostId
       })
     };
+
+    console.log('Sending request to Claude API:', {
+      message: message.substring(0, 50) + '...',
+      source,
+      suggestionType,
+      showMoreType,
+      postId: targetPostId
+    });
 
     // Make API request to your backend Claude endpoint
     const response = await fetch('/api/ai/claude', requestOptions);
@@ -662,54 +501,13 @@ export default function DiscussionPageRightBar(props) {
     return data;
   };
 
-  // Command suggestions based on available data
-  const getCommandSuggestions = () => {
-    // Use the enhanced post data that includes info from DiscussionPageCenterTop
-    const contextData = enhancedPostData || postData;
-    if (!contextData) return [];
-
-    // Get the first hashtag/tag, whichever is available
-    const tags = contextData.hashtags || contextData.tags;
-    const firstTag = tags && tags.length > 0 ? tags[0] : 'this topic';
-    
-    // Get creator username, either from username or author property
-    const creator = contextData.username || contextData.author;
-
-    const commands = [
-      `What's this discussion about?`,
-      `Search for posts about ${firstTag}`,
-      `Find related discussions`
-    ];
-
-    if (creator) {
-      commands.push(`Tell me about user @${creator}`);
-    }
-
-    commands.push("What's trending on the platform?");
-
-    return commands;
-  };
-
-  // Commands handler for keyboard shortcuts
-  const handleKeyDown = (e) => {
-    // Handle newlines and submissions
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    } else if (e.key === '/' && inputText === '') {
-      // Show commands menu
-      e.preventDefault();
-      setInputText('/');
-    }
-  };
-
-  // MODIFIED: Suggest questions based on post content (removed 2 suggestions)
+  // Suggested questions
   const getSuggestedQuestions = () => {
     const contextData = enhancedPostData || postData;
     if (!contextData) return [];
 
-    const titleFragment = contextData.title ? 
-      `"${contextData.title?.substring(0, 30)}${contextData.title?.length > 30 ? '...' : ''}"` : 
+    const titleFragment = contextData.title ?
+      `"${contextData.title?.substring(0, 30)}${contextData.title?.length > 30 ? '...' : ''}"` :
       "this discussion";
 
     const suggestions = [
@@ -720,33 +518,17 @@ export default function DiscussionPageRightBar(props) {
     return suggestions;
   };
 
-  // MODIFIED: Use a suggested question with tracking
+  // Use a suggested question
   const useSuggestion = (suggestion) => {
-    setInputText(suggestion);
-    
-    // NEW: Track suggestion type
+    // Track suggestion type
     if (suggestion.includes('summarize')) {
       setCurrentSuggestionType('summarize');
     } else if (suggestion.includes('similar topics')) {
       setCurrentSuggestionType('similar');
     }
-    
-    // Expand the input for the suggestion
-    setIsExpanded(true);
-    const rows = suggestion.split('\n').length;
-    setInputRows(Math.min(5, Math.max(1, rows)));
-    
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-      // Delay to ensure the DOM updates
-      setTimeout(() => {
-        textareaRef.current.style.height = 'auto';
-        const scrollHeight = textareaRef.current.scrollHeight;
-        const newHeight = Math.min(120, Math.max(43, scrollHeight));
-        setTextareaHeight(`${newHeight}px`);
-        textareaRef.current.style.height = `${newHeight}px`;
-      }, 0);
-    }
+
+    // Submit the suggestion
+    handleAiChatSubmit(suggestion);
   };
 
   // Effect to update container width when mobile view changes
@@ -776,48 +558,46 @@ export default function DiscussionPageRightBar(props) {
   }, [isMobileView]);
 
   return (
-    <div 
+    <div
       className={styles.chatbotContainer}
       ref={containerRef}
-      style={{ 
+      style={{
         width: isMobileView ? '100%' : `${sidebarWidth}px`,
-        maxWidth: isMobileView ? '100%' : `${sidebarWidth}px` 
+        maxWidth: isMobileView ? '100%' : `${sidebarWidth}px`
       }}
     >
-      {/* Only show resize handle when not in mobile view */}
-      {!isMobileView && (
-        <div 
-          className={`${styles.resizeHandle} ${isResizing ? styles.isResizing : ''}`}
-          onMouseDown={startResizing}
-          title="Drag to resize"
-        >
-          <div className={styles.resizeBar}></div>
-        </div>
-      )}
-      
+      {/* Resize handle */}
+      <div
+        className={`${styles.resizeHandle} ${isResizing ? styles.isResizing : ''}`}
+        onMouseDown={startResizing}
+        title="Drag to resize"
+      >
+        <div className={styles.resizeBar}></div>
+      </div>
+
       {/* Debug indicator - only shown when resizing */}
       {isResizing && (
         <div className={styles.resizeDebug}>
           Width: {Math.round(sidebarWidth)}px
         </div>
       )}
-      
+
       <div className={styles.chatMessages}>
         {/* Pass enhancedPostData to RecommendationItems for better recommendations */}
         <RecommendationItems postData={enhancedPostData || postData} />
-        
+
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`${styles.chatMessage} ${styles[message.type]}`}
+            className={`${aiChatStyles.chatMessage} ${aiChatStyles[message.type]}`}
           >
-            <div className={styles.messageContent} dangerouslySetInnerHTML={{ __html: message.content }}></div>
+            <div className={aiChatStyles.messageContent} dangerouslySetInnerHTML={{ __html: message.content }}></div>
           </div>
         ))}
 
         {isLoading && (
-          <div className={`${styles.chatMessage} ${styles.ai}`}>
-            <div className={styles.typingIndicator}>
+          <div className={`${aiChatStyles.chatMessage} ${aiChatStyles.ai}`}>
+            <div className={aiChatStyles.typingIndicator}>
               <span></span>
               <span></span>
               <span></span>
@@ -845,63 +625,9 @@ export default function DiscussionPageRightBar(props) {
         </div>
       )}
 
-      {/* Database command suggestions - only show if hasInteracted is false */}
-      {!hasInteracted && messages.length > 3 && dbDataAvailable.length > 0 && !isLoading && (
-        <div className={styles.suggestionsContainer}>
-          <p className={styles.suggestionsTitle}>Try these data commands:</p>
-          <div className={styles.suggestionsList}>
-            {getCommandSuggestions().map((command, index) => (
-              <button
-                key={index}
-                className={`${styles.suggestionButton} ${styles.dbCommandButton}`}
-                onClick={() => useSuggestion(command)}
-              >
-                {command}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Replace old chat input with AiChat component */}
+      <AiChat onSubmit={handleAiChatSubmit} />
 
-      <form onSubmit={handleSubmit} className={styles.chatInputContainer}>
-        <div className={`${styles.chatInputWrapper} ${isFocused ? styles.chatInputWrapperFocused : ''} ${isExpanded ? styles.chatInputWrapperExpanded : ''}`}>
-          <textarea
-            ref={textareaRef}
-            value={inputText}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            placeholder="Ask Flock..."
-            className={styles.chatInput}
-            rows={inputRows}
-            style={{ height: textareaHeight }}
-            disabled={isLoading}
-          />
-          <div className={styles.chatControls}>
-            <button
-              type="submit"
-              className={styles.sendButton}
-              disabled={isLoading || !inputText.trim()}
-            >
-              <span>Ask</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9 18 15 12 9 6"></polyline>
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div className={styles.modelSelectorContainer}>
-          <div className={styles.dbIndicator}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z" />
-              <path d="M2 17l10 5 10-5" />
-              <path d="M2 12l10 5 10-5" />
-            </svg>
-            <span>Connected to database</span>
-          </div>
-        </div>
-      </form>
     </div>
   );
 }

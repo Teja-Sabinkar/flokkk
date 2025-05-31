@@ -621,6 +621,50 @@ export default function DiscussionPageLeftBar({ postData, loading, error, curren
   }, [postData]);
 
 
+  useEffect(() => {
+    // Listen for post update events
+    const handlePostUpdate = (event) => {
+      const { postId: updatedPostId, updatedPost, communityLinks: newCommunityLinks } = event.detail;
+
+      // Check if this is the current post being viewed
+      if (postData && (postData.id === updatedPostId || postData._id === updatedPostId)) {
+        console.log('Post updated, refreshing community links...', newCommunityLinks);
+
+        // Update community links immediately
+        if (newCommunityLinks && Array.isArray(newCommunityLinks)) {
+          const formattedCommunityLinks = newCommunityLinks.map((link, index) => ({
+            id: index + 1,
+            title: link.title || 'Untitled Link',
+            description: link.description || '',
+            url: link.url || '#',
+            votes: link.voteCount || link.votes || 0,
+            contributorUsername: link.contributorUsername || 'Anonymous',
+          }));
+
+          setCommunityLinksData(formattedCommunityLinks);
+
+          // Show feedback message
+          setFeedbackMessage({
+            type: 'success',
+            text: 'Community links updated!'
+          });
+
+          setTimeout(() => setFeedbackMessage(null), 3000);
+        }
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('post-updated', handlePostUpdate);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('post-updated', handlePostUpdate);
+    };
+  }, [postData]);
+
+
+
   const handleSubscribe = async () => {
     if (!currentUser) {
       // Redirect to login if not logged in

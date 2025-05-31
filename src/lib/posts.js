@@ -17,10 +17,10 @@ export async function fetchPosts(options = {}) {
 export async function getPostById(postId, token = localStorage.getItem('token')) {
   try {
     const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-    
+
     const response = await fetch(`/api/posts/${postId}`, { headers });
     if (!response.ok) throw new Error('Failed to fetch post');
-    
+
     return await response.json();
   } catch (error) {
     console.error('Error getting post:', error);
@@ -42,7 +42,6 @@ export async function updatePost(postId, postData, token = localStorage.getItem(
     
     console.log('Updating post with data:', postData);
     
-    // Handle file uploads if present
     let imageUrl = null;
     if (postData.thumbnailFile) {
       const formData = new FormData();
@@ -60,16 +59,15 @@ export async function updatePost(postId, postData, token = localStorage.getItem(
       imageUrl = uploadData.filepath;
     } 
     
-    // Prepare post update payload
     const updatePayload = {
       title: postData.title,
       content: postData.content || '',
       status: postData.status || 'published',
       tags: postData.tags || [],
-      links: postData.links || []
+      links: postData.links || [],
+      communityLinks: postData.communityLinks || [] // INCLUDE COMMUNITY LINKS
     };
     
-    // Only include image fields if they're being changed
     if (imageUrl) {
       updatePayload.newThumbnail = imageUrl;
     } else if (postData.thumbnailPreview) {
@@ -78,7 +76,6 @@ export async function updatePost(postId, postData, token = localStorage.getItem(
       updatePayload.removeThumbnail = true;
     }
     
-    // Update post with API
     const response = await fetch(`/api/posts/${postId}`, {
       method: 'PATCH',
       headers: {
@@ -110,19 +107,19 @@ export async function deletePost(postId, token = localStorage.getItem('token')) 
   try {
     if (!token) throw new Error('Authentication required');
     if (!postId) throw new Error('Post ID is required');
-    
+
     const response = await fetch(`/api/posts/${postId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to delete post');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Error deleting post:', error);

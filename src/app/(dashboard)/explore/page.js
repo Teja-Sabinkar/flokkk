@@ -1,16 +1,17 @@
-// src/app/(dashboard)/explore/page.js - Updated layout (removed DesktopSidebarToggle)
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // ADD THIS IMPORT
 import Header from '@/components/layout/Header/Header';
 import SidebarNavigation from '@/components/layout/SidebarNavigation/SidebarNavigation';
 import CategorySection from '@/components/explore/CategorySection';
 import ExploreSection from '@/components/explore/ExploreSection';
-import RightSidebarContainer from '@/components/ai/RightSidebarContainer';
-import RightSidebarToggle from '@/components/ai/RightSidebarToggle';
+import ExploreRightSidebar from '@/components/explore/ExploreRightSidebar';
+import ExploreRightSidebarToggle from '@/components/explore/ExploreRightSidebarToggle';
 import styles from './page.module.css';
 
 export default function ExplorePage() {
+  const router = useRouter(); // ADD THIS LINE
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [activeCategory, setActiveCategory] = useState('Trending');
@@ -19,6 +20,7 @@ export default function ExplorePage() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [noContentMessage, setNoContentMessage] = useState(null);
 
   // Add state for right sidebar visibility and mobile view detection
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(() => {
@@ -29,154 +31,9 @@ export default function ExplorePage() {
     return true; // Default to true for SSR
   });
   const [isMobileView, setIsMobileView] = useState(false);
+  const [rightSidebarWidth, setRightSidebarWidth] = useState(330);
 
-  // Fetch user data if not using a context
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const token = localStorage.getItem('token');
-
-      if (token) {
-        try {
-          const response = await fetch('/api/auth/me', {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-
-          if (response.ok) {
-            const userData = await response.json();
-            // Ensure we have a valid avatar URL or null
-            userData.avatar = userData.avatar || null;
-            setUser(userData);
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-        }
-      }
-    };
-
-    fetchUserData();
-  }, []);
-
-  // Check for mobile view and update sidebar visibility
-  useEffect(() => {
-    const checkMobileView = () => {
-      const isMobile = window.innerWidth < 1300;
-      setIsMobileView(isMobile);
-    };
-
-    // Check initially
-    checkMobileView();
-
-    // Set up event listener for window resize
-    window.addEventListener('resize', checkMobileView);
-
-    // Clean up
-    return () => {
-      window.removeEventListener('resize', checkMobileView);
-    };
-  }, []);
-
-  // Fetch explore content when category changes
-  useEffect(() => {
-    fetchExploreContent(activeCategory, 1);
-  }, [activeCategory]);
-
-  // Function to fetch explore content from API
-  const fetchExploreContent = async (category, pageNumber) => {
-    setIsLoading(true);
-    setError(null);
-
-    if (pageNumber === 1) {
-      setExploreItems([]); // Clear existing items if loading first page
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
-      const response = await fetch(`/api/explore/category?category=${encodeURIComponent(category)}&page=${pageNumber}`, {
-        headers
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch explore content: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      // Process the items to ensure all necessary fields are present
-      const processedItems = (data.items || []).map(item => ({
-        id: item.id || item._id, // Ensure we have an id field
-        username: item.username || 'anonymous',
-        timeAgo: item.timeAgo || 'some time',
-        title: item.title || 'Untitled',
-        description: item.description || item.content || '',
-        imageUrl: item.imageUrl || item.image || '/api/placeholder/600/300',
-        videoUrl: item.videoUrl || null,
-        discussionCount: item.discussionCount || '0',
-        profilePicture: item.profilePicture || '/profile-placeholder.jpg'
-      }));
-
-      if (pageNumber === 1) {
-        // Replace existing items
-        setExploreItems(processedItems);
-      } else {
-        // Append to existing items
-        setExploreItems(prevItems => [...prevItems, ...processedItems]);
-      }
-
-      // Update pagination info
-      setPage(pageNumber);
-      setHasMore(data.pagination.page < data.pagination.totalPages);
-
-      console.log(`Loaded ${processedItems.length} items for ${category} (source: ${data.source || 'unknown'})`);
-
-    } catch (err) {
-      console.error('Error fetching explore content:', err);
-      setError(err.message || 'Failed to load content');
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  // Handle load more functionality
-  const handleLoadMore = () => {
-    if (!isLoading && hasMore) {
-      fetchExploreContent(activeCategory, page + 1);
-    }
-  };
-
-  // If no user data from API, provide a fallback
-  const userWithFallback = user || {
-    name: 'Guest',
-    avatar: null,
-    notifications: 0
-  };
-
-  // Handle sidebar toggle
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  // Handle overlay click to close sidebar
-  const handleOverlayClick = () => {
-    setIsSidebarOpen(false);
-  };
-
-  // Define the right sidebar toggle function
-  const handleRightSidebarToggle = () => {
-    setIsRightSidebarVisible(!isRightSidebarVisible);
-  };
-
-  // Handle category change
-  const handleCategoryChange = (newCategory) => {
-    console.log('Category changed to:', newCategory);
-    setActiveCategory(newCategory);
-    setPage(1); // Reset pagination when category changes
-  };
-
-  // Categories for the top section
+  // Categories with your exact definitions and icons
   const categories = [
     {
       id: 'trending',
@@ -293,9 +150,183 @@ export default function ExplorePage() {
     }
   ];
 
+  // Check for mobile view and update sidebar visibility
+  useEffect(() => {
+    const checkMobileView = () => {
+      const isMobile = window.innerWidth < 1300;
+      setIsMobileView(isMobile);
+    };
+
+    // Check initially
+    checkMobileView();
+
+    // Set up event listener for window resize
+    window.addEventListener('resize', checkMobileView);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', checkMobileView);
+    };
+  }, []);
+
+  // Fetch user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem('token');
+
+      if (token) {
+        try {
+          const response = await fetch('/api/auth/me', {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            // Ensure we have a valid avatar URL or null
+            userData.avatar = userData.avatar || userData.profilePicture || null;
+            // Ensure we have username - try multiple possible field names
+            if (!userData.username && userData.name) {
+              userData.username = userData.name;
+            }
+            setUser(userData);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  // Fetch explore content when category changes
+  useEffect(() => {
+    fetchExploreContent(activeCategory, 1);
+  }, [activeCategory]);
+
+  // Function to fetch explore content from API with pagination
+  const fetchExploreContent = async (category, pageNumber) => {
+    setIsLoading(true);
+    setError(null);
+
+    if (pageNumber === 1) {
+      setExploreItems([]);
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const response = await fetch(`/api/explore/category?category=${encodeURIComponent(category)}&page=${pageNumber}&limit=12`, {
+        headers
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch explore content: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // NEW: Handle no content response with encouraging messages
+      if (data.source === 'no_content' && data.message) {
+        setExploreItems([]);
+        setHasMore(false);
+        setNoContentMessage(data.message);
+        console.log(`📭 No content found for ${category}`);
+        return;
+      }
+
+      // Clear no content message when we have results
+      setNoContentMessage(null);
+
+      // Process the items as before...
+      const processedItems = (data.items || []).map(item => ({
+        id: item.id || item._id,
+        username: item.username || 'anonymous',
+        timeAgo: item.timeAgo || 'some time',
+        title: item.title || 'Untitled',
+        description: item.description || item.content || '',
+        imageUrl: item.imageUrl || item.image || '/api/placeholder/600/300',
+        videoUrl: item.videoUrl || null,
+        discussionCount: item.discussionCount || '0',
+        profilePicture: item.profilePicture || '/profile-placeholder.jpg'
+      }));
+
+      if (pageNumber === 1) {
+        setExploreItems(processedItems);
+      } else {
+        setExploreItems(prevItems => [...prevItems, ...processedItems]);
+      }
+
+      setPage(pageNumber);
+      setHasMore(data.pagination && data.pagination.page < data.pagination.totalPages);
+
+      console.log(`📊 Loaded ${processedItems.length} items for ${category} (page ${pageNumber})`);
+
+    } catch (err) {
+      console.error('Error fetching explore content:', err);
+      setError(err.message || 'Failed to load content');
+      setNoContentMessage(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle load more functionality
+  const handleLoadMore = () => {
+    if (!isLoading && hasMore) {
+      fetchExploreContent(activeCategory, page + 1);
+    }
+  };
+
+  // Handle category change
+  const handleCategoryChange = (newCategory) => {
+    console.log('Category changed to:', newCategory);
+    setActiveCategory(newCategory);
+    setPage(1); // Reset pagination when category changes
+  };
+
+  // Load saved sidebar width on component mount
+  useEffect(() => {
+    const savedWidth = localStorage.getItem('rightSidebarWidth');
+    if (savedWidth) {
+      setRightSidebarWidth(Number(savedWidth));
+    }
+  }, []);
+
+  // Handle sidebar toggle
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  // Handle overlay click to close sidebar
+  const handleOverlayClick = () => {
+    setIsSidebarOpen(false);
+  };
+
+  // Define the right sidebar toggle function
+  const handleRightSidebarToggle = () => {
+    setIsRightSidebarVisible(!isRightSidebarVisible);
+  };
+
+  // Handle right sidebar width change
+  const handleRightSidebarWidthChange = (width) => {
+    setRightSidebarWidth(width);
+  };
+
+  // If no user data from API, provide a fallback
+  const userWithFallback = user || {
+    name: 'Guest',
+    username: 'Guest',
+    avatar: null,
+    notifications: 0
+  };
+
   return (
     <div className={styles.pageContainer}>
-      {/* Header fixed at the top */}
+      {/* Your existing header */}
       <div className={styles.headerContainer}>
         <Header
           user={userWithFallback}
@@ -304,16 +335,15 @@ export default function ExplorePage() {
         />
       </div>
 
-      {/* Main content area with sidebar and content */}
       <div className={styles.mainContent}>
-        {/* Left sidebar with navigation */}
+        {/* Your existing sidebar */}
         <div className={`${styles.sidebarContainer} ${isSidebarOpen ? styles.open : ''}`}>
           <div className={styles.sidebarScrollable}>
             <SidebarNavigation isOpen={isSidebarOpen} />
           </div>
         </div>
 
-        {/* Mobile overlay for sidebar */}
+        {/* Mobile overlay */}
         {isSidebarOpen && (
           <div
             className={styles.mobileOverlay}
@@ -321,95 +351,136 @@ export default function ExplorePage() {
           />
         )}
 
-        {/* Middle content with Explore content */}
-        <div className={styles.feedContainer}>
-          <div className={styles.feedScrollable}>
+        {/* REPLACE your existing content area with this enhanced version */}
+        <div className={`${styles.contentContainer} ${!isRightSidebarVisible ? styles.expanded : ''}`}>
+          <div className={styles.contentScrollable}>
             <div className={styles.pageHeader}>
-              <h1 className={styles.pageTitle}>Explore</h1>
+              <h1>Explore</h1>
               <p className={styles.pageDescription}>
                 Discover exciting content across different categories
               </p>
             </div>
 
-            {/* Category section with enhanced visibility */}
-            <div style={{
-              border: '1px solid #333',
-              borderRadius: '8px',
-              padding: '10px',
-              marginBottom: '20px',
-              backgroundColor: '#1a1a1a'
-            }}>
-              <CategorySection
-                categories={categories}
-                activeCategory={activeCategory}
-                onCategoryChange={handleCategoryChange}
-              />
-            </div>
+            {/* Category Section */}
+            <CategorySection
+              categories={categories}
+              activeCategory={activeCategory}
+              onCategoryChange={handleCategoryChange}
+            />
 
-            {/* Content section for selected category */}
-            <div className={styles.contentSection}>
-              {isLoading && exploreItems.length === 0 ? (
-                <div className={styles.loadingContainer}>
-                  <div className={styles.loadingSpinner}></div>
-                  <p>Loading {activeCategory} content...</p>
-                </div>
-              ) : error ? (
-                <div className={styles.errorContainer}>
-                  <p>{error}</p>
-                  <button
-                    className={styles.retryButton}
-                    onClick={() => fetchExploreContent(activeCategory, 1)}
+            {/* ENHANCED Explore Content with No Content Handling */}
+            {isLoading && exploreItems.length === 0 ? (
+              <div className={styles.loadingContainer}>
+                <div className={styles.loadingSpinner}></div>
+                <p>Loading {activeCategory.toLowerCase()} content...</p>
+              </div>
+            ) : error ? (
+              <div className={styles.errorContainer}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.errorIcon}>
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <h3>Unable to load content</h3>
+                <p>Error loading explore data: {error}</p>
+                <button 
+                  className={styles.retryButton}
+                  onClick={() => fetchExploreContent(activeCategory, 1)}
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : noContentMessage ? (
+              // NEW: Enhanced no content message with homepage redirect
+              <div className={styles.noContentContainer}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={styles.noContentIcon}>
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                  <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                  <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                </svg>
+                <h3 className={styles.noContentTitle}>{noContentMessage.title}</h3>
+                <p className={styles.noContentDescription}>{noContentMessage.description}</p>
+                <p className={styles.noContentSuggestion}>{noContentMessage.suggestion}</p>
+                <div className={styles.noContentActions}>
+                  <button 
+                    className={styles.createDiscussionButton}
+                    onClick={() => {
+                      // Redirect to homepage where users can create discussions
+                      router.push('/home');
+                    }}
                   >
-                    Retry
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Create First Discussion
+                  </button>
+                  <button 
+                    className={styles.exploreOtherButton}
+                    onClick={() => handleCategoryChange('Trending')}
+                  >
+                    Explore Trending Instead
                   </button>
                 </div>
-              ) : exploreItems.length === 0 ? (
-                <div className={styles.noContentContainer}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={styles.noContentIcon}>
-                    <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
-                    <line x1="12" y1="12" x2="12" y2="12.01"></line>
-                    <path d="M8 12h.01"></path>
-                    <path d="M16 12h.01"></path>
-                  </svg>
-                  <h3 className={styles.noContentTitle}>No {activeCategory} content found</h3>
-                  <p className={styles.noContentText}>We couldn't find any discussions related to this category.</p>
-                </div>
-              ) : (
-                <>
-                  <ExploreSection
-                    title={`${activeCategory} Content`}
-                    items={exploreItems}
-                  />
+              </div>
+            ) : exploreItems.length === 0 ? (
+              // Fallback for any other empty state
+              <div className={styles.noContentContainer}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={styles.noContentIcon}>
+                  <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
+                  <line x1="12" y1="12" x2="12" y2="12.01"></line>
+                  <path d="M8 12h.01"></path>
+                  <path d="M16 12h.01"></path>
+                </svg>
+                <h3 className={styles.noContentTitle}>No content found</h3>
+                <p className={styles.noContentText}>We couldn't find any discussions for this category.</p>
+              </div>
+            ) : (
+              // Show the actual content
+              <>
+                <ExploreSection
+                  title={`${activeCategory} Content`}
+                  items={exploreItems}
+                />
 
-                  {/* Load more button */}
-                  {hasMore && (
-                    <div className={styles.loadMoreContainer}>
-                      <button
-                        className={styles.loadMoreButton}
-                        onClick={handleLoadMore}
-                        disabled={isLoading}
-                      >
-                        {isLoading ? 'Loading...' : 'Load More'}
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+                {/* Load more button */}
+                {hasMore && (
+                  <div className={styles.loadMoreContainer}>
+                    <button
+                      className={styles.loadMoreButton}
+                      onClick={handleLoadMore}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className={styles.loadingSpinnerSmall}></div>
+                          Loading...
+                        </>
+                      ) : (
+                        'Load More'
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
 
-        {/* Unified Right sidebar toggle - visible on both desktop and mobile */}
-        <RightSidebarToggle
+        {/* Your existing right sidebar components */}
+        <ExploreRightSidebarToggle
           isRightSidebarVisible={isRightSidebarVisible}
           handleRightSidebarToggle={handleRightSidebarToggle}
+          sidebarWidth={rightSidebarWidth}
         />
 
-        {/* Right sidebar with AI assistant - Part of the flex layout in desktop */}
-        <RightSidebarContainer
+        <ExploreRightSidebar
           user={userWithFallback}
           isRightSidebarVisible={isRightSidebarVisible}
           isMobileView={isMobileView}
+          onClose={handleRightSidebarToggle}
+          onWidthChange={handleRightSidebarWidthChange}
         />
       </div>
     </div>

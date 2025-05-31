@@ -7,19 +7,6 @@
     position: relative;
 }
 
-.sectionHeader {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-}
-
-.title {
-    font-size: 22px;
-    font-weight: 600;
-    color: #ffffff;
-    margin: 0;
-}
 
 /* Grid layout for items - already using 2 columns */
 .gridContainer {

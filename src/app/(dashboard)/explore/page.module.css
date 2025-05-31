@@ -1,5 +1,3 @@
-/* src/app/(dashboard)/explore/page.module.css - Move feedContainer right and fix overflow */
-/* Main container for the entire page */
 .pageContainer {
   display: flex;
   flex-direction: column;
@@ -40,7 +38,8 @@
 /* Main content area - fixed to use row layout */
 .mainContent {
   display: flex;
-  flex-direction: row; /* Ensure horizontal layout */
+  flex-direction: row;
+  /* Ensure horizontal layout */
   position: fixed;
   top: 60px;
   left: 0;
@@ -49,16 +48,15 @@
   background-color: #0f0f0f;
   overflow: hidden;
   z-index: 0;
-  /* Set max-width to prevent overflow */
-  max-width: 100vw;
 }
 
 /* Left sidebar container - changed to relative positioning */
 .sidebarContainer {
-  width: 250px;
+  width: 330px;
   flex-shrink: 0;
   background-color: #121212;
-  position: relative; /* Changed from absolute */
+  position: relative;
+  /* Changed from absolute */
   height: 100%;
   overflow: hidden;
   transition: transform 0.3s ease;
@@ -73,175 +71,258 @@
   padding-bottom: 20px;
 }
 
-/* Center feed container - MOVED 100px RIGHT AND FIXED OVERFLOW ISSUE */
-.feedContainer {
+/* Content container - changed to relative positioning */
+.contentContainer {
   flex: 1;
-  position: relative; /* Changed from absolute */
+  position: relative;
+  /* Changed from absolute */
   height: 100%;
   background-color: #0f0f0f;
   overflow: hidden;
-  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  /* Move container 100px to the right */
-  margin-left: 100px;
-  /* Ensure content stays within bounds */
-  min-width: 0; /* This is critical to prevent flex item overflow */
-  width: calc(100% - 100px); /* Subtract the margin to prevent overflow */
-  max-width: calc(100% - 100px); /* Ensure it doesn't extend beyond the viewport */
+  transition: width 0.3s ease;
 }
 
-.feedScrollable {
+.contentContainer.expanded {
+  width: 100%;
+  transition: width 0.3s ease;
+}
+
+.contentScrollable {
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
   padding: 30px;
   background-color: #0f0f0f;
   padding-bottom: 40px;
   scrollbar-width: none;
-  /* Ensure content stays within container */
-  width: 100%;
-  box-sizing: border-box;
 }
 
-.feedScrollable::-webkit-scrollbar {
+.contentScrollable::-webkit-scrollbar {
   display: none;
 }
 
+/* Page header styling */
 .pageHeader {
-  margin-bottom: 24px;
+  margin-bottom: 30px;
 }
 
-.pageTitle {
+.pageHeader h1 {
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 600;
+  margin-bottom: 8px;
   color: #fff;
-  margin: 0 0 8px 0;
 }
 
 .pageDescription {
   font-size: 16px;
   color: #aaa;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-.mobileOverlay {
-  display: none;
-  position: fixed;
-  top: 60px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 90;
-  backdrop-filter: blur(4px);
-}
-
-/* New styles for the content section */
-.contentSection {
-  margin-top: 30px;
-  animation: fadeIn 0.3s ease-in-out;
-  /* Ensure content doesn't cause overflow */
-  width: 100%;
-  box-sizing: border-box;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0.7; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* For when right sidebar is not visible to expand content */
-.expandedFeed {
-  width: 100%;
-}
-
-/* Loading container styles */
+/* Loading container */
 .loadingContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
+  padding: 60px 20px;
   text-align: center;
-  color: #888;
+  min-height: 300px;
 }
 
 .loadingSpinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
+  border: 3px solid rgba(76, 160, 255, 0.2);
+  border-top: 3px solid #4ca0ff;
   border-radius: 50%;
-  border-top-color: #4169e1;
-  animation: spin 1s ease-in-out infinite;
-  margin-bottom: 20px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
 }
 
 @keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
   to {
     transform: rotate(360deg);
   }
 }
 
-/* Empty state styling */
-.noContentContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
-  text-align: center;
-  color: #888;
-  padding: 40px 20px;
-  background-color: #1a1a1a;
-  border-radius: 12px;
-  border: 1px dashed #333;
+.loadingContainer p {
+  color: #cccccc;
+  font-size: 16px;
+  margin: 0;
 }
 
-.noContentIcon {
-  margin-bottom: 20px;
-  color: #555;
+/* Small loading spinner for Load More button */
+.loadingSpinnerSmall {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #333;
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
 }
 
-.noContentTitle {
-  font-size: 18px;
-  font-weight: 500;
-  margin-bottom: 8px;
-  color: #bbb;
-}
-
-.noContentText {
-  font-size: 14px;
-  color: #777;
-}
-
-/* Error container styles */
+/* Error container */
 .errorContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
+  padding: 60px 20px;
   text-align: center;
-  color: #ff6b6b;
-  background-color: rgba(255, 107, 107, 0.1);
+  background: rgba(255, 82, 82, 0.05);
   border-radius: 12px;
-  padding: 40px 20px;
+  border: 1px solid rgba(255, 82, 82, 0.2);
+  margin: 20px 0;
+  min-height: 300px;
+}
+
+.errorIcon {
+  color: #ff5252;
+  margin-bottom: 24px;
+  opacity: 0.8;
+}
+
+.errorContainer h3 {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.errorContainer p {
+  color: #cccccc;
+  font-size: 14px;
+  margin-bottom: 24px;
+  line-height: 1.5;
 }
 
 .retryButton {
-  margin-top: 16px;
-  padding: 8px 20px;
-  background-color: #4169e1;
+  background: #ff5252;
   color: white;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  padding: 12px 24px;
+  border-radius: 8px;
   font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .retryButton:hover {
-  background-color: #3452b4;
+  background: #ff6b6b;
+  transform: translateY(-1px);
+}
+
+/* No content container */
+.noContentContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(46, 136, 255, 0.05) 0%, rgba(46, 136, 255, 0.02) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(46, 136, 255, 0.1);
+  margin: 20px 0;
+  min-height: 400px;
+}
+
+.noContentIcon {
+  color: #4ca0ff;
+  margin-bottom: 24px;
+  opacity: 0.8;
+}
+
+.noContentTitle {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.noContentDescription {
+  color: #cccccc;
+  font-size: 16px;
+  margin-bottom: 8px;
+  line-height: 1.5;
+  max-width: 400px;
+}
+
+.noContentSuggestion {
+  color: #4ca0ff;
+  font-size: 15px;
+  margin-bottom: 32px;
+  font-weight: 500;
+  line-height: 1.4;
+  max-width: 450px;
+}
+
+.noContentActions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.createDiscussionButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #4ca0ff 0%, #2e88ff 100%);
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(46, 136, 255, 0.3);
+}
+
+.createDiscussionButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(46, 136, 255, 0.4);
+  background: linear-gradient(135deg, #5db0ff 0%, #3e98ff 100%);
+}
+
+.createDiscussionButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(46, 136, 255, 0.3);
+}
+
+.exploreOtherButton {
+  background: transparent;
+  color: #888888;
+  border: 1px solid #444444;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.exploreOtherButton:hover {
+  color: #cccccc;
+  border-color: #666666;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.noContentText {
+  font-size: 14px;
+  color: #777;
+  max-width: 400px;
 }
 
 /* Load more button styles */
@@ -252,18 +333,24 @@
 }
 
 .loadMoreButton {
-  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
   background-color: #2a2a2a;
   color: white;
   border: 1px solid #444;
   border-radius: 6px;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 120px;
 }
 
-.loadMoreButton:hover {
+.loadMoreButton:hover:not(:disabled) {
   background-color: #3a3a3a;
+  border-color: #555;
   transform: translateY(-2px);
 }
 
@@ -271,6 +358,19 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Mobile overlay for sidebar toggle */
+.mobileOverlay {
+  display: none;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 90;
+  backdrop-filter: blur(4px);
 }
 
 /* Responsive adjustments - switch to absolute positioning for mobile */
@@ -287,11 +387,8 @@
     transform: translateX(0);
   }
 
-  /* Adjust for mobile view */
-  .feedContainer {
-    margin-left: 0; /* Remove margin on mobile */
-    width: 100%; /* Full width on mobile */
-    max-width: 100%;
+  .contentContainer {
+    width: 100%;
   }
 
   .mobileOverlay {
@@ -307,29 +404,17 @@
 }
 
 @media (max-width: 992px) {
-  .sidebarContainer {
-    width: 240px;
-  }
 
   .open~.mobileOverlay,
   .open+.mobileOverlay,
   .open~* .mobileOverlay {
-    left: 240px;
+    left: 0px;
   }
 }
 
 @media (max-width: 768px) {
-  .feedScrollable {
+  .contentScrollable {
     padding: 20px;
-  }
-
-  .pageTitle {
-    font-size: 24px;
-  }
-
-  .pageDescription {
-    font-size: 14px;
-    margin-bottom: 16px;
   }
 
   .sidebarContainer {
@@ -340,6 +425,45 @@
   .open+.mobileOverlay,
   .open~* .mobileOverlay {
     left: 0px;
+  }
+
+  .pageHeader h1 {
+    font-size: 22px;
+  }
+
+  .pageDescription {
+    font-size: 14px;
+  }
+
+  .noContentContainer {
+    padding: 40px 16px;
+    min-height: 300px;
+  }
+
+  .noContentTitle {
+    font-size: 20px;
+  }
+
+  .noContentDescription {
+    font-size: 14px;
+  }
+
+  .noContentSuggestion {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .noContentActions {
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .createDiscussionButton,
+  .exploreOtherButton {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
   }
 }
 
@@ -354,16 +478,17 @@
     left: 0px;
   }
 
-  .feedScrollable {
+  .contentScrollable {
     padding: 16px;
     padding-bottom: 40px;
   }
 
-  .pageTitle {
+  .pageHeader h1 {
     font-size: 20px;
   }
-  
-  .contentSections {
-    gap: 32px;
+
+  .loadMoreButton {
+    padding: 10px 20px;
+    font-size: 13px;
   }
 }

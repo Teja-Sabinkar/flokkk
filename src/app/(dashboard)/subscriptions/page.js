@@ -1,47 +1,413 @@
-// src/app/(dashboard)/subscriptions/page.js - Updated with sidebar awareness
 'use client';
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/layout/Header/Header';
 import SidebarNavigation from '@/components/layout/SidebarNavigation/SidebarNavigation';
 import SubscriptionsContainer from '@/components/subscriptions/SubscriptionsContainer';
-import RightSidebarContainer from '@/components/ai/RightSidebarContainer';
-import RightSidebarToggle from '@/components/ai/RightSidebarToggle';
-import { 
-  fetchSubscriptionFeed, 
-  getRecentSubscriptions 
-} from '@/lib/subscriptions';
 import styles from './page.module.css';
 
+// SubscriptionRightSidebar Component (duplicated from RecentlyViewedRightSidebar)
+import { useRef, useCallback } from 'react';
+import RotatingNewsContainer from '@/components/widgets/rotatingNewsContainer';
+import QuickActions from '@/components/widgets/quickActions';
+import AiChat from '@/components/aichat/AiChat';
+import aiChatStyles from '@/components/aichat/AiChat.module.css';
+
+const SubscriptionRightSidebar = ({
+  user,
+  isRightSidebarVisible = true,
+  isMobileView = false,
+  onClose,
+  onWidthChange
+}) => {
+  const [isResizing, setIsResizing] = useState(false);
+  const [rightSidebarWidth, setRightSidebarWidth] = useState(330);
+
+  // Chat related states
+  const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Refs
+  const containerRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  // Check if there are any user messages to determine header visibility
+  const hasUserMessages = messages.some(message => message.type === 'user');
+
+  // Handle quick action selection
+  const handleQuickAction = useCallback((action) => {
+    switch (action) {
+      case 'explore':
+        window.location.href = '/explore';
+        break;
+      case 'trending':
+        console.log('Trending action selected');
+        break;
+      case 'create':
+        window.location.href = '/home';
+        break;
+      default:
+        break;
+    }
+  }, []);
+
+  // Handle mobile close if provided
+  const handleClose = useCallback(() => {
+    if (onClose && isMobileView) {
+      onClose();
+    }
+  }, [onClose, isMobileView]);
+
+  // Update CSS variables when sidebar width changes
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-width', `${rightSidebarWidth}px`);
+    document.documentElement.style.setProperty('--toggle-position', `${rightSidebarWidth + 15}px`);
+  }, [rightSidebarWidth]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Resize functionality for right sidebar
+  const startResizing = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setIsResizing(true);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.body.style.pointerEvents = 'none';
+    
+    if (containerRef.current) {
+      containerRef.current.style.pointerEvents = 'auto';
+    }
+  }, []);
+
+  // Listen for mouse events during resize
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizing) return;
+
+      const windowWidth = window.innerWidth;
+      const newWidth = windowWidth - e.clientX;
+      const minWidth = 250;
+      const maxWidth = Math.min(600, windowWidth * 0.4);
+      const constrainedWidth = Math.min(Math.max(newWidth, minWidth), maxWidth);
+
+      setRightSidebarWidth(constrainedWidth);
+      localStorage.setItem('rightSidebarWidth', constrainedWidth.toString());
+
+      if (onWidthChange) {
+        onWidthChange(constrainedWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (!isResizing) return;
+
+      setIsResizing(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.body.style.pointerEvents = '';
+
+      if (containerRef.current) {
+        containerRef.current.style.pointerEvents = '';
+      }
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, onWidthChange]);
+
+  // Load saved width on mount
+  useEffect(() => {
+    const savedWidth = localStorage.getItem('rightSidebarWidth');
+    if (savedWidth) {
+      const width = Number(savedWidth);
+      setRightSidebarWidth(width);
+      if (onWidthChange) {
+        onWidthChange(width);
+      }
+    }
+  }, [onWidthChange]);
+
+  // Function to handle AI chat submission
+  const handleAiChatSubmit = async (message) => {
+    if (!message.trim() || isLoading) return;
+
+    const userMessage = {
+      id: Date.now(),
+      type: 'user',
+      content: message,
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem('token');
+      const requestOptions = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          message: message,
+          username: user?.username || 'Anonymous User'
+        })
+      };
+
+      const response = await fetch('/api/ai/claude', requestOptions);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 429) {
+          throw new Error(`Rate limit exceeded: ${errorData.message}`);
+        }
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiResponse = {
+        id: Date.now() + 1,
+        type: 'ai',
+        content: data.response || "I'm sorry, I couldn't process your request."
+      };
+
+      setMessages(prev => [...prev, aiResponse]);
+    } catch (err) {
+      console.error('Error communicating with AI:', err);
+      setError(err.message || 'Failed to get a response from Claude AI');
+
+      const errorMessage = {
+        id: Date.now() + 1,
+        type: 'error',
+        content: 'Sorry, I encountered an error. Please try again later.'
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to get time-based greeting
+  const getTimeBasedGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return "Good Morning";
+    else if (hour >= 12 && hour < 17) return "Good Afternoon";
+    else if (hour >= 17 && hour < 21) return "Good Evening";
+    else return "Good Night";
+  };
+
+  // Add welcome message when component mounts or user changes
+  useEffect(() => {
+    if (!user || user.name === 'Guest' || user.username === 'Guest') {
+      return;
+    }
+
+    let username = 'there';
+    if (user) {
+      username = user.username || user.name || (user.email ? user.email.split('@')[0] : 'there');
+    }
+
+    const cleanUsername = username.replace(/[@\s]/g, '');
+    const timeGreeting = getTimeBasedGreeting();
+    const welcomeMessage = {
+      id: 1,
+      type: 'system',
+      content: `Hi ${cleanUsername}, ${timeGreeting}! How can I assist you today?`
+    };
+
+    setMessages([welcomeMessage]);
+  }, [user]);
+
+  return (
+    <div
+      className={`${styles.rightSidebarContainer} ${isRightSidebarVisible ? styles.visible : styles.hidden} ${isResizing ? styles.resizing : ''}`}
+      ref={containerRef}
+      data-width={rightSidebarWidth}
+    >
+      {/* Resize handle */}
+      <div
+        className={`${styles.resizeHandle} ${isResizing ? styles.isResizing : ''}`}
+        onMouseDown={startResizing}
+        title="Drag to resize"
+      >
+        <div className={styles.resizeBar}></div>
+      </div>
+
+      <div className={styles.sidebarContentWrapper}>
+        {/* Main widgets area */}
+        <div className={styles.widgetsArea}>
+          <div className={styles.widgetsContainer}>
+            <RotatingNewsContainer />
+            <QuickActions onActionSelect={handleQuickAction} />
+
+            {/* Display chat messages */}
+            {messages.length > 0 && (
+              <div className={styles.messagesContainer}>
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`${aiChatStyles.chatMessage} ${aiChatStyles[message.type]}`}
+                  >
+                    <div className={aiChatStyles.messageContent} dangerouslySetInnerHTML={{ __html: message.content }}></div>
+                  </div>
+                ))}
+
+                {isLoading && (
+                  <div className={`${aiChatStyles.chatMessage} ${aiChatStyles.ai}`}>
+                    <div className={aiChatStyles.typingIndicator}>
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Header text - only show when no user messages exist */}
+        {!hasUserMessages && (
+          <div className={styles.headerText}>
+            <p className={styles.promptText}>Something on your mind?</p>
+            <h2 className={styles.title}>Ask Flokkk</h2>
+          </div>
+        )}
+
+        {/* AI Chat Component - Fixed at bottom */}
+        <div className={styles.aiChatWrapper}>
+          <AiChat onSubmit={handleAiChatSubmit} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// SubscriptionRightSidebarToggle Component (duplicated from RecentlyViewedRightSidebarToggle)
+const SubscriptionRightSidebarToggle = ({
+    isRightSidebarVisible,
+    handleRightSidebarToggle,
+    sidebarWidth = 330
+}) => {
+    const [screenSize, setScreenSize] = useState('desktop');
+    const [isReady, setIsReady] = useState(false);
+
+    // Check for screen size breakpoints
+    useEffect(() => {
+        const checkScreenSize = () => {
+            const width = window.innerWidth;
+            if (width < 480) {
+                setScreenSize('small-mobile');
+            } else if (width < 1300) {
+                setScreenSize('mobile');
+            } else {
+                setScreenSize('desktop');
+            }
+        };
+
+        checkScreenSize();
+        window.addEventListener('resize', checkScreenSize);
+        return () => window.removeEventListener('resize', checkScreenSize);
+    }, []);
+
+    // Set initial safe position and mark as ready
+    useEffect(() => {
+        document.documentElement.style.setProperty('--toggle-right-position', isRightSidebarVisible ? '320px' : '0px');
+        
+        const timer = setTimeout(() => {
+            setIsReady(true);
+        }, 50);
+
+        return () => clearTimeout(timer);
+    }, [isRightSidebarVisible]);
+
+    // Update positioning once ready and when dependencies change
+    useEffect(() => {
+        if (!isReady) return;
+
+        let rightPosition;
+
+        if (isRightSidebarVisible) {
+            if (screenSize === 'small-mobile' || screenSize === 'mobile') {
+                rightPosition = '320px';
+            } else {
+                rightPosition = `${sidebarWidth + 5}px`;
+            }
+        } else {
+            rightPosition = '0px';
+        }
+
+        document.documentElement.style.setProperty('--toggle-right-position', rightPosition);
+    }, [isRightSidebarVisible, sidebarWidth, screenSize, isReady]);
+
+    // Determine CSS classes based on state
+    const getToggleClasses = () => {
+        let classes = [styles.rightSidebarToggle];
+        
+        if (isRightSidebarVisible) {
+            classes.push(styles.active);
+        }
+        
+        if (!isReady) {
+            classes.push(styles.hidden);
+        }
+        
+        return classes.join(' ');
+    };
+
+    return (
+        <button
+            className={getToggleClasses()}
+            onClick={handleRightSidebarToggle}
+            aria-label="Toggle subscriptions sidebar"
+        >
+            <span className={styles.aiText}>flokkk</span>
+        </button>
+    );
+};
+
+// Main Subscriptions Page Component
 export default function SubscriptionsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [subscriptionsData, setSubscriptionsData] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [feedPosts, setFeedPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [feedPosts, setFeedPosts] = useState([]);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    totalPosts: 0,
-    totalPages: 0
-  });
-  
-  // New state for filter controls
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [timeFilter, setTimeFilter] = useState('all'); // 'all', 'day', 'week', or 'month'
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Add state for right sidebar visibility and mobile view detection
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(() => {
-    // Initially visible only if screen width >= 1300px (desktop)
     if (typeof window !== 'undefined') {
       return window.innerWidth >= 1300;
     }
-    return true; // Default to true for SSR
+    return true;
   });
   const [isMobileView, setIsMobileView] = useState(false);
-  
+  const [rightSidebarWidth, setRightSidebarWidth] = useState(330);
+
   // Check for mobile view and update sidebar visibility
   useEffect(() => {
     const checkMobileView = () => {
@@ -49,23 +415,16 @@ export default function SubscriptionsPage() {
       setIsMobileView(isMobile);
     };
 
-    // Check initially
     checkMobileView();
-
-    // Set up event listener for window resize
     window.addEventListener('resize', checkMobileView);
-
-    // Clean up
-    return () => {
-      window.removeEventListener('resize', checkMobileView);
-    };
+    return () => window.removeEventListener('resize', checkMobileView);
   }, []);
-  
-  // Fetch user data if not using a context
+
+  // Fetch user data
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem('token');
-      
+
       if (token) {
         try {
           const response = await fetch('/api/auth/me', {
@@ -73,11 +432,15 @@ export default function SubscriptionsPage() {
               Authorization: `Bearer ${token}`
             }
           });
-          
+
           if (response.ok) {
             const userData = await response.json();
-            // Ensure we have a valid avatar URL or null
-            userData.avatar = userData.avatar || null;
+            userData.avatar = userData.avatar || userData.profilePicture || null;
+
+            if (!userData.username && userData.name) {
+              userData.username = userData.name;
+            }
+
             setUser(userData);
           }
         } catch (error) {
@@ -85,66 +448,93 @@ export default function SubscriptionsPage() {
         }
       }
     };
-    
+
     fetchUserData();
   }, []);
 
-  // Fetch subscription data
+  // Fetch subscriptions and feed
   useEffect(() => {
     const fetchSubscriptions = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
-        // Fetch recent active subscriptions
-        const { subscriptions = [] } = await getRecentSubscriptions({ limit: 5 });
-        setSubscriptionsData(subscriptions);
-        
-        // Fetch subscription feed posts
-        const feedData = await fetchSubscriptionFeed({ page: 1, limit: 10 });
-        setFeedPosts(feedData.posts || []);
-        setPagination(feedData.pagination || pagination);
-        
+        const token = localStorage.getItem('token');
+
+        if (token) {
+          // Fetch user's subscriptions list using the dedicated subscriptions API
+          // API returns: { subscriptions: [{ id, username, name, profilePicture, bio, followingSince, avatarColor }], pagination }
+          const subscriptionsResponse = await fetch('/api/subscriptions/list?page=1&limit=20', {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          if (subscriptionsResponse.ok) {
+            const subscriptionsData = await subscriptionsResponse.json();
+            setSubscriptions(subscriptionsData.subscriptions || []);
+          }
+
+          // Fetch subscription feed posts using the dedicated subscriptions feed API
+          // API returns: { posts: [{ id, title, content, image, videoUrl, hashtags, discussions, shares, createdAt, updatedAt, username, name, profilePicture, userId }], pagination }
+          const feedResponse = await fetch('/api/subscriptions/feed?page=1&limit=20', {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          if (feedResponse.ok) {
+            const feedData = await feedResponse.json();
+            setFeedPosts(feedData.posts || []);
+            setHasMore(feedData.pagination?.totalPages > 1 || false);
+          }
+        }
       } catch (error) {
-        console.error('Error loading subscriptions:', error);
-        setError(error.message || 'Failed to load subscriptions');
+        console.error('Error fetching subscriptions:', error);
+        setError(error.message);
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchSubscriptions();
   }, []);
 
-  // Handle loading more posts
-  const loadMorePosts = async () => {
-    if (isLoading || pagination.page >= pagination.totalPages) return;
-    
+  // Load more posts function
+  const handleLoadMore = async () => {
+    if (isLoading || !hasMore) return;
+
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const nextPage = pagination.page + 1;
-      
-      const feedData = await fetchSubscriptionFeed({ 
-        page: nextPage, 
-        limit: pagination.limit 
+      const token = localStorage.getItem('token');
+      const nextPage = currentPage + 1;
+
+      const response = await fetch(`/api/subscriptions/feed?page=${nextPage}&limit=20`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
-      
-      setFeedPosts(prevPosts => [...prevPosts, ...(feedData.posts || [])]);
-      setPagination(feedData.pagination);
+
+      if (response.ok) {
+        const data = await response.json();
+        setFeedPosts(prev => [...prev, ...(data.posts || [])]);
+        setHasMore(data.pagination?.page < data.pagination?.totalPages || false);
+        setCurrentPage(nextPage);
+      }
     } catch (error) {
       console.error('Error loading more posts:', error);
-      setError('Failed to load more posts. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // If no user data from API, provide a fallback
-  const userWithFallback = user || {
-    name: 'Guest',
-    avatar: null,
-    notifications: 0
-  };
+  // Load saved sidebar width on component mount
+  useEffect(() => {
+    const savedWidth = localStorage.getItem('rightSidebarWidth');
+    if (savedWidth) {
+      setRightSidebarWidth(Number(savedWidth));
+    }
+  }, []);
 
   // Handle sidebar toggle
   const toggleSidebar = () => {
@@ -161,119 +551,79 @@ export default function SubscriptionsPage() {
     setIsRightSidebarVisible(!isRightSidebarVisible);
   };
 
-  // Filter subscriptions based on time period and search query
-  const getFilteredSubscriptions = () => {
-    // First apply time filter
-    let filteredSubs = [...subscriptionsData];
-    
-    if (timeFilter !== 'all') {
-      const now = new Date();
-      let cutoffDate;
-      
-      switch (timeFilter) {
-        case 'day':
-          // Last 24 hours
-          cutoffDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-          break;
-        case 'week':
-          // Last 7 days
-          cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          break;
-        case 'month':
-          // Last 30 days
-          cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          break;
-      }
-      
-      // Filter based on lastPostTime (assuming it's in a format we can parse)
-      filteredSubs = filteredSubs.filter(sub => {
-        // Parse the lastPostTime (e.g., "2h ago", "3d ago")
-        const timeMatch = sub.lastPostTime?.match(/(\d+)([hd])/);
-        if (!timeMatch) return true; // Keep if can't parse
-        
-        const value = parseInt(timeMatch[1]);
-        const unit = timeMatch[2];
-        
-        const postDate = new Date();
-        if (unit === 'h') {
-          postDate.setHours(postDate.getHours() - value);
-        } else if (unit === 'd') {
-          postDate.setDate(postDate.getDate() - value);
-        }
-        
-        return postDate >= cutoffDate;
-      });
-    }
-    
-    // Then apply search query if exists
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filteredSubs = filteredSubs.filter(sub => 
-        (sub.username && sub.username.toLowerCase().includes(query)) ||
-        (sub.name && sub.name.toLowerCase().includes(query)) ||
-        (sub.title && sub.title.toLowerCase().includes(query)) ||
-        (sub.description && sub.description.toLowerCase().includes(query))
-      );
-    }
-    
-    return filteredSubs;
+  // Handle right sidebar width change
+  const handleRightSidebarWidthChange = (width) => {
+    setRightSidebarWidth(width);
   };
-  
-  // Filter posts based on time period and search query
+
+  // Filter items based on time period and search
   const getFilteredPosts = () => {
-    // First apply time filter
-    let filteredPosts = [...feedPosts];
-    
+    let filtered = feedPosts;
+
+    // Apply time filter
     if (timeFilter !== 'all') {
       const now = new Date();
       let cutoffDate;
-      
+
       switch (timeFilter) {
         case 'day':
-          // Last 24 hours
           cutoffDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
           break;
         case 'week':
-          // Last 7 days
           cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
           break;
         case 'month':
-          // Last 30 days
           cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
           break;
+        default:
+          return filtered;
       }
-      
-      filteredPosts = filteredPosts.filter(post => {
+
+      filtered = filtered.filter(post => {
         const postDate = new Date(post.createdAt);
         return postDate >= cutoffDate;
       });
     }
-    
-    // Then apply search query if exists
+
+    // Apply search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filteredPosts = filteredPosts.filter(post => 
-        (post.username && post.username.toLowerCase().includes(query)) ||
-        (post.name && post.name.toLowerCase().includes(query)) ||
-        (post.title && post.title.toLowerCase().includes(query)) ||
-        (post.content && post.content.toLowerCase().includes(query))
-      );
+      const lowerQuery = searchQuery.toLowerCase();
+      filtered = filtered.filter(post => {
+        const contentMatch = 
+          (post.title && post.title.toLowerCase().includes(lowerQuery)) ||
+          (post.content && post.content.toLowerCase().includes(lowerQuery));
+
+        const usernameMatch = 
+          (post.username && post.username.toLowerCase().includes(lowerQuery));
+
+        return contentMatch || usernameMatch;
+      });
     }
-    
-    return filteredPosts;
+
+    return filtered;
   };
+
+  // If no user data from API, provide a fallback
+  const userWithFallback = user || {
+    name: 'Guest',
+    username: 'Guest',
+    avatar: null,
+    notifications: 0
+  };
+
+  const filteredPosts = getFilteredPosts();
 
   return (
     <div className={styles.pageContainer}>
       {/* Header fixed at the top */}
       <div className={styles.headerContainer}>
-        <Header 
+        <Header
           user={userWithFallback}
           onMenuToggle={toggleSidebar}
           isMobileMenuOpen={isSidebarOpen}
         />
       </div>
-      
+
       {/* Main content area */}
       <div className={styles.mainContent}>
         {/* Left sidebar with navigation */}
@@ -282,30 +632,30 @@ export default function SubscriptionsPage() {
             <SidebarNavigation isOpen={isSidebarOpen} />
           </div>
         </div>
-        
-        {/* Mobile overlay for sidebar toggle */}
+
+        {/* Mobile overlay for sidebar */}
         {isSidebarOpen && (
-          <div 
-            className={styles.mobileOverlay} 
+          <div
+            className={styles.mobileOverlay}
             onClick={handleOverlayClick}
           />
         )}
-        
-        {/* Content area with subscriptions - FIXED: Apply expandedContent class conditionally */}
-        <div className={`${styles.contentContainer} ${!isRightSidebarVisible || isMobileView ? styles.expandedContent : ''}`}>
+
+        {/* Content area with subscriptions */}
+        <div className={`${styles.contentContainer} ${!isRightSidebarVisible ? styles.expanded : ''}`}>
           <div className={styles.contentScrollable}>
             <div className={styles.pageHeader}>
               <h1>Subscriptions</h1>
               <p className={styles.pageDescription}>
-                Creators and content you follow across the platform
+                Latest content from creators you follow
               </p>
             </div>
-            
-            {/* Filter Bar - New Addition */}
+
+            {/* Filter Bar */}
             <div className={styles.filterBar}>
               <div className={styles.filterBarLeft}>
                 <div className={styles.filterDropdown}>
-                  <select 
+                  <select
                     value={timeFilter}
                     onChange={(e) => setTimeFilter(e.target.value)}
                     className={styles.filterSelect}
@@ -317,12 +667,12 @@ export default function SubscriptionsPage() {
                   </select>
                 </div>
               </div>
-              
+
               <div className={styles.filterBarRight}>
                 <div className={styles.searchContainer}>
                   <input
                     type="text"
-                    placeholder="Search content or users..."
+                    placeholder="Search content or creators..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className={styles.searchInput}
@@ -334,9 +684,9 @@ export default function SubscriptionsPage() {
                     </svg>
                   </button>
                 </div>
-                
+
                 <div className={styles.viewToggle}>
-                  <button 
+                  <button
                     className={`${styles.viewToggleButton} ${viewMode === 'grid' ? styles.active : ''}`}
                     onClick={() => setViewMode('grid')}
                     aria-label="Grid view"
@@ -348,7 +698,7 @@ export default function SubscriptionsPage() {
                       <rect x="3" y="14" width="7" height="7"></rect>
                     </svg>
                   </button>
-                  <button 
+                  <button
                     className={`${styles.viewToggleButton} ${viewMode === 'list' ? styles.active : ''}`}
                     onClick={() => setViewMode('list')}
                     aria-label="List view"
@@ -365,36 +715,33 @@ export default function SubscriptionsPage() {
                 </div>
               </div>
             </div>
-            
-            {error && (
-              <div className={styles.errorMessage}>
-                {error}
-              </div>
-            )}
-            
-            <SubscriptionsContainer 
-              subscriptions={getFilteredSubscriptions()} 
-              isLoading={isLoading}
-              feedPosts={getFilteredPosts()}
-              onLoadMore={loadMorePosts}
-              hasMore={pagination.page < pagination.totalPages}
+
+            <SubscriptionsContainer
+              subscriptions={subscriptions}
+              feedPosts={filteredPosts}
+              isLoading={isLoading && feedPosts.length === 0}
+              onLoadMore={handleLoadMore}
+              hasMore={hasMore}
               viewMode={viewMode}
-              isExpanded={!isRightSidebarVisible || isMobileView}
+              isExpanded={!isRightSidebarVisible}
             />
           </div>
         </div>
 
-        {/* Unified Right sidebar toggle - visible on both desktop and mobile */}
-        <RightSidebarToggle
+        {/* Right sidebar toggle */}
+        <SubscriptionRightSidebarToggle
           isRightSidebarVisible={isRightSidebarVisible}
           handleRightSidebarToggle={handleRightSidebarToggle}
+          sidebarWidth={rightSidebarWidth}
         />
 
-        {/* Right sidebar with AI assistant - Part of the flex layout in desktop */}
-        <RightSidebarContainer
+        {/* Right sidebar */}
+        <SubscriptionRightSidebar
           user={userWithFallback}
           isRightSidebarVisible={isRightSidebarVisible}
           isMobileView={isMobileView}
+          onClose={handleRightSidebarToggle}
+          onWidthChange={handleRightSidebarWidthChange}
         />
       </div>
     </div>

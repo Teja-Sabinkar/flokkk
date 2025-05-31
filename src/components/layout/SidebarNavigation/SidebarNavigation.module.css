@@ -32,7 +32,6 @@
   transition: background-color 0.2s ease;
   border-radius: 10PX;
   margin-bottom: 15px;
-
 }
 
 .navLink:hover {
@@ -43,6 +42,12 @@
   background-color: #3f51b5;
   /* Blue color for active state */
   color: white;
+}
+
+/* Special class for Flokkk A.I. navigation link */
+.flokkkAI {
+  border: 1px solid #3f51b5;
+  position: relative;
 }
 
 .navIcon {
@@ -60,16 +65,12 @@
 }
 
 /* Responsive behavior */
-
-
 @media (max-width: 1300px) {
   .sidebar {
     width: 330px;
     padding-top: 0px;
   }
 }
-
-
 
 @media (max-width: 768px) {
   .sidebar {

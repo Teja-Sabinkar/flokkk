@@ -1,0 +1,344 @@
+/* Right sidebar container */
+.rightSidebarContainer {
+    width: 330px;
+    flex-shrink: 0;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #0f0f0f;
+    overflow: hidden;
+    z-index: 100;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+}
+
+.rightSidebarScrollable {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background-color: #0f0f0f;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 20px 0 0 16px;
+    /* Added justify-content to push elements to top and bottom */
+    justify-content: space-between;
+}
+
+/* Style for the content at the top of the sidebar */
+.sidebarTopContent {
+    width: 100%;
+}
+
+/* Style for the AiChat wrapper at the bottom */
+.aiChatWrapper {
+    width: 100%;
+    margin-top: auto;
+}
+
+/* Chat messages container */
+.chatMessages {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-grow: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #444 #1a1a1a;
+}
+
+/* Messages container */
+.messagesContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 16px 0 0;
+    margin-top: 16px;
+    margin-bottom: 14px;
+}
+
+/* Chat message styles */
+.chatMessage {
+    padding: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    animation: fadeIn 0.3s ease;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: visible;
+    margin-bottom: 12px;
+}
+
+/* Message content styling */
+.messageContent {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    overflow-x: hidden;
+    overflow-y: visible;
+}
+
+/* System message style */
+.system {
+    color: #a1a1a1;
+    padding: 10px 14px;
+    background-color: transparent;
+    font-size: 13px;
+    text-align: center;
+    max-width: 80%;
+    margin: 0px auto;
+}
+
+/* User message style */
+.user {
+    background-color: #2962FF;
+    align-self: flex-end;
+    max-width: 85%;
+    padding: 12px 16px;
+    color: white;
+}
+
+/* AI message style */
+.ai {
+    background-color: #181818;
+    align-self: flex-start;
+    color: #fff;
+    border: 1px solid #333;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 12px 16px;
+}
+
+/* Error message style */
+.error {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #ff6b6b;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    padding: 12px 16px;
+    border-radius: 12px;
+    max-width: 85%;
+}
+
+/* Typing indicator animation */
+.typingIndicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 16px;
+}
+
+.typingIndicator span {
+    width: 6px;
+    height: 6px;
+    background-color: #6e6e6e;
+    border-radius: 50%;
+    display: inline-block;
+    animation: typing 1.4s infinite ease-in-out both;
+}
+
+.typingIndicator span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.typingIndicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typingIndicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+
+    0%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: translateY(-6px);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Resize handle styles */
+.resizeHandle {
+    position: absolute;
+    left: -10px;
+    top: 0;
+    height: 100%;
+    width: 20px;
+    cursor: col-resize;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.2;
+    transition: opacity 0.2s;
+}
+
+.resizeHandle:hover,
+.resizeHandle.isResizing {
+    opacity: 1;
+    background-color: rgba(65, 105, 225, 0.1);
+}
+
+.resizeBar {
+    width: 15px;
+    height: 100px;
+    background-color: #4169e1;
+    border-radius: 4px;
+}
+
+/* Right sidebar toggle button */
+.rightSidebarToggle {
+    position: fixed;
+    right: 0px;
+    top: 100px;
+    transform: translateY(-50%);
+    border-top: 1px solid #4169e1;
+    border-left: 1px solid #4169e1;
+    border-bottom: 1px solid #4169e1;
+    border-right: none;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    color: #fff;
+    width: 28px;
+    height: 80px;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    cursor: pointer;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
+    transition: right 0.3s ease;
+    background-color: #4169e1da;
+    backdrop-filter: blur(1px);
+    font-size: 8px;
+}
+
+.rightSidebarToggle:hover {
+    background-color: #4169e1;
+}
+
+.rightSidebarToggle.active {
+    color: white;
+}
+
+/* Adjusted position for active state */
+.rightSidebarToggle.active {
+    right: var(--sidebar-width, 330px);
+}
+
+/* Toggle button text */
+.toggleText {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 2px;
+}
+
+/* Show sidebar when visible class is present */
+.rightSidebarContainer.visible {
+    transform: translateX(0);
+}
+
+/* Hide sidebar by default in mobile view */
+@media (max-width: 1300px) {
+    .rightSidebarContainer {
+        transform: translateX(100%);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1300px) {
+
+    /* Hide right sidebar */
+    .rightSidebarContainer {
+        position: fixed;
+        right: 0;
+        top: 60px;
+        /* Below header */
+        height: calc(100vh - 60px);
+        z-index: 998;
+        margin-left: 0;
+        transform: translateX(100%);
+        /* Move it completely off-screen to the right */
+        /* Hide by default */
+        border-radius: 0;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+        /* Ensure smooth animation */
+        width: 400px !important;
+        /* Use fixed width in mobile view */
+        min-width: 330px !important;
+        max-width: 450px !important;
+    }
+
+    .rightSidebarContainer.visible {
+        transform: translateX(0);
+        /* Bring it back to visible position */
+        /* Show when toggled */
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .resizeHandle {
+        display: none;
+    }
+
+    .rightSidebarToggle {
+        right: 0px;
+        /* Slightly closer to edge on very small screens */
+    }
+
+    .rightSidebarToggle.active {
+        right: 400px;
+        /* Slight adjustment for mobile */
+    }
+}
+
+@media (max-width: 480px) {
+    .rightSidebarContainer {
+        width: 330px !important;
+        /* Use fixed width in mobile view */
+        min-width: 300px !important;
+        max-width: 330px !important;
+    }
+
+    .rightSidebarToggle.active {
+        right: 329px;
+        /* Width of the sidebar when open */
+    }
+
+    .rightSidebarScrollable {
+        padding-bottom: 60px;
+    }
+}

@@ -13,10 +13,13 @@
 }
 
 .recommendationsHeader h3 {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
-    color: #d1d1d1;
-    margin: 0;
+    color: #fff;
+    margin: 0 0 0 10px;
+    width: 100%;
+    white-space: nowrap;
+    overflow: visible;
 }
 
 /* Link container for recommendations */

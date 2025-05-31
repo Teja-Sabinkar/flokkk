@@ -68,12 +68,89 @@
     min-height: 300px;
 }
 
+.linksSectionContainer:nth-child(2) .linkItem {
+    border-left: 3px solid #ff6b6b;
+}
+
 .linksSectionTitle {
     margin: 0 0 16px 0;
     font-size: 16px;
     font-weight: 600;
     color: #fff;
     padding-bottom: 8px;
+}
+
+/* Link Search Container */
+.linkSearchContainer {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.linkSearchInput {
+    width: 100%;
+    padding: 12px 50px 12px 16px;
+    font-size: 14px;
+    background-color: #252525;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    color: #fff;
+    transition: border-color 0.2s;
+}
+
+.linkSearchInput:focus {
+    outline: none;
+    border-color: #4169e1;
+}
+
+.linkSearchInput::placeholder {
+    color: #666;
+}
+
+.linkSearchClearButton {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.linkSearchClearButton:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.linkSearchIcon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* No Results Message */
+.noResultsMessage {
+    color: #888;
+    font-size: 14px;
+    text-align: center;
+    padding: 20px 16px;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px dashed #333;
+    border-radius: 6px;
+    margin: 12px 0;
+    font-style: italic;
 }
 
 /* Community Links Note */
@@ -85,7 +162,6 @@
     border-radius: 4px;
     font-size: 13px;
     color: #8bb4f7;
-    font-style: italic;
     text-align: center;
 }
 
@@ -592,7 +668,7 @@
 }
 
 .linkTitle {
-    margin: 0 0 4px 0;
+    margin: 0 30px 4px 0;
     font-size: 15px;
     font-weight: 500;
     color: #fff;

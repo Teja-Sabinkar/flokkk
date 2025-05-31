@@ -1,0 +1,75 @@
+/* src/components/widgets/quickActions.module.css */
+.quickActions {
+    background-color: #171717;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #2a2a2a;
+}
+
+.actionTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 12px 0;
+}
+
+.actionButtons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+
+.actionButton {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: #d1d1d1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.actionButton:hover {
+    background-color: #2a2a2a;
+    border-color: #4169e1;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.actionButton:active {
+    transform: translateY(0);
+}
+
+.actionButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .quickActions {
+        padding: 12px;
+    }
+
+    .actionTitle {
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+
+    .actionButton {
+        padding: 10px 6px;
+        font-size: 10px;
+        gap: 4px;
+    }
+
+    .actionButton svg {
+        width: 16px;
+        height: 16px;
+    }
+}

@@ -1,14 +1,46 @@
-// /api/ai/claude/route.js
+// /api/ai/claude/route.js - Enhanced with Discussion Analysis and New Suggestion System
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
-import { claudeDbService } from '@/lib/claudeDbService';
-import { rateLimiter } from '@/lib/rateLimiting';
-import { responseCache, withCache } from '@/lib/responseCache';
 import { ObjectId } from 'mongodb';
 import { connectToDatabase } from '@/lib/mongodb';
+import dbConnect from '@/lib/mongoose';
+import Post from '@/models/Post';
+import Comment from '@/models/Comment';
+
+// Safe imports with fallbacks
+let rateLimiter = {
+  checkRateLimit: async () => ({ allowed: true, remainingRequests: 30, resetTime: new Date() })
+};
+
+let responseCache = {
+  generateCacheKey: () => 'key',
+  get: async () => null,
+  set: async () => {}
+};
+
+// Try to import utilities
+try {
+  const rateLimitModule = await import('@/lib/rateLimiting');
+  if (rateLimitModule.rateLimiter) {
+    rateLimiter = rateLimitModule.rateLimiter;
+  }
+} catch (e) {
+  console.warn('rateLimiting module not available:', e.message);
+}
+
+try {
+  const responseCacheModule = await import('@/lib/responseCache');
+  if (responseCacheModule.responseCache) {
+    responseCache = responseCacheModule.responseCache;
+  }
+} catch (e) {
+  console.warn('responseCache module not available:', e.message);
+}
 
 export async function POST(request) {
+  console.log('Claude API route called');
+  
   try {
     // Get authentication info if available
     const headersList = headers();
@@ -16,8 +48,20 @@ export async function POST(request) {
     let userId = null;
     let username = 'Anonymous User';
 
-    // Connect to database
-    const { db } = await connectToDatabase();
+    console.log('Setting up database connections...');
+    
+    // Connect to database with error handling
+    try {
+      await connectToDatabase();
+      await dbConnect();
+      console.log('Database connected successfully');
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
+      return NextResponse.json(
+        { error: 'Database connection failed', details: dbError.message },
+        { status: 500 }
+      );
+    }
 
     // Verify user if token provided
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -25,25 +69,37 @@ export async function POST(request) {
       try {
         const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET);
         userId = decoded.id;
+        console.log('User authenticated:', userId);
       } catch (error) {
         console.warn('Invalid token provided to Claude API:', error.message);
-        // Continue as anonymous user
       }
     }
 
-    // Parse request body - now with suggestion tracking
-    const { 
-      message, 
-      context, 
-      username: providedUsername, 
-      dataCommands, 
-      showMoreDb, 
-      showMoreAi,
+    // Parse request body
+    let requestData;
+    try {
+      requestData = await request.json();
+      console.log('Request data parsed:', Object.keys(requestData));
+    } catch (parseError) {
+      console.error('Request parsing error:', parseError);
+      return NextResponse.json(
+        { error: 'Invalid request format', details: parseError.message },
+        { status: 400 }
+      );
+    }
+
+    const {
+      message,
+      context,
+      username: providedUsername,
       source = 'manual',
       suggestionType = null,
-      extractedContent = null,
-      keywords = []
-    } = await request.json();
+      postId = null,
+      showMoreType = null,
+      originalQuery = null
+    } = requestData;
+
+    console.log('Processing request:', { source, suggestionType, postId, showMoreType });
 
     // Use username from request if provided and no authenticated user
     if (providedUsername && !userId) {
@@ -52,199 +108,1693 @@ export async function POST(request) {
 
     // Validate required fields
     if (!message) {
+      console.error('Missing message in request');
       return NextResponse.json(
         { error: 'Message is required' },
         { status: 400 }
       );
     }
 
-    // NEW: Rate limiting check
-    const rateLimitUserId = userId || request.ip || 'anonymous';
-    const rateLimit = await rateLimiter.checkRateLimit(rateLimitUserId, source);
-    
+    // Rate limiting check with fallback
+    const rateLimitUserId = userId || 'anonymous';
+    let rateLimit;
+    try {
+      rateLimit = await rateLimiter.checkRateLimit(rateLimitUserId, source);
+      console.log('Rate limit check passed:', rateLimit.allowed);
+    } catch (rateLimitError) {
+      console.warn('Rate limit check failed:', rateLimitError);
+      rateLimit = { allowed: true, remainingRequests: 30, resetTime: new Date() };
+    }
+
     if (!rateLimit.allowed) {
       return NextResponse.json({
         error: 'Rate limit exceeded',
-        message: rateLimit.message,
+        message: rateLimit.message || 'Too many requests',
         resetTime: rateLimit.resetTime,
         remainingRequests: rateLimit.remainingRequests
-      }, { 
-        status: 429,
-        headers: {
-          'X-RateLimit-Limit': source === 'suggestion' ? '20' : '10',
-          'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': rateLimit.resetTime.toISOString()
-        }
-      });
+      }, { status: 429 });
     }
 
-    // Make sure we have an API key
+    // Check Claude API key
     if (!process.env.CLAUDE_API_KEY) {
       console.error('CLAUDE_API_KEY is not defined in environment variables');
       return NextResponse.json(
-        { error: 'API configuration error' },
+        { error: 'Claude API not configured' },
         { status: 500 }
       );
     }
 
-    // NEW: Generate cache key for this request
-    const cacheKey = responseCache.generateCacheKey(message, source, suggestionType, keywords);
-    
-    // NEW: Check cache first (except for showMore requests which should always be fresh)
-    if (!showMoreDb && !showMoreAi) {
-      const cachedResponse = await responseCache.get(cacheKey);
-      if (cachedResponse) {
-        console.log('Returning cached response');
-        return NextResponse.json({
-          ...cachedResponse,
-          cached: true
-        }, {
+    console.log('Processing request type:', { source, suggestionType, showMoreType });
+
+    // Handle show more requests
+    if (showMoreType && originalQuery) {
+      console.log('Handling show more request:', showMoreType);
+      try {
+        const showMoreResult = await handleShowMoreRequest(showMoreType, originalQuery, message, postId, username);
+        return NextResponse.json(showMoreResult, {
           headers: {
-            'X-RateLimit-Limit': source === 'suggestion' ? '20' : '10',
+            'X-RateLimit-Limit': source === 'suggestion' ? '60' : '30',
             'X-RateLimit-Remaining': rateLimit.remainingRequests.toString(),
-            'X-RateLimit-Reset': rateLimit.resetTime.toISOString(),
-            'X-Cache-Status': 'HIT'
+            'X-RateLimit-Reset': rateLimit.resetTime.toISOString()
           }
         });
+      } catch (showMoreError) {
+        console.error('Show more request failed:', showMoreError);
+        return NextResponse.json({
+          response: "I couldn't load additional content. Please try again.",
+          model: "claude-3-haiku-20240307",
+          usage: null,
+          dataAvailable: [],
+          hasMoreDb: false,
+          hasMoreAi: false
+        }, { status: 200 });
       }
     }
 
-    // Process the request
-    let response;
-    if (source === 'suggestion') {
-      response = await handleSuggestionQuery(message, suggestionType, extractedContent, keywords, context, username);
-    } else {
-      response = await handleManualQuery(message, context, username, dataCommands, showMoreDb, showMoreAi, keywords);
+    // Process the request based on source and type
+    let responseData;
+    try {
+      if (source === 'suggestion') {
+        console.log('Handling suggestion query:', suggestionType);
+        responseData = await handleSuggestionQuery(message, suggestionType, postId, username);
+      } else {
+        console.log('Handling manual query');
+        responseData = await handleManualQuery(message, context, username, postId);
+      }
+    } catch (processingError) {
+      console.error('Request processing error:', processingError);
+      return NextResponse.json(
+        { 
+          error: 'Processing failed', 
+          details: processingError.message,
+          response: "I encountered an error processing your request. Please try again."
+        },
+        { status: 200 } // Return 200 with error message instead of 500
+      );
     }
 
-    // NEW: Cache the response (except for showMore requests)
-    if (!showMoreDb && !showMoreAi && response.ok) {
-      const responseData = await response.json();
-      await responseCache.set(cacheKey, responseData, source);
-      
-      // Re-create the response with cache headers
-      return NextResponse.json(responseData, {
-        headers: {
-          'X-RateLimit-Limit': source === 'suggestion' ? '20' : '10',
-          'X-RateLimit-Remaining': rateLimit.remainingRequests.toString(),
-          'X-RateLimit-Reset': rateLimit.resetTime.toISOString(),
-          'X-Cache-Status': 'MISS'
-        }
-      });
-    }
+    console.log('Request processed successfully');
 
-    // Add rate limit headers to the response
-    const responseData = await response.json();
     return NextResponse.json(responseData, {
       headers: {
-        'X-RateLimit-Limit': source === 'suggestion' ? '20' : '10',
+        'X-RateLimit-Limit': source === 'suggestion' ? '60' : '30',
         'X-RateLimit-Remaining': rateLimit.remainingRequests.toString(),
-        'X-RateLimit-Reset': rateLimit.resetTime.toISOString(),
-        'X-Cache-Status': showMoreDb || showMoreAi ? 'BYPASS' : 'MISS'
+        'X-RateLimit-Reset': rateLimit.resetTime.toISOString()
       }
     });
 
   } catch (error) {
     console.error('Claude AI handler error:', error);
     return NextResponse.json(
-      { error: 'Error processing request', message: error.message },
-      { status: 500 }
+      { 
+        error: 'Internal server error', 
+        details: error.message,
+        response: "I'm experiencing technical difficulties. Please try again in a moment."
+      },
+      { status: 200 } // Return 200 with error message instead of 500
     );
   }
 }
 
-// NEW: Handle suggestion-based queries
-async function handleSuggestionQuery(message, suggestionType, extractedContent, keywords, context, username) {
+// Handle suggestion queries
+async function handleSuggestionQuery(message, suggestionType, postId, username) {
+  console.log('Processing suggestion:', suggestionType, 'for post:', postId);
+  
   try {
     if (suggestionType === 'summarize') {
-      return await handleSummarizeRequest(message, extractedContent, context, username);
+      return await handleSummarizeDiscussionSuggestion(message, postId, username);
     } else if (suggestionType === 'similar') {
-      return await handleSimilarTopicsRequest(message, keywords, context, username);
+      return await handleSimilarTopicsDiscussionSuggestion(message, postId, username);
     } else {
-      throw new Error('Unknown suggestion type');
+      console.warn('Unknown suggestion type:', suggestionType);
+      return {
+        response: "I don't understand this type of suggestion. Please try again.",
+        model: "claude-3-haiku-20240307",
+        usage: null,
+        dataAvailable: [],
+        hasMoreDb: false,
+        hasMoreAi: false
+      };
     }
   } catch (error) {
     console.error('Error handling suggestion query:', error);
-    return NextResponse.json(
-      { error: 'Error processing suggestion', message: error.message },
-      { status: 500 }
-    );
+    return {
+      response: "I couldn't process this suggestion. Please try again.",
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
   }
 }
 
-// NEW: Handle "summarize" suggestion
-async function handleSummarizeRequest(message, extractedContent, context, username) {
+// Handle manual queries from input field with enhanced relevance filtering
+async function handleManualQuery(message, context, username, postId) {
+  console.log('Processing manual query:', message);
+  
   try {
-    // Prepare content for summarization
-    let contentToSummarize = '';
+    // Extract keywords from user's question
+    const keywords = await extractKeywordsFromText(message);
+    console.log('Extracted keywords:', keywords);
     
-    if (extractedContent) {
-      if (extractedContent.postTitle) {
-        contentToSummarize += `Title: ${extractedContent.postTitle}\n\n`;
-      }
-      
-      if (extractedContent.postContent) {
-        contentToSummarize += `Content: ${extractedContent.postContent}\n\n`;
-      }
-      
-      if (extractedContent.linkTitles && extractedContent.linkTitles.length > 0) {
-        contentToSummarize += `Links: ${extractedContent.linkTitles.join(', ')}\n\n`;
-      }
-      
-      if (extractedContent.linkDescriptions && extractedContent.linkDescriptions.length > 0) {
-        contentToSummarize += `Link Descriptions: ${extractedContent.linkDescriptions.join(' | ')}\n\n`;
-      }
-      
-      if (extractedContent.comments && extractedContent.comments.length > 0) {
-        contentToSummarize += `Key Comments:\n${extractedContent.comments.slice(0, 5).join('\n')}\n`;
-      }
+    // Find relevant discussions and links from database
+    const searchResults = await findRelevantDiscussionsAndLinks(keywords, 15); // Get more results for better filtering
+    console.log('Found search results:', searchResults.discussions.length, 'discussions,', searchResults.links.length, 'links');
+
+    // Apply quality filtering for initial results
+    const hasPhrasesInKeywords = keywords.some(keyword => keyword.includes(' '));
+    const minDiscussionScore = hasPhrasesInKeywords ? 8 : 4;
+    const minLinkScore = hasPhrasesInKeywords ? 8 : 5;
+
+    // Get top quality discussions and links for initial response
+    const topDiscussions = searchResults.discussions
+      .filter(discussion => !discussion.relevanceScore || discussion.relevanceScore >= minDiscussionScore)
+      .slice(0, 2);
+    
+    const topLinks = searchResults.links
+      .filter(link => !link.relevanceScore || link.relevanceScore >= minLinkScore)
+      .slice(0, 2);
+
+    console.log('Top quality results:', topDiscussions.length, 'discussions,', topLinks.length, 'links');
+
+    // Generate brief about the topics using Claude AI
+    const briefResponse = await generateTopicBrief(message, keywords, topDiscussions, topLinks);
+
+    // Build HTML response
+    let htmlResponse = '';
+
+    // Add discussions
+    if (topDiscussions.length > 0) {
+      topDiscussions.forEach(discussion => {
+        htmlResponse += formatDiscussionCard(discussion);
+      });
     }
 
-    if (!contentToSummarize.trim()) {
-      contentToSummarize = 'No content available to summarize.';
+    // Add links
+    if (topLinks.length > 0) {
+      topLinks.forEach(link => {
+        htmlResponse += formatLinkCard(link);
+      });
     }
 
-    // Create Claude API request for summarization
+    // Only show "Show more" button if there are actually more high-quality results available
+    const remainingDiscussions = searchResults.discussions
+      .filter(discussion => !discussion.relevanceScore || discussion.relevanceScore >= minDiscussionScore)
+      .slice(2); // Skip the first 2 we already showed
+    
+    const remainingLinks = searchResults.links
+      .filter(link => !link.relevanceScore || link.relevanceScore >= minLinkScore)
+      .slice(2); // Skip the first 2 we already showed
+
+    // Additional validation for remaining results
+    const validRemainingDiscussions = remainingDiscussions.filter(discussion => 
+      validateContentRelevance(discussion.title, keywords)
+    );
+    
+    const validRemainingLinks = remainingLinks.filter(link => 
+      validateContentRelevance(link.title, keywords) || validateContentRelevance(link.description, keywords)
+    );
+
+    const hasMoreQualityContent = validRemainingDiscussions.length > 0 || validRemainingLinks.length > 0;
+
+    console.log('Quality content check:', {
+      remainingDiscussions: remainingDiscussions.length,
+      remainingLinks: remainingLinks.length,
+      validRemainingDiscussions: validRemainingDiscussions.length,
+      validRemainingLinks: validRemainingLinks.length,
+      hasMoreQualityContent
+    });
+
+    // Only add show more button if there's actually more quality content
+    if (hasMoreQualityContent) {
+      htmlResponse += `<div style="color: #4ca0ff; font-size: 13px; padding: 10px 0 5px 0; cursor: pointer;" class="show-more-discussions-links" data-query="${encodeURIComponent(message)}" data-type="more-discussions-links">Show more relevant discussions & links</div>`;
+    }
+
+    // Add brief response
+    htmlResponse += `<div style="padding: 10px 0; color: #ccc; font-size: 13px; line-height: 1.4;">${briefResponse}</div>`;
+
+    // Add show more insights button
+    htmlResponse += `<div style="color: #4ca0ff; font-size: 13px; padding: 5px 0 10px 0; cursor: pointer;" class="show-more-insights" data-query="${encodeURIComponent(message)}" data-type="more-insights">Show more insights</div>`;
+
+    return {
+      response: htmlResponse || '<div style="color: #888; font-size: 13px; padding: 10px 0;">No related content found for your question.</div>',
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
+
+  } catch (error) {
+    console.error('Error in manual query:', error);
+    return {
+      response: "I encountered an error processing your question. Please try again.",
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
+  }
+}
+
+// Handle summarize discussion suggestion
+async function handleSummarizeDiscussionSuggestion(message, postId, username) {
+  console.log('Handling summarize suggestion for post:', postId);
+  
+  try {
+    // Extract comprehensive data from current post
+    const postData = await extractCurrentPostData(postId);
+    
+    if (!postData) {
+      console.warn('No post data found for ID:', postId);
+      return {
+        response: "I couldn't find the discussion content to summarize.",
+        model: "claude-3-haiku-20240307",
+        usage: null,
+        dataAvailable: [],
+        hasMoreDb: false,
+        hasMoreAi: false
+      };
+    }
+
+    console.log('Post data extracted successfully');
+
+    // Generate brief summary using Claude AI
+    const briefSummary = await generateBriefSummary(postData, username);
+
+    // Build response with show more button
+    const htmlResponse = `
+      <div style="padding: 10px 0; color: #ccc; font-size: 13px; line-height: 1.4;">
+        ${briefSummary}
+      </div>
+      <div style="color: #4ca0ff; font-size: 13px; padding: 10px 0 5px 0; cursor: pointer;" class="show-more-insights-links" data-query="${encodeURIComponent(message)}" data-post-id="${postId}" data-type="more-insights-links">Show more insights and links</div>
+    `;
+
+    return {
+      response: htmlResponse,
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
+
+  } catch (error) {
+    console.error('Error in summarize discussion suggestion:', error);
+    return {
+      response: "I couldn't summarize this discussion. Please try again.",
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
+  }
+}
+
+// Handle similar topics discussion suggestion with enhanced relevance filtering
+async function handleSimilarTopicsDiscussionSuggestion(message, postId, username) {
+  console.log('Handling similar topics suggestion for post:', postId);
+  
+  try {
+    // Extract post data and keywords
+    const postData = await extractCurrentPostData(postId);
+    if (!postData) {
+      console.warn('No post data found for similar topics analysis:', postId);
+      return {
+        response: "I couldn't find the post to analyze for similar topics.",
+        model: "claude-3-haiku-20240307",
+        usage: null,
+        dataAvailable: [],
+        hasMoreDb: false,
+        hasMoreAi: false
+      };
+    }
+
+    // Extract keywords from post title and content
+    const keywords = await extractKeywordsFromPost(postData);
+    console.log('Keywords extracted for similar topics:', keywords);
+    
+    // Find similar content from database with enhanced filtering
+    const searchResults = await findRelevantDiscussionsAndLinks(keywords, 15);
+    console.log('Similar content found:', searchResults.discussions.length, 'discussions,', searchResults.links.length, 'links');
+
+    // Apply quality filtering
+    const hasPhrasesInKeywords = keywords.some(keyword => keyword.includes(' '));
+    const minDiscussionScore = hasPhrasesInKeywords ? 8 : 4;
+    const minLinkScore = hasPhrasesInKeywords ? 8 : 5;
+
+    // Get top quality discussions and links for initial response
+    const topDiscussions = searchResults.discussions
+      .filter(discussion => !discussion.relevanceScore || discussion.relevanceScore >= minDiscussionScore)
+      .slice(0, 2);
+    
+    const topLinks = searchResults.links
+      .filter(link => !link.relevanceScore || link.relevanceScore >= minLinkScore)
+      .slice(0, 2);
+
+    // Additional validation for similar topics
+    const validDiscussions = topDiscussions.filter(discussion => 
+      validateContentRelevance(discussion.title, keywords)
+    );
+    
+    const validLinks = topLinks.filter(link => 
+      validateContentRelevance(link.title, keywords) || validateContentRelevance(link.description, keywords)
+    );
+
+    console.log('Validated similar topics:', validDiscussions.length, 'discussions,', validLinks.length, 'links');
+
+    // Generate small brief about similar topics
+    const smallBrief = await generateSimilarTopicsBrief(keywords, validDiscussions, validLinks);
+
+    // Build HTML response
+    let htmlResponse = '';
+
+    // Add validated discussions
+    if (validDiscussions.length > 0) {
+      validDiscussions.forEach(discussion => {
+        htmlResponse += formatDiscussionCard(discussion);
+      });
+    }
+
+    // Add validated links
+    if (validLinks.length > 0) {
+      validLinks.forEach(link => {
+        htmlResponse += formatLinkCard(link);
+      });
+    }
+
+    // Check for more quality content before showing "Show more" button
+    const remainingDiscussions = searchResults.discussions
+      .filter(discussion => !discussion.relevanceScore || discussion.relevanceScore >= minDiscussionScore)
+      .slice(2);
+    
+    const remainingLinks = searchResults.links
+      .filter(link => !link.relevanceScore || link.relevanceScore >= minLinkScore)
+      .slice(2);
+
+    const validRemainingDiscussions = remainingDiscussions.filter(discussion => 
+      validateContentRelevance(discussion.title, keywords)
+    );
+    
+    const validRemainingLinks = remainingLinks.filter(link => 
+      validateContentRelevance(link.title, keywords) || validateContentRelevance(link.description, keywords)
+    );
+
+    const hasMoreQualityContent = validRemainingDiscussions.length > 0 || validRemainingLinks.length > 0;
+
+    // Only add show more button if there's actually more quality content
+    if (hasMoreQualityContent) {
+      htmlResponse += `<div style="color: #4ca0ff; font-size: 13px; padding: 10px 0 5px 0; cursor: pointer;" class="show-more-discussions-links" data-query="${encodeURIComponent(message)}" data-post-id="${postId}" data-type="more-discussions-links">Show more relevant discussions & links</div>`;
+    }
+
+    // Add small brief
+    htmlResponse += `<div style="padding: 10px 0; color: #ccc; font-size: 13px; line-height: 1.4;">${smallBrief}</div>`;
+
+    // Add show more insights button
+    htmlResponse += `<div style="color: #4ca0ff; font-size: 13px; padding: 5px 0 10px 0; cursor: pointer;" class="show-more-insights" data-query="${encodeURIComponent(message)}" data-post-id="${postId}" data-type="more-insights">Show more insights</div>`;
+
+    return {
+      response: htmlResponse,
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
+
+  } catch (error) {
+    console.error('Error in similar topics discussion suggestion:', error);
+    return {
+      response: "I couldn't find similar topics. Please try again.",
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
+  }
+}
+
+// Handle show more requests
+async function handleShowMoreRequest(showMoreType, originalQuery, message, postId, username) {
+  console.log('Processing show more request:', { showMoreType, originalQuery, postId });
+  
+  try {
+    let result;
+    
+    switch (showMoreType) {
+      case 'more-discussions-links':
+        console.log('Handling more discussions/links');
+        result = await handleShowMoreDiscussionsLinks(originalQuery, postId, username);
+        break;
+      
+      case 'more-insights':
+        console.log('Handling more insights');
+        result = await handleShowMoreInsights(originalQuery, postId, username);
+        break;
+      
+      case 'more-insights-links':
+        console.log('Handling more insights and links');
+        result = await handleShowMoreInsightsAndLinks(originalQuery, postId, username);
+        break;
+      
+      default:
+        console.warn('Unknown show more type:', showMoreType);
+        result = {
+          response: "I don't understand this request type. Please try again.",
+          model: "claude-3-haiku-20240307",
+          usage: null,
+          dataAvailable: [],
+          hasMoreDb: false,
+          hasMoreAi: false
+        };
+    }
+    
+    console.log('Show more request completed successfully');
+    return result;
+    
+  } catch (error) {
+    console.error('Error in handleShowMoreRequest:', error);
+    return {
+      response: "I couldn't load the additional content. Please try again.",
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
+  }
+}
+
+// Handle show more discussions and links with enhanced relevance filtering
+async function handleShowMoreDiscussionsLinks(originalQuery, postId, username) {
+  console.log('Processing show more discussions/links for:', { originalQuery, postId });
+  
+  try {
+    let keywords = [];
+    
+    // Extract keywords safely
+    try {
+      if (postId) {
+        console.log('Extracting keywords from post:', postId);
+        const postData = await extractCurrentPostData(postId);
+        if (postData) {
+          keywords = await extractKeywordsFromPost(postData);
+          console.log('Keywords from post:', keywords);
+        }
+      }
+      
+      if (keywords.length === 0) {
+        console.log('Extracting keywords from query:', originalQuery);
+        keywords = await extractKeywordsFromText(originalQuery);
+        console.log('Keywords from query:', keywords);
+      }
+    } catch (keywordError) {
+      console.warn('Keyword extraction failed:', keywordError.message);
+      keywords = extractKeywordsSimple(originalQuery);
+    }
+
+    if (keywords.length === 0) {
+      console.warn('No keywords found, using fallback');
+      return {
+        response: '<div style="color: #888; font-size: 13px; padding: 10px 0;">No additional relevant content found.</div>',
+        model: "claude-3-haiku-20240307",
+        usage: null,
+        dataAvailable: [],
+        hasMoreDb: false,
+        hasMoreAi: false
+      };
+    }
+
+    // Find more relevant content with enhanced filtering
+    console.log('Searching for additional relevant content with keywords:', keywords);
+    const searchResults = await findRelevantDiscussionsAndLinks(keywords, 25); // Get more results for better selection
+    console.log('Search results:', searchResults.discussions.length, 'discussions,', searchResults.links.length, 'links');
+
+    // Apply stricter filtering for "show more" results
+    const hasPhrasesInKeywords = keywords.some(keyword => keyword.includes(' '));
+    const minDiscussionScore = hasPhrasesInKeywords ? 8 : 4;
+    const minLinkScore = hasPhrasesInKeywords ? 8 : 5;
+
+    // Filter discussions by relevance score (skip first 2, then get next high-quality results)
+    const moreDiscussions = searchResults.discussions
+      .filter(discussion => discussion.relevanceScore && discussion.relevanceScore >= minDiscussionScore)
+      .slice(2, 6); // Skip first 2, get next 4
+
+    // Filter links by relevance score (skip first 2, then get next high-quality results)
+    const moreLinks = searchResults.links
+      .filter(link => link.relevanceScore && link.relevanceScore >= minLinkScore)
+      .slice(2, 6); // Skip first 2, get next 4
+
+    console.log('Filtered show more results:', moreDiscussions.length, 'discussions,', moreLinks.length, 'links');
+
+    // Additional validation: ensure results actually contain relevant keywords
+    const validatedDiscussions = moreDiscussions.filter(discussion => {
+      return validateContentRelevance(discussion.title, keywords);
+    });
+
+    const validatedLinks = moreLinks.filter(link => {
+      return validateContentRelevance(link.title, keywords) || validateContentRelevance(link.description, keywords);
+    });
+
+    console.log('Validated show more results:', validatedDiscussions.length, 'discussions,', validatedLinks.length, 'links');
+
+    let htmlResponse = '';
+
+    // Add validated discussions
+    if (validatedDiscussions.length > 0) {
+      console.log('Adding', validatedDiscussions.length, 'validated discussions');
+      validatedDiscussions.forEach(discussion => {
+        htmlResponse += formatDiscussionCard(discussion);
+      });
+    }
+
+    // Add validated links
+    if (validatedLinks.length > 0) {
+      console.log('Adding', validatedLinks.length, 'validated links');
+      validatedLinks.forEach(link => {
+        htmlResponse += formatLinkCard(link);
+      });
+    }
+
+    // If no high-quality additional content found, return appropriate message
+    if (!htmlResponse) {
+      htmlResponse = '<div style="color: #888; font-size: 13px; padding: 10px 0;">No additional high-quality content found for this topic.</div>';
+    }
+
+    console.log('Show more discussions/links completed successfully');
+    return {
+      response: htmlResponse,
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
+
+  } catch (error) {
+    console.error('Error in handleShowMoreDiscussionsLinks:', error);
+    return {
+      response: '<div style="color: #888; font-size: 13px; padding: 10px 0;">Sorry, I couldn\'t load more discussions and links. Please try again.</div>',
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
+  }
+}
+
+// Helper function to validate content relevance
+function validateContentRelevance(content, keywords) {
+  if (!content || !keywords || keywords.length === 0) return false;
+  
+  const contentLower = content.toLowerCase();
+  
+  // For multi-word keywords (phrases), check if phrase exists
+  const phraseKeywords = keywords.filter(keyword => keyword.includes(' '));
+  if (phraseKeywords.length > 0) {
+    return phraseKeywords.some(phrase => contentLower.includes(phrase.toLowerCase()));
+  }
+  
+  // For single words, require at least 2 matches for multi-word queries
+  if (keywords.length > 1) {
+    const matchedWords = keywords.filter(keyword => {
+      const wordRegex = new RegExp(`\\b${keyword.toLowerCase()}\\b`, 'i');
+      return wordRegex.test(contentLower);
+    });
+    return matchedWords.length >= Math.ceil(keywords.length / 2);
+  }
+  
+  // For single keyword, just check if it exists with word boundaries
+  const wordRegex = new RegExp(`\\b${keywords[0].toLowerCase()}\\b`, 'i');
+  return wordRegex.test(contentLower);
+}
+
+// Handle show more insights (Claude AI elaborated response)
+async function handleShowMoreInsights(originalQuery, postId, username) {
+  console.log('Processing show more insights for:', { originalQuery, postId });
+  
+  try {
+    let keywords = [];
+    let contextData = null;
+    
+    // Extract keywords and context safely
+    try {
+      if (postId) {
+        console.log('Getting context data from post:', postId);
+        contextData = await extractCurrentPostData(postId);
+        if (contextData) {
+          keywords = await extractKeywordsFromPost(contextData);
+          console.log('Keywords from post context:', keywords);
+        }
+      }
+      
+      if (keywords.length === 0) {
+        console.log('Extracting keywords from query:', originalQuery);
+        keywords = await extractKeywordsFromText(originalQuery);
+        console.log('Keywords from query:', keywords);
+      }
+    } catch (contextError) {
+      console.warn('Context extraction failed:', contextError.message);
+      keywords = extractKeywordsSimple(originalQuery);
+    }
+
+    // Get relevant content for context
+    let searchResults = { discussions: [], links: [] };
+    try {
+      if (keywords.length > 0) {
+        console.log('Getting search results for context');
+        searchResults = await findRelevantDiscussionsAndLinks(keywords, 10);
+        console.log('Context search results:', searchResults.discussions.length, 'discussions,', searchResults.links.length, 'links');
+      }
+    } catch (searchError) {
+      console.warn('Search for context failed:', searchError.message);
+    }
+
+    // First generate the small brief to build upon
+    console.log('Generating small brief to build upon');
+    let smallBrief = '';
+    try {
+      const topDiscussions = searchResults.discussions.slice(0, 2);
+      const topLinks = searchResults.links.slice(0, 2);
+      smallBrief = await generateTopicBrief(originalQuery, keywords, topDiscussions, topLinks);
+      console.log('Small brief generated for expansion');
+    } catch (briefError) {
+      console.warn('Small brief generation failed:', briefError.message);
+      smallBrief = "This topic covers various aspects related to your question.";
+    }
+
+    // Generate elaborated insights that build upon the small brief
+    console.log('Generating elaborated insights based on small brief');
+    let elaboratedInsights = '';
+    try {
+      elaboratedInsights = await generateElaboratedInsights(originalQuery, keywords, searchResults, contextData, username, smallBrief);
+      console.log('Elaborated insights generated successfully');
+    } catch (insightsError) {
+      console.warn('Insights generation failed:', insightsError.message);
+      elaboratedInsights = "Here are some detailed insights about this topic based on the available information and related discussions in the community.";
+    }
+
+    // Generate educational external links based on the expanded insights
+    let externalLinks = [];
+    try {
+      console.log('Generating educational external links based on expanded insights');
+      const aiGeneratedLinks = await generateRelevantExternalLinks(originalQuery, keywords, elaboratedInsights);
+      if (aiGeneratedLinks && aiGeneratedLinks.length > 0) {
+        externalLinks.push(...aiGeneratedLinks);
+      }
+      
+      // Also extract any existing links from post content as supplementary
+      if (contextData && contextData.postContent) {
+        const urlRegex = /https?:\/\/[^\s<>"']+/g;
+        const foundUrls = contextData.postContent.match(urlRegex) || [];
+        
+        foundUrls.slice(0, Math.max(0, 4 - externalLinks.length)).forEach(url => {
+          if (!url.includes('youtube.com') && !url.includes('youtu.be') && !url.includes('tiktok.com')) {
+            const cleanUrl = url.replace(/[.,;!?)]+$/, ''); // Remove trailing punctuation
+            externalLinks.push({
+              title: cleanUrl.length > 50 ? cleanUrl.substring(0, 50) + '...' : cleanUrl,
+              url: cleanUrl,
+              description: 'Additional resource from discussion'
+            });
+          }
+        });
+      }
+      
+      console.log('Educational external links found:', externalLinks.length);
+    } catch (linksError) {
+      console.warn('External links extraction failed:', linksError.message);
+    }
+
+    // Wrap the elaborated insights in show-more-insights div
+    let htmlResponse = `<div class="show-more-insights">${elaboratedInsights}`;
+
+    // Add educational external links if found
+    if (externalLinks && externalLinks.length > 0) {
+      htmlResponse += `<div style="padding: 15px 0 5px 0; color: #4ca0ff; font-size: 14px; font-weight: 500;">Educational Resources:</div>`;
+      externalLinks.slice(0, 4).forEach(link => {
+        htmlResponse += `
+          <div style="padding: 8px 0; border-bottom: 1px solid #333;">
+            <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="color: #4ca0ff; text-decoration: none; font-size: 13px; line-height: 1.4;">
+              ${link.title}
+            </a>
+            ${link.description ? `<div style="color: #888; font-size: 12px; margin-top: 2px;">${link.description}</div>` : ''}
+          </div>
+        `;
+      });
+    }
+
+    htmlResponse += `</div>`; // Close show-more-insights div
+
+    console.log('Show more insights completed successfully');
+    return {
+      response: htmlResponse,
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
+
+  } catch (error) {
+    console.error('Error in handleShowMoreInsights:', error);
+    return {
+      response: '<div class="show-more-insights">I couldn\'t generate more insights at this time. Please try again.</div>',
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
+  }
+}
+
+// Handle show more insights and links (for summarize suggestion)
+async function handleShowMoreInsightsAndLinks(originalQuery, postId, username) {
+  console.log('Processing show more insights and links for:', { originalQuery, postId });
+  
+  try {
+    // Extract comprehensive data from current post
+    let postData = null;
+    try {
+      if (postId) {
+        console.log('Extracting post data for insights and links:', postId);
+        postData = await extractCurrentPostData(postId);
+        if (!postData) {
+          console.warn('No post data found for insights and links');
+          return {
+            response: "I couldn't find the discussion content for detailed analysis.",
+            model: "claude-3-haiku-20240307",
+            usage: null,
+            dataAvailable: [],
+            hasMoreDb: false,
+            hasMoreAi: false
+          };
+        }
+        console.log('Post data extracted successfully for insights and links');
+      }
+    } catch (postError) {
+      console.error('Error extracting post data:', postError);
+      return {
+        response: "I couldn't access the discussion content for analysis.",
+        model: "claude-3-haiku-20240307",
+        usage: null,
+        dataAvailable: [],
+        hasMoreDb: false,
+        hasMoreAi: false
+      };
+    }
+
+    // Extract keywords for finding similar content
+    let keywords = [];
+    try {
+      if (postData) {
+        keywords = await extractKeywordsFromPost(postData);
+        console.log('Keywords extracted for insights and links:', keywords);
+      } else {
+        keywords = await extractKeywordsFromText(originalQuery);
+        console.log('Keywords from query for insights and links:', keywords);
+      }
+    } catch (keywordError) {
+      console.warn('Keyword extraction failed for insights and links:', keywordError.message);
+      keywords = extractKeywordsSimple(originalQuery || '');
+    }
+    
+    // Find relevant discussions and links
+    let searchResults = { discussions: [], links: [] };
+    try {
+      if (keywords.length > 0) {
+        console.log('Finding relevant content for insights and links');
+        searchResults = await findRelevantDiscussionsAndLinks(keywords, 15);
+        console.log('Found for insights and links:', searchResults.discussions.length, 'discussions,', searchResults.links.length, 'links');
+      }
+    } catch (searchError) {
+      console.warn('Search failed for insights and links:', searchError.message);
+    }
+
+    // Get top 4 discussions and 4 links
+    const topDiscussions = searchResults.discussions.slice(0, 4);
+    const topLinks = searchResults.links.slice(0, 4);
+
+    let htmlResponse = '<div class="show-more-insights">';
+
+    // Add relevant discussions
+    if (topDiscussions.length > 0) {
+      console.log('Adding', topDiscussions.length, 'relevant discussions');
+      topDiscussions.forEach(discussion => {
+        htmlResponse += formatDiscussionCard(discussion);
+      });
+    }
+
+    // Add relevant links
+    if (topLinks.length > 0) {
+      console.log('Adding', topLinks.length, 'relevant links');
+      topLinks.forEach(link => {
+        htmlResponse += formatLinkCard(link);
+      });
+    }
+
+    // Generate elaborated summary with side headings
+    let elaboratedSummary = '';
+    try {
+      console.log('Generating elaborated summary with headings');
+      elaboratedSummary = await generateElaboratedSummaryWithHeadings(postData, topDiscussions, topLinks, username);
+      htmlResponse += elaboratedSummary;
+      console.log('Elaborated summary generated successfully');
+    } catch (summaryError) {
+      console.warn('Summary generation failed:', summaryError.message);
+      elaboratedSummary = '<div style="padding: 15px 0; color: #ccc; font-size: 13px;">Here\'s a detailed analysis of the discussion and related content.</div>';
+      htmlResponse += elaboratedSummary;
+    }
+
+    // Extract and add external links based on the elaborated summary content
+    try {
+      console.log('Extracting external links for insights and links');
+      const externalLinks = await extractAndGenerateExternalLinks(originalQuery, postData, keywords, elaboratedSummary);
+      if (externalLinks && externalLinks.length > 0) {
+        console.log('Adding', externalLinks.length, 'external links');
+        htmlResponse += `<div style="padding: 15px 0 5px 0; color: #4ca0ff; font-size: 14px; font-weight: 500;">Educational Resources:</div>`;
+        externalLinks.forEach(link => {
+          htmlResponse += `
+            <div style="padding: 8px 0; border-bottom: 1px solid #333;">
+              <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="color: #4ca0ff; text-decoration: none; font-size: 13px; line-height: 1.4;">
+                ${link.title}
+              </a>
+              ${link.description ? `<div style="color: #888; font-size: 12px; margin-top: 2px;">${link.description}</div>` : ''}
+            </div>
+          `;
+        });
+      }
+    } catch (linksError) {
+      console.warn('External links extraction failed for insights and links:', linksError.message);
+    }
+
+    htmlResponse += '</div>'; // Close show-more-insights div
+
+    console.log('Show more insights and links completed successfully');
+    return {
+      response: htmlResponse,
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
+
+  } catch (error) {
+    console.error('Error in handleShowMoreInsightsAndLinks:', error);
+    return {
+      response: '<div class="show-more-insights">I couldn\'t generate detailed insights and links at this time. Please try again.</div>',
+      model: "claude-3-haiku-20240307",
+      usage: null,
+      dataAvailable: [],
+      hasMoreDb: false,
+      hasMoreAi: false
+    };
+  }
+}
+
+// Extract current post data (postTitle, postContent, links, comments)
+async function extractCurrentPostData(postId) {
+  console.log('Extracting post data for ID:', postId);
+  
+  try {
+    if (!postId) {
+      console.warn('No postId provided to extractCurrentPostData');
+      return null;
+    }
+
+    // Validate ObjectId format
+    if (!ObjectId.isValid(postId)) {
+      console.warn('Invalid ObjectId format:', postId);
+      return null;
+    }
+
+    // Get post data
+    const post = await Post.findById(postId).lean();
+    if (!post) {
+      console.warn('Post not found for ID:', postId);
+      return null;
+    }
+
+    console.log('Post found:', post.title);
+
+    // Get comments for this post
+    let comments = [];
+    try {
+      comments = await Comment.find({ 
+        postId: new ObjectId(postId),
+        isDeleted: { $ne: true }
+      })
+      .sort({ likes: -1, createdAt: -1 })
+      .limit(10) // Limit to prevent memory issues
+      .lean();
+      
+      console.log('Comments found:', comments.length);
+    } catch (commentError) {
+      console.warn('Error fetching comments:', commentError.message);
+    }
+
+    const result = {
+      postTitle: post.title || '',
+      postContent: post.content || '',
+      creatorLinks: post.creatorLinks || [],
+      communityLinks: post.communityLinks || [],
+      comments: comments.map(comment => ({
+        username: comment.username || 'Anonymous',
+        content: comment.content || '',
+        likes: comment.likes || 0
+      })),
+      hashtags: post.hashtags || []
+    };
+
+    console.log('Post data extracted successfully');
+    return result;
+
+  } catch (error) {
+    console.error('Error extracting current post data:', error);
+    return null;
+  }
+}
+
+// Extract keywords from post title and content
+async function extractKeywordsFromPost(postData) {
+  try {
+    const combinedText = `${postData.postTitle || ''} ${postData.postContent || ''}`;
+    return await extractKeywordsFromText(combinedText);
+  } catch (error) {
+    console.error('Error extracting keywords from post:', error);
+    return [];
+  }
+}
+
+// Extract keywords from any text using contextual phrase approach
+async function extractKeywordsFromText(text) {
+  try {
+    console.log('Extracting contextual keywords from:', text.substring(0, 100) + '...');
+    
+    // Use simple keyword extraction as primary method for phrases
+    const simplePhrases = extractKeywordsSimple(text);
+    console.log('Simple extraction found phrases:', simplePhrases);
+    
+    // Try AI keyword extraction for better contextual understanding
+    let aiKeywords = [];
+    try {
+      aiKeywords = await extractKeywordsWithAI(text);
+      console.log('AI extraction found keywords:', aiKeywords);
+    } catch (aiError) {
+      console.warn('AI keyword extraction failed, using simple extraction:', aiError.message);
+    }
+    
+    // Combine and prioritize meaningful phrases
+    const allKeywords = [];
+    
+    // First, add AI-generated contextual phrases (these are usually better)
+    if (aiKeywords.length > 0) {
+      allKeywords.push(...aiKeywords);
+    }
+    
+    // Then add simple extraction phrases that aren't already covered
+    simplePhrases.forEach(phrase => {
+      const isAlreadyCovered = allKeywords.some(existing => 
+        existing.toLowerCase().includes(phrase.toLowerCase()) || 
+        phrase.toLowerCase().includes(existing.toLowerCase())
+      );
+      
+      if (!isAlreadyCovered) {
+        allKeywords.push(phrase);
+      }
+    });
+    
+    // Remove duplicates and limit to 10 most relevant
+    const uniqueKeywords = [...new Set(allKeywords)];
+    const finalKeywords = uniqueKeywords.slice(0, 10);
+    
+    console.log('Final contextual keywords:', finalKeywords);
+    return finalKeywords;
+  } catch (error) {
+    console.error('Error in contextual keyword extraction:', error);
+    // Fallback to simple extraction only
+    return extractKeywordsSimple(text).slice(0, 8);
+  }
+}
+
+// Simple keyword extraction with contextual phrases
+function extractKeywordsSimple(text) {
+  if (!text || typeof text !== 'string') return [];
+  
+  try {
+    const cleanText = text
+      .replace(/https?:\/\/[^\s]+/g, '') // Remove URLs
+      .replace(/[^\w\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    const stopWords = new Set([
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 
+      'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 
+      'will', 'would', 'could', 'should', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 
+      'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 'her', 
+      'its', 'our', 'their', 'how', 'what', 'when', 'where', 'why', 'who', 'from', 'can', 'about',
+      'get', 'make', 'take', 'go', 'come', 'see', 'know', 'think', 'say', 'want', 'need', 'like'
+    ]);
+    
+    const words = cleanText.toLowerCase().split(/\s+/).filter(word => word.length > 2);
+    const phrases = [];
+    
+    // Extract 2-word meaningful phrases
+    for (let i = 0; i < words.length - 1; i++) {
+      const word1 = words[i];
+      const word2 = words[i + 1];
+      
+      // Skip if either word is a stop word
+      if (stopWords.has(word1) || stopWords.has(word2)) continue;
+      
+      // Skip numbers only combinations
+      if (/^\d+$/.test(word1) && /^\d+$/.test(word2)) continue;
+      
+      const phrase = `${word1} ${word2}`;
+      if (phrase.length > 4) {
+        phrases.push(phrase);
+      }
+    }
+    
+    // Extract 3-word meaningful phrases for better context
+    for (let i = 0; i < words.length - 2; i++) {
+      const word1 = words[i];
+      const word2 = words[i + 1];
+      const word3 = words[i + 2];
+      
+      // Skip if any word is a stop word
+      if (stopWords.has(word1) || stopWords.has(word2) || stopWords.has(word3)) continue;
+      
+      // Prioritize phrases with proper nouns or important terms
+      const phrase = `${word1} ${word2} ${word3}`;
+      const hasCapitalizedWord = cleanText.includes(word1.charAt(0).toUpperCase() + word1.slice(1)) ||
+                                 cleanText.includes(word2.charAt(0).toUpperCase() + word2.slice(1)) ||
+                                 cleanText.includes(word3.charAt(0).toUpperCase() + word3.slice(1));
+      
+      if (hasCapitalizedWord && phrase.length > 6) {
+        phrases.push(phrase);
+      }
+    }
+    
+    // Also include single important words as fallback
+    const importantSingleWords = words.filter(word => 
+      !stopWords.has(word) && 
+      word.length > 3 && 
+      !(/^\d+$/.test(word)) // Exclude pure numbers
+    );
+    
+    // Combine phrases and important single words, prioritizing phrases
+    const allKeywords = [...new Set([...phrases, ...importantSingleWords])];
+    
+    return allKeywords.slice(0, 10);
+  } catch (error) {
+    console.error('Error in simple keyword extraction:', error);
+    return [];
+  }
+}
+
+// AI-powered keyword extraction with contextual phrases
+async function extractKeywordsWithAI(text) {
+  try {
+    if (!process.env.CLAUDE_API_KEY) {
+      throw new Error('No Claude API key available');
+    }
+
     const claudeRequest = {
       model: "claude-3-haiku-20240307",
-      system: `You are Claude, an AI assistant that provides well-structured summaries with clear formatting. You are helping ${username} understand a discussion.
-      
-      IMPORTANT: Format your response using HTML structure with:
-      - Use <h3> for main sections
-      - Use <h4> for subsections  
-      - Use <ul> and <li> for bullet points
-      - Use <strong> for emphasis
-      - Use <p> for paragraphs
-      
-      Provide a clear, well-structured summary that includes:
-      
-      <h3>🎯 Main Topic</h3>
-      <p>Brief overview of what this discussion is about</p>
-      
-      <h3>📋 Key Points</h3>
-      <ul>
-        <li>Important insight 1</li>
-        <li>Important insight 2</li>
-        <li>Important insight 3</li>
-      </ul>
-      
-      <h3>💬 Community Insights</h3>
-      <ul>
-        <li>Notable perspective from comments</li>
-        <li>User feedback or questions</li>
-      </ul>
-      
-      <h3>🔗 Resources & Actions</h3>
-      <ul>
-        <li>Links or tools mentioned</li>
-        <li>Actionable takeaways</li>
-      </ul>
-      
-      Keep the summary engaging and well-organized with clear visual hierarchy.`,
+      system: `Extract meaningful keywords and phrases from the text that capture the context and intent. Focus on:
+1. 2+ word meaningful phrases that represent key concepts
+2. Contextual combinations (e.g., "History of India" instead of just "India")
+3. Important multi-word terms that better represent what the user is asking about
+4. Proper nouns and specific topics as complete phrases
+
+Return comma-separated keywords/phrases. Prioritize 2-3 word phrases over single words. Maximum 8 items total.
+
+Examples:
+- "history of India from 1915" → "History of India, Indian independence movement, Colonial India, Modern Indian history"
+- "digital marketing strategies" → "digital marketing strategies, online marketing, digital advertising, marketing techniques"
+- "Narendra Modi policies" → "Narendra Modi, Indian Prime Minister, Modi government policies, BJP leadership"`,
       messages: [
         {
           role: "user",
-          content: `Please summarize this discussion content:\n\n${contentToSummarize}`
+          content: `Extract contextual keywords and phrases from: "${text.substring(0, 800)}"`
+        }
+      ],
+      max_tokens: 100,
+      temperature: 0.1,
+    };
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify(claudeRequest)
+    });
+
+    if (!response.ok) {
+      throw new Error(`AI keyword extraction failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const aiResponse = data.content[0]?.text || "";
+    
+    return aiResponse
+      .split(',')
+      .map(keyword => keyword.trim())
+      .filter(keyword => keyword.length > 1)
+      .slice(0, 8);
+  } catch (error) {
+    console.warn('AI keyword extraction failed:', error.message);
+    return [];
+  }
+}
+
+// Find relevant discussions and links from database with enhanced relevance filtering
+async function findRelevantDiscussionsAndLinks(keywords, limit = 10) {
+  try {
+    if (!keywords || keywords.length === 0) {
+      console.warn('No keywords provided for search');
+      return { discussions: [], links: [] };
+    }
+
+    console.log('Searching for content with keywords:', keywords);
+
+    // Create both phrase-based and individual word regex patterns
+    const phraseRegexes = keywords
+      .filter(keyword => keyword.includes(' ')) // Multi-word phrases
+      .map(phrase => new RegExp(phrase.replace(/\s+/g, '\\s+'), 'i'));
+    
+    const wordRegexes = keywords
+      .filter(keyword => !keyword.includes(' ')) // Single words
+      .map(word => new RegExp(`\\b${word}\\b`, 'i')); // Word boundaries for exact matches
+    
+    const allRegexes = [...phraseRegexes, ...wordRegexes];
+
+    // Enhanced search query that prioritizes phrase matches
+    const searchQuery = {
+      $or: [
+        // High priority: exact phrase matches in title
+        ...phraseRegexes.map(regex => ({ title: regex })),
+        // Medium priority: exact phrase matches in content  
+        ...phraseRegexes.map(regex => ({ content: regex })),
+        // Lower priority: individual word matches with word boundaries
+        ...wordRegexes.map(regex => ({ title: regex })),
+        ...wordRegexes.map(regex => ({ content: regex })),
+        // Hashtag matches (converted to lowercase)
+        { hashtags: { $in: keywords.map(k => k.toLowerCase().replace(/\s+/g, '')) } }
+      ]
+    };
+
+    // Find relevant discussions (posts) with enhanced scoring
+    let discussions = [];
+    try {
+      discussions = await Post.aggregate([
+        {
+          $match: searchQuery
+        },
+        {
+          $addFields: {
+            // Enhanced relevance scoring
+            relevanceScore: {
+              $add: [
+                // Base engagement score
+                { $ifNull: ["$discussions", 0] },
+                { $multiply: [{ $size: { $ifNull: ["$creatorLinks", []] } }, 2] },
+                { $multiply: [{ $size: { $ifNull: ["$communityLinks", []] } }, 2] },
+                // Bonus for phrase matches in title (high weight)
+                ...phraseRegexes.map(regex => ({
+                  $cond: {
+                    if: { $regexMatch: { input: "$title", regex: regex.source, options: "i" } },
+                    then: 10, // High bonus for phrase in title
+                    else: 0
+                  }
+                })),
+                // Bonus for phrase matches in content (medium weight)
+                ...phraseRegexes.map(regex => ({
+                  $cond: {
+                    if: { $regexMatch: { input: "$content", regex: regex.source, options: "i" } },
+                    then: 5, // Medium bonus for phrase in content
+                    else: 0
+                  }
+                })),
+                // Smaller bonus for individual word matches
+                ...wordRegexes.map(regex => ({
+                  $cond: {
+                    if: { $regexMatch: { input: "$title", regex: regex.source, options: "i" } },
+                    then: 2, // Small bonus for word in title
+                    else: 0
+                  }
+                }))
+              ]
+            }
+          }
+        },
+        {
+          // Filter out low relevance results
+          $match: {
+            relevanceScore: { $gte: phraseRegexes.length > 0 ? 8 : 4 } // Higher threshold for phrase searches
+          }
+        },
+        {
+          $sort: { relevanceScore: -1, createdAt: -1 }
+        },
+        {
+          $limit: Math.min(limit * 2, 50) // Get more results for better filtering
+        }
+      ]);
+      
+      console.log('Found discussions before filtering:', discussions.length);
+    } catch (discussionError) {
+      console.warn('Error finding discussions:', discussionError.message);
+    }
+
+    // Find relevant links from posts with enhanced relevance
+    const linkResults = [];
+    try {
+      const linkSearchQuery = {
+        $or: [
+          // High priority: phrase matches in link titles/descriptions
+          ...phraseRegexes.map(regex => ({ "creatorLinks.title": regex })),
+          ...phraseRegexes.map(regex => ({ "creatorLinks.description": regex })),
+          ...phraseRegexes.map(regex => ({ "communityLinks.title": regex })),
+          ...phraseRegexes.map(regex => ({ "communityLinks.description": regex })),
+          // Lower priority: word matches in link titles/descriptions
+          ...wordRegexes.map(regex => ({ "creatorLinks.title": regex })),
+          ...wordRegexes.map(regex => ({ "creatorLinks.description": regex })),
+          ...wordRegexes.map(regex => ({ "communityLinks.title": regex })),
+          ...wordRegexes.map(regex => ({ "communityLinks.description": regex }))
+        ]
+      };
+
+      const posts = await Post.find(linkSearchQuery).limit(30).lean();
+      console.log('Found posts with matching links:', posts.length);
+
+      posts.forEach(post => {
+        // Process creator links
+        if (post.creatorLinks && Array.isArray(post.creatorLinks)) {
+          post.creatorLinks.forEach((link, index) => {
+            const relevanceScore = calculateEnhancedLinkRelevance(link, keywords, phraseRegexes, wordRegexes);
+            const minThreshold = phraseRegexes.length > 0 ? 8 : 5; // Higher threshold for phrase searches
+            
+            if (relevanceScore >= minThreshold) {
+              linkResults.push({
+                id: `${post._id.toString()}-creator-${index}`,
+                title: link.title || 'Untitled Link',
+                url: link.url || '#',
+                description: link.description || '',
+                votes: link.voteCount || link.votes || 0,
+                contributorUsername: post.username || 'Unknown',
+                postId: post._id.toString(),
+                type: 'creator',
+                relevanceScore
+              });
+            }
+          });
+        }
+
+        // Process community links
+        if (post.communityLinks && Array.isArray(post.communityLinks)) {
+          post.communityLinks.forEach((link, index) => {
+            const relevanceScore = calculateEnhancedLinkRelevance(link, keywords, phraseRegexes, wordRegexes);
+            const minThreshold = phraseRegexes.length > 0 ? 8 : 5; // Higher threshold for phrase searches
+            
+            if (relevanceScore >= minThreshold) {
+              linkResults.push({
+                id: `${post._id.toString()}-community-${index}`,
+                title: link.title || 'Untitled Link',
+                url: link.url || '#',
+                description: link.description || '',
+                votes: link.votes || 0,
+                contributorUsername: link.contributorUsername || 'Unknown',
+                postId: post._id.toString(),
+                type: 'community',
+                relevanceScore
+              });
+            }
+          });
+        }
+      });
+
+      // Sort links by relevance score first, then by votes
+      linkResults.sort((a, b) => {
+        if (b.relevanceScore !== a.relevanceScore) return b.relevanceScore - a.relevanceScore;
+        return b.votes - a.votes;
+      });
+
+      console.log('Found relevant links after filtering:', linkResults.length);
+    } catch (linkError) {
+      console.warn('Error finding links:', linkError.message);
+    }
+
+    // Final filtering to ensure high quality results
+    const filteredDiscussions = discussions
+      .filter(post => post.relevanceScore >= (phraseRegexes.length > 0 ? 8 : 4))
+      .slice(0, limit);
+
+    const filteredLinks = linkResults
+      .filter(link => link.relevanceScore >= (phraseRegexes.length > 0 ? 8 : 5))
+      .slice(0, limit);
+
+    console.log('Final filtered results:', filteredDiscussions.length, 'discussions,', filteredLinks.length, 'links');
+
+    return {
+      discussions: filteredDiscussions.map(post => ({
+        id: post._id.toString(),
+        title: post.title || 'Untitled Post',
+        username: post.username || 'Unknown',
+        discussions: post.discussions || 0,
+        linkCount: (post.creatorLinks?.length || 0) + (post.communityLinks?.length || 0),
+        engagementScore: post.engagementScore || 0,
+        relevanceScore: post.relevanceScore || 0,
+        createdAt: post.createdAt
+      })),
+      links: filteredLinks
+    };
+  } catch (error) {
+    console.error('Error finding relevant discussions and links:', error);
+    return { discussions: [], links: [] };
+  }
+}
+
+// Enhanced helper function to calculate link relevance score with phrase prioritization
+function calculateEnhancedLinkRelevance(link, keywords, phraseRegexes, wordRegexes) {
+  let score = 0;
+  const title = (link.title || '').toLowerCase();
+  const description = (link.description || '').toLowerCase();
+  const url = (link.url || '').toLowerCase();
+
+  // High scoring: exact phrase matches
+  phraseRegexes.forEach(phraseRegex => {
+    const phrase = phraseRegex.source.replace(/\\s\+/g, ' ').toLowerCase();
+    if (title.includes(phrase)) score += 10; // Very high score for phrase in title
+    if (description.includes(phrase)) score += 8; // High score for phrase in description
+    if (url.includes(phrase.replace(/\s+/g, ''))) score += 3; // Medium score for phrase in URL
+  });
+
+  // Medium scoring: individual word matches with word boundaries
+  wordRegexes.forEach(wordRegex => {
+    const word = wordRegex.source.replace(/\\b/g, '').toLowerCase();
+    const wordBoundaryRegex = new RegExp(`\\b${word}\\b`, 'i');
+    
+    if (wordBoundaryRegex.test(title)) score += 3; // Medium score for word in title
+    if (wordBoundaryRegex.test(description)) score += 2; // Lower score for word in description
+    if (wordBoundaryRegex.test(url)) score += 1; // Low score for word in URL
+  });
+
+  // Additional scoring for multi-word queries - require multiple word matches
+  if (keywords.length > 1) {
+    const matchedWords = keywords.filter(keyword => {
+      if (keyword.includes(' ')) {
+        // For phrases, check if the phrase exists
+        return title.includes(keyword.toLowerCase()) || description.includes(keyword.toLowerCase());
+      } else {
+        // For individual words, check with word boundaries
+        const wordRegex = new RegExp(`\\b${keyword}\\b`, 'i');
+        return wordRegex.test(title) || wordRegex.test(description);
+      }
+    });
+    
+    // Bonus for matching multiple keywords (helps with contextual relevance)
+    if (matchedWords.length > 1) {
+      score += matchedWords.length * 2;
+    }
+    
+    // Penalty if less than half of keywords match (filters out weak matches)
+    if (matchedWords.length < Math.ceil(keywords.length / 2)) {
+      score = Math.max(0, score - 5);
+    }
+  }
+
+  return score;
+}
+
+// Legacy function for backward compatibility
+function calculateLinkRelevance(link, keywords) {
+  let score = 0;
+  const title = (link.title || '').toLowerCase();
+  const description = (link.description || '').toLowerCase();
+  const url = (link.url || '').toLowerCase();
+
+  keywords.forEach(keyword => {
+    const keywordLower = keyword.toLowerCase();
+    if (title.includes(keywordLower)) score += 2;
+    if (description.includes(keywordLower)) score += 1;
+    if (url.includes(keywordLower)) score += 0.5;
+  });
+
+  return score;
+}
+
+// Generate brief summary using Claude AI
+async function generateBriefSummary(postData, username) {
+  try {
+    if (!process.env.CLAUDE_API_KEY) {
+      return "Here's a summary of the discussion based on the content and links shared.";
+    }
+
+    let contentToSummarize = '';
+    
+    if (postData.postTitle) {
+      contentToSummarize += `Title: ${postData.postTitle}\n\n`;
+    }
+
+    if (postData.postContent) {
+      contentToSummarize += `Content: ${postData.postContent.substring(0, 800)}${postData.postContent.length > 800 ? '...' : ''}\n\n`;
+    }
+
+    if (postData.creatorLinks && postData.creatorLinks.length > 0) {
+      contentToSummarize += `Creator Links:\n${postData.creatorLinks.slice(0, 3).map(link => 
+        `- ${link.title}: ${(link.description || 'No description').substring(0, 80)}`
+      ).join('\n')}\n\n`;
+    }
+
+    if (postData.comments && postData.comments.length > 0) {
+      contentToSummarize += `Top Comments:\n${postData.comments.slice(0, 3).map(comment => 
+        `- ${comment.username}: ${comment.content.substring(0, 80)}`
+      ).join('\n')}\n`;
+    }
+
+    const claudeRequest = {
+      model: "claude-3-haiku-20240307",
+      system: `Provide a brief, engaging summary in 2-3 sentences that captures the main points of the discussion. Keep it conversational and informative.`,
+      messages: [
+        {
+          role: "user",
+          content: `Summarize this discussion:\n\n${contentToSummarize}`
+        }
+      ],
+      max_tokens: 150,
+      temperature: 0.7,
+    };
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify(claudeRequest)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Summary generation failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.content[0]?.text || "Here's a summary of the key points from this discussion.";
+  } catch (error) {
+    console.error('Error generating brief summary:', error);
+    return "Here's a summary of the discussion based on the content and links shared.";
+  }
+}
+
+// Generate similar topics brief
+async function generateSimilarTopicsBrief(keywords, discussions, links) {
+  try {
+    if (!process.env.CLAUDE_API_KEY) {
+      return "These topics are connected through common themes and interests in the community.";
+    }
+
+    const claudeRequest = {
+      model: "claude-3-haiku-20240307",
+      system: "Create a brief summary about similar topics found. Focus on connections and themes. Keep it conversational in 2-3 sentences.",
+      messages: [
+        {
+          role: "user",
+          content: `Keywords: ${keywords.join(', ')}. Found ${discussions.length} discussions and ${links.length} links. Explain connections.`
+        }
+      ],
+      max_tokens: 120,
+      temperature: 0.7,
+    };
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify(claudeRequest)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Topics brief failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.content[0]?.text || "These topics are connected through common themes and interests.";
+  } catch (error) {
+    console.error('Error generating similar topics brief:', error);
+    return "These topics are connected through common themes and interests in the community.";
+  }
+}
+
+// Generate topic brief for manual queries
+async function generateTopicBrief(question, keywords, discussions, links) {
+  try {
+    if (!process.env.CLAUDE_API_KEY) {
+      return "Here's a brief overview of this topic based on the related discussions and links.";
+    }
+
+    const claudeRequest = {
+      model: "claude-3-haiku-20240307",
+      system: "Provide a brief overview about the main topic/subject that the user is asking about. Focus on explaining what the topic is and why it's relevant, not directly answering their specific question. Keep it informative in 2-3 sentences.",
+      messages: [
+        {
+          role: "user",
+          content: `User asked: "${question}". Keywords: ${keywords.join(', ')}. Found ${discussions.length} discussions and ${links.length} links. Provide a brief overview about the main topic/subject of this question.`
+        }
+      ],
+      max_tokens: 120,
+      temperature: 0.7,
+    };
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify(claudeRequest)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Topic brief failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.content[0]?.text || "Here's a brief overview of this topic based on the related discussions and links.";
+  } catch (error) {
+    console.error('Error generating topic brief:', error);
+    return "Here's a brief overview of this topic based on the related discussions and links.";
+  }
+}
+
+// Generate elaborated insights using Claude AI
+async function generateElaboratedInsights(query, keywords, searchResults, contextData, username, smallBrief = null) {
+  try {
+    if (!process.env.CLAUDE_API_KEY) {
+      return "Here are some detailed insights about this topic based on the available information.";
+    }
+
+    const claudeRequest = {
+      model: "claude-3-haiku-20240307",
+      system: `You are providing detailed insights about the specific topic the user asked about. Stay focused on their exact query and don't get distracted by unrelated content. 
+
+CRITICAL: The user's query is about "${query}". Your response must be directly about this topic only.
+
+Provide detailed analysis with HTML headings (use <h3>, <h4>, <h5>) and structured content. Include bullet points with <ul><li> for key insights. Make it comprehensive with 3-4 sections covering different aspects of the topic the user actually asked about. Use proper HTML formatting.
+
+If the user asked about a person, focus on that person. If they asked about a technology, focus on that technology. Do not mix topics or discuss unrelated subjects.`,
+      messages: [
+        {
+          role: "user",
+          content: `I want detailed insights about: "${query}"
+
+Keywords related to this topic: ${keywords.join(', ')}
+
+Please provide comprehensive insights specifically about "${query}" with proper HTML structure and formatting. Focus only on this topic and ignore any unrelated information.`
+        }
+      ],
+      max_tokens: 700,
+      temperature: 0.7,
+    };
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify(claudeRequest)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Insights generation failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const generatedContent = data.content[0]?.text || "Here are some detailed insights about this topic.";
+    
+    // Validation: Check if the response is actually about the queried topic
+    const queryWords = query.toLowerCase().split(' ');
+    const contentLower = generatedContent.toLowerCase();
+    const hasRelevantContent = queryWords.some(word => word.length > 3 && contentLower.includes(word));
+    
+    if (!hasRelevantContent) {
+      console.warn('Generated content seems unrelated to query:', query);
+      return `<h3>About ${query}</h3><p>Here are detailed insights about ${query} based on available information and community discussions.</p>`;
+    }
+    
+    return generatedContent;
+  } catch (error) {
+    console.error('Error generating elaborated insights:', error);
+    return `<h3>About ${query}</h3><p>Here are detailed insights about ${query} based on the available information.</p>`;
+  }
+}
+
+// Generate elaborated summary with side headings
+async function generateElaboratedSummaryWithHeadings(postData, discussions, links, username) {
+  try {
+    if (!process.env.CLAUDE_API_KEY) {
+      return '<div style="padding: 15px 0; color: #ccc; font-size: 13px;">Here\'s a detailed summary of the discussion and related content.</div>';
+    }
+
+    let contentInfo = '';
+    if (postData.postTitle) {
+      contentInfo += `Title: ${postData.postTitle}\n`;
+    }
+    if (postData.postContent) {
+      contentInfo += `Content: ${postData.postContent.substring(0, 400)}...\n`;
+    }
+
+    const claudeRequest = {
+      model: "claude-3-haiku-20240307",
+      system: `You are summarizing the specific discussion content provided. Stay focused on the actual discussion topic and content.
+
+Provide a detailed summary with subheadings (<h3>, <h4>, <h5>) and structured content. Use bullet points (<ul><li>) for key insights. Cover the main points from the discussion content in 3-4 sections.
+
+Focus specifically on the discussion topic shown in the title and content - do not introduce unrelated topics.
+
+Do not mention formatting instructions in your response - just provide the content directly.`,
+      messages: [
+        {
+          role: "user",
+          content: `Please summarize this discussion content:\n\n${contentInfo}\n\nFound ${discussions.length} related discussions and ${links.length} related links in the community.\n\nProvide a detailed summary with subheadings that focuses on the actual discussion content.`
         }
       ],
       max_tokens: 800,
@@ -262,108 +1812,62 @@ async function handleSummarizeRequest(message, extractedContent, context, userna
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API error: ${response.status} - ${errorText}`);
+      throw new Error(`Summary generation failed: ${response.status}`);
     }
 
     const data = await response.json();
-    const aiResponse = data.content[0]?.text || "I'm sorry, I couldn't generate a summary.";
-
-    // Format response (no "show more" for suggestions)
-    const finalResponse = `<div style="font-size: 15px; font-weight: bold; color: #FFFFFF; padding: 10px 0 5px 5px; display: flex; align-items: center;">
-      <span style="color: #FFFFFF; margin-right: 5px;">•</span> DISCUSSION SUMMARY
-    </div>
-    <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white;">
-      ${aiResponse}
-    </div>`;
-
-    return NextResponse.json({
-      response: finalResponse,
-      model: data?.model || "claude-3-haiku-20240307",
-      usage: data?.usage || null,
-      dataAvailable: [],
-      hasMoreDb: false,
-      hasMoreAi: false,
-      isExpandedDb: false,
-      isExpandedAi: false
-    }, { status: 200 });
-
+    let content = data.content[0]?.text || "Here's a detailed summary of the discussion.";
+    
+    // Clean up any mentions of formatting instructions that might slip through
+    content = content
+      .replace(/with proper HTML formatting[:\.]?/gi, '')
+      .replace(/using HTML formatting[:\.]?/gi, '')
+      .replace(/with HTML structure[:\.]?/gi, '')
+      .replace(/Here (?:is|are) (?:a )?detailed (?:summary|analysis|overview) (?:of|about) .+ with .+formatting[:\.]?\s*/gi, '')
+      .trim();
+    
+    return `<div style="padding: 15px 0; color: #ccc; font-size: 13px; line-height: 1.5;">${content}</div>`;
   } catch (error) {
-    console.error('Error in summarize request:', error);
-    throw error;
+    console.error('Error generating elaborated summary:', error);
+    return '<div style="padding: 15px 0; color: #ccc; font-size: 13px;">Here\'s a detailed summary of the discussion and related content.</div>';
   }
 }
 
-// NEW: Handle "similar topics" suggestion
-async function handleSimilarTopicsRequest(message, keywords, context, username) {
+// Generate relevant external links based on insights content
+async function generateRelevantExternalLinks(query, keywords, insights) {
   try {
-    // Use keywords to find similar content
-    let similarContent = '';
-    let relevantDiscussions = [];
-    let relevantLinks = [];
-
-    if (keywords && keywords.length > 0) {
-      // Search for similar posts using keywords
-      const searchResults = await claudeDbService.findSimilarByKeywords(keywords, 10);
-      
-      if (searchResults.posts && searchResults.posts.length > 0) {
-        similarContent = searchResults.posts.map(post => 
-          `${post.title}: ${post.content ? post.content.substring(0, 100) + '...' : ''}`
-        ).join('\n');
-        
-        // Get top 2 discussions (based on comments + links count)
-        relevantDiscussions = searchResults.posts
-          .sort((a, b) => ((b.discussions || 0) + (b.linkCount || 0)) - ((a.discussions || 0) + (a.linkCount || 0)))
-          .slice(0, 2);
-      }
-
-      // Search for relevant links
-      const linkResults = await claudeDbService.findTopLinks(keywords, 5);
-      if (linkResults && linkResults.length > 0) {
-        relevantLinks = linkResults
-          .sort((a, b) => (b.votes || 0) - (a.votes || 0))
-          .slice(0, 2);
-      }
+    if (!process.env.CLAUDE_API_KEY) {
+      console.warn('No Claude API key for external link generation');
+      return [];
     }
 
-    // Create Claude API request for similar topics analysis
     const claudeRequest = {
       model: "claude-3-haiku-20240307",
-      system: `You are Claude, an AI assistant helping ${username} discover similar topics and content.
-      
-      IMPORTANT: Format your response using HTML structure with:
-      - Use <h3> for main sections
-      - Use <h4> for subsections
-      - Use <ul> and <li> for bullet points
-      - Use <strong> for emphasis
-      - Use <p> for paragraphs
-      
-      Based on the provided content, create a well-structured overview:
-      
-      <h3>🔍 Related Topics</h3>
-      <ul>
-        <li><strong>Topic 1:</strong> Brief description</li>
-        <li><strong>Topic 2:</strong> Brief description</li>
-      </ul>
-      
-      <h3>🎯 Key Themes</h3>
-      <ul>
-        <li>Common pattern or theme 1</li>
-        <li>Common pattern or theme 2</li>
-      </ul>
-      
-      <h3>💡 Areas of Interest</h3>
-      <p>Explanation of why these topics might interest the user</p>
-      
-      Keep it engaging, well-organized, and insightful.`,
+      system: `Based on the specific topic "${query}" and the insights content provided, suggest 3-4 relevant educational resources as JSON array. Each item should have 'title', 'url', and 'description' fields. 
+
+Focus on reputable sources like:
+- Educational institutions (.edu sites)
+- Government websites (.gov sites) 
+- Established organizations
+- Well-known educational platforms (Coursera, edX, Khan Academy, etc.)
+- Wikipedia for general topics
+- Official websites for specific people/organizations
+
+IMPORTANT: The links must be directly related to "${query}" - do not suggest links about unrelated topics.
+
+Return only a valid JSON array with no additional text or formatting instructions.`,
       messages: [
         {
           role: "user",
-          content: `Based on these keywords: ${keywords.join(', ')}\n\nAnd this similar content from our database:\n${similarContent || 'No similar content found'}\n\nWhat similar topics might interest someone discussing this subject?`
+          content: `Topic: "${query}"
+Keywords: ${keywords.join(', ')}
+Insights Content: ${insights.substring(0, 600)}
+
+Suggest relevant educational links specifically about "${query}" as JSON array.`
         }
       ],
-      max_tokens: 600,
-      temperature: 0.7,
+      max_tokens: 300,
+      temperature: 0.3,
     };
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -377,426 +1881,178 @@ async function handleSimilarTopicsRequest(message, keywords, context, username) 
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API error: ${response.status} - ${errorText}`);
+      throw new Error(`External links generation failed: ${response.status}`);
     }
 
     const data = await response.json();
-    const aiResponse = data.content[0]?.text || "I couldn't find similar topics.";
-
-    // Build response with discussions and links
-    let finalResponse = `<div style="font-size: 15px; font-weight: bold; color: #FFFFFF; padding: 10px 0 5px 5px; display: flex; align-items: center;">
-      <span style="color: #FFFFFF; margin-right: 5px;">•</span> SIMILAR TOPICS
-    </div>
-    <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white;">
-      ${aiResponse}
-    </div>`;
-
-    // Add relevant discussions if available
-    if (relevantDiscussions.length > 0) {
-      finalResponse += `<div style="font-size: 13px; color: #888888; margin: 10px 0 5px 0; padding-left: 5px;">Relevant discussions:</div>`;
+    let aiResponse = data.content[0]?.text || "";
+    
+    // Clean up any formatting mentions that might slip through
+    aiResponse = aiResponse
+      .replace(/with proper HTML formatting[:\.]?/gi, '')
+      .replace(/using HTML formatting[:\.]?/gi, '')
+      .replace(/with HTML structure[:\.]?/gi, '')
+      .trim();
+    
+    try {
+      // Try to parse the JSON response
+      const suggestedLinks = JSON.parse(aiResponse);
+      if (Array.isArray(suggestedLinks)) {
+        return suggestedLinks.slice(0, 4).map(link => ({
+          title: link.title || 'Educational Resource',
+          url: link.url || '#',
+          description: link.description || 'Additional learning resource'
+        }));
+      }
+    } catch (parseError) {
+      console.warn('Failed to parse AI-generated links JSON:', parseError.message);
       
-      relevantDiscussions.forEach(post => {
-        const commentCount = post.discussions || 0;
-        finalResponse += `
-        <div style="padding: 0 5px 10px 5px;">
-          <div style="font-size: 13px; color: white; margin-bottom: 5px;">
-            ${post.title} <span style="color: #4ca0ff;">@${post.username}</span>
-          </div>
-          <div style="display: flex; gap: 8px; margin-top: 5px;">
-            <div style="background-color: #111111; color: #aaaaaa; padding: 2px 10px; border-radius: 12px; font-size: 11px;">${commentCount} Comments</div>
-            <a href="/discussion?id=${post.id}" style="background-color: #111111; color: #aaaaaa; border: none; padding: 2px 10px; border-radius: 12px; font-size: 11px; text-decoration: none;">Take me</a>
-          </div>
-        </div>`;
-      });
+      // Fallback: Extract any URLs mentioned in the response
+      const urlMatches = aiResponse.match(/https?:\/\/[^\s"',]+/g);
+      if (urlMatches && urlMatches.length > 0) {
+        return urlMatches.slice(0, 3).map((url, index) => ({
+          title: `Educational Resource ${index + 1}`,
+          url: url.replace(/[.,;!?)]+$/, ''), // Remove trailing punctuation
+          description: 'Additional learning resource related to the topic'
+        }));
+      }
     }
 
-    // Add relevant links if available
-    if (relevantLinks.length > 0) {
-      finalResponse += `<div style="font-size: 13px; color: #888888; margin: 10px 0 5px 0; padding-left: 5px;">Relevant links:</div>`;
-      
-      relevantLinks.forEach(link => {
-        finalResponse += `
-        <div style="padding: 10px; margin: 0 5px 10px 5px; border: 1px solid #2e88ff; border-radius: 6px; background-color: rgba(0, 0, 0, 0.2);">
-          <div style="font-size: 13px; color: white; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${link.title}</div>
-          <div style="font-size: 12px; color: #4ca0ff; margin-bottom: 8px;">@${link.contributorUsername || 'unknown'}</div>
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="color: #aaaaaa; font-size: 11px; display: flex; align-items: center;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" style="margin-right: 4px;">
-                <path d="M12 19V5M5 12l7-7 7 7"/>
-              </svg>
-              ${(link.votes || 0) > 1000 ? ((link.votes || 0) / 1000).toFixed(1) + 'k' : (link.votes || 0)}
-            </div>
-            <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="background-color: #111111; color: #aaaaaa; border: none; padding: 2px 10px; border-radius: 12px; font-size: 11px; text-decoration: none;">Take me</a>
-          </div>
-        </div>`;
-      });
-    }
-
-    return NextResponse.json({
-      response: finalResponse,
-      model: data?.model || "claude-3-haiku-20240307",
-      usage: data?.usage || null,
-      dataAvailable: [],
-      hasMoreDb: false,
-      hasMoreAi: false,
-      isExpandedDb: false,
-      isExpandedAi: false
-    }, { status: 200 });
-
+    // If AI generation fails, return some generic educational resources based on the actual query
+    return generateFallbackEducationalLinks(keywords, query);
+    
   } catch (error) {
-    console.error('Error in similar topics request:', error);
-    throw error;
+    console.error('Error generating relevant external links:', error);
+    return generateFallbackEducationalLinks(keywords, query);
   }
 }
 
-// Handle manual queries (existing logic with modifications)
-async function handleManualQuery(message, context, username, dataCommands, showMoreDb, showMoreAi, keywords) {
+// Generate fallback educational links when AI generation fails
+function generateFallbackEducationalLinks(keywords, query = null) {
   try {
-    let databaseInfo = "";
-    let dataAvailable = [];
-    let allResults = {
-      posts: [],
-      links: [],
-      comments: [],
-      forums: [],
-      trending: [],
-      related: [],
-      userPosts: []
-    };
-
-    // Only run database queries if it's not a showMoreAi-only request
-    if (!showMoreAi) {
-      console.log('Processing manual query with keywords:', keywords);
-
-      // NEW: Use keywords for better database searching
-      if (keywords && keywords.length > 0) {
-        // Use keyword-based search for manual queries
-        const keywordResults = await claudeDbService.findSimilarByKeywords(keywords, 15);
-        
-        if (keywordResults.posts) allResults.posts.push(...keywordResults.posts);
-        if (keywordResults.links) allResults.links.push(...keywordResults.links);
-        if (keywordResults.comments) allResults.comments.push(...keywordResults.comments);
-      } else if (dataCommands && Array.isArray(dataCommands) && dataCommands.length > 0) {
-        // Fallback to original dataCommands approach
-        const dbResults = await Promise.all(dataCommands.map(async (command) => {
-          switch (command.type) {
-            case 'comprehensive_search':
-              return await claudeDbService.comprehensiveSearch(command.query, command.limit || 10);
-            case 'search_posts':
-              return { posts: await claudeDbService.searchPosts(command.query, command.limit || 10) };
-            case 'get_post':
-              const post = await claudeDbService.getPostById(command.postId);
-              return post ? { post } : null;
-            case 'get_user':
-              const user = await claudeDbService.getUserByUsername(command.username);
-              return user ? { user } : null;
-            case 'get_user_posts':
-              return { userPosts: await claudeDbService.getRecentPostsByUser(command.username, command.limit || 3) };
-            case 'get_trending':
-              return { trending: await claudeDbService.getTrendingPosts(command.limit || 5) };
-            case 'get_related_posts':
-              return { related: await claudeDbService.getRelatedPosts(command.postId, command.limit || 3) };
-            case 'search_forums':
-              return { forums: await claudeDbService.searchForums(command.topic, command.limit || 3) };
-            default:
-              return null;
-          }
-        }));
-
-        // Combine all results
-        dbResults.forEach(result => {
-          if (!result) return;
-          if (result.posts) allResults.posts.push(...result.posts);
-          if (result.links) allResults.links.push(...result.links);
-          if (result.comments) allResults.comments.push(...result.comments);
-          if (result.forums) allResults.forums.push(...result.forums);
-          if (result.trending) allResults.trending.push(...result.trending);
-          if (result.related) allResults.related.push(...result.related);
-          if (result.userPosts) allResults.userPosts.push(...result.userPosts);
-          if (result.post) allResults.post = result.post;
-          if (result.user) allResults.user = result.user;
-        });
+    const fallbackLinks = [];
+    const searchTerm = query || keywords[0] || 'technology';
+    
+    // Generate some educational platform links based on the actual query or keywords
+    const educationalPlatforms = [
+      {
+        title: `Learn about ${searchTerm} on Wikipedia`,
+        url: `https://en.wikipedia.org/wiki/${encodeURIComponent(searchTerm.replace(/\s+/g, '_'))}`,
+        description: 'Comprehensive encyclopedia article'
+      },
+      {
+        title: `${searchTerm} courses on Coursera`,
+        url: `https://www.coursera.org/search?query=${encodeURIComponent(searchTerm)}`,
+        description: 'Online courses and certifications'
+      },
+      {
+        title: `${searchTerm} resources on Khan Academy`,
+        url: `https://www.khanacademy.org/search?search_again=1&page_search_query=${encodeURIComponent(searchTerm)}`,
+        description: 'Free educational resources and tutorials'
       }
+    ];
 
-      // Sort results
-      allResults.posts.sort((a, b) => (b.discussions || 0) - (a.discussions || 0));
-      allResults.links.sort((a, b) => (b.votes || 0) - (a.votes || 0));
-
-      // Build database info if we found anything
-      const hasResults = Object.keys(allResults).some(key =>
-        (Array.isArray(allResults[key]) && allResults[key].length > 0) ||
-        (!Array.isArray(allResults[key]) && allResults[key])
-      );
-
-      if (hasResults) {
-        databaseInfo = `<div style="font-size: 15px; font-weight: bold; color: #FFFFFF; padding: 10px 0 5px 5px; display: flex; align-items: center;">
-          <span style="color: #FFFFFF; margin-right: 5px;">•</span> ${showMoreDb ? 'EXPANDED DATABASE INFORMATION' : 'DATABASE INFORMATION'}
-        </div>`;
-
-        // Add discussions section - show more posts if expandDbResults is true
-        if (allResults.posts.length > 0) {
-          const postsToShow = showMoreDb ? allResults.posts.slice(0, 4) : allResults.posts.slice(0, 2);
-          databaseInfo += `<div style="font-size: 13px; color: #888888; margin: 10px 0 5px 0; padding-left: 5px;">Relevant discussions:</div>`;
-
-          postsToShow.forEach(post => {
-            const commentCount = post.discussions || 0;
-            databaseInfo += `
-            <div style="padding: 0 5px 10px 5px;">
-              <div style="font-size: 13px; color: white; margin-bottom: 5px;">
-                ${post.title} <span style="color: #4ca0ff;">@${post.username}</span>
-              </div>
-              <div style="display: flex; gap: 8px; margin-top: 5px;">
-                <div style="background-color: #111111; color: #aaaaaa; padding: 2px 10px; border-radius: 12px; font-size: 11px;">${commentCount} Comments</div>
-                <a href="/discussion?id=${post.id}" style="background-color: #111111; color: #aaaaaa; border: none; padding: 2px 10px; border-radius: 12px; font-size: 11px; text-decoration: none;">Take me</a>
-              </div>
-            </div>`;
-          });
-        }
-
-        // Add links section
-        if (allResults.links.length > 0) {
-          const linksToShow = showMoreDb ? allResults.links.slice(0, 4) : allResults.links.slice(0, 2);
-          databaseInfo += `<div style="font-size: 13px; color: #888888; margin: 10px 0 5px 0; padding-left: 5px;">Relevant links:</div>`;
-
-          linksToShow.forEach(link => {
-            databaseInfo += `
-            <div style="padding: 10px; margin: 0 5px 10px 5px; border: 1px solid #2e88ff; border-radius: 6px; background-color: rgba(0, 0, 0, 0.2);">
-              <div style="font-size: 13px; color: white; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${link.title}</div>
-              <div style="font-size: 12px; color: #4ca0ff; margin-bottom: 8px;">@${link.contributorUsername || 'unknown'}</div>
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="color: #aaaaaa; font-size: 11px; display: flex; align-items: center;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" style="margin-right: 4px;">
-                    <path d="M12 19V5M5 12l7-7 7 7"/>
-                  </svg>
-                  ${(link.votes || 0) > 1000 ? ((link.votes || 0) / 1000).toFixed(1) + 'k' : (link.votes || 0)}
-                </div>
-                <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="background-color: #111111; color: #aaaaaa; border: none; padding: 2px 10px; border-radius: 12px; font-size: 11px; text-decoration: none;">Take me</a>
-              </div>
-            </div>`;
-          });
-        }
-
-        // Add "Show more" link if there are additional results and not already expanded
-        if (!showMoreDb && (allResults.posts.length > 2 || allResults.links.length > 2)) {
-          databaseInfo += `<div style="color: #4ca0ff; font-size: 13px; padding: 5px 0 10px 5px; cursor: pointer;" class="show-more-results show-more-db" data-query="${encodeURIComponent(message)}" data-type="db">Show more</div>`;
-        }
-      } else {
-        databaseInfo = `<div style="font-size: 15px; font-weight: bold; color: #FFFFFF; padding: 10px 0 5px 5px; display: flex; align-items: center;">
-          <span style="color: #FFFFFF; margin-right: 5px;">•</span> DATABASE INFORMATION
-        </div>
-        <div style="padding: 5px; font-size: 13px; color: #888888;">
-          I couldn't find any relevant information about this topic in our platform database.
-        </div>`;
-      }
-
-      dataAvailable = Object.keys(allResults).filter(key =>
-        (Array.isArray(allResults[key]) && allResults[key].length > 0) ||
-        (!Array.isArray(allResults[key]) && allResults[key])
-      );
-    }
-
-    // Handle AI response generation
-    let aiInfo = "";
-    let data = {};
-
-    if (!showMoreDb || showMoreAi) {
-      if (showMoreAi) {
-        // Expanded AI call
-        const claudeRequest = {
-          model: "claude-3-haiku-20240307",
-          system: `You are Claude, an AI assistant embedded in a discussion platform called Turtle. You are having a conversation with ${username}.
-          
-          ${context ? `Context about the current discussion: ${context}` : ''}
-          
-          IMPORTANT: Format your response using HTML structure with:
-          - Use <h3> for main sections
-          - Use <h4> for subsections
-          - Use <ul> and <li> for bullet points
-          - Use <strong> for emphasis
-          - Use <p> for paragraphs
-          
-          The user has requested a more detailed response. Structure your answer like:
-          
-          <h3>📊 Detailed Analysis</h3>
-          <p>Comprehensive explanation of the topic</p>
-          
-          <h4>Key Components</h4>
-          <ul>
-            <li><strong>Component 1:</strong> Detailed explanation</li>
-            <li><strong>Component 2:</strong> Detailed explanation</li>
-          </ul>
-          
-          <h4>Practical Applications</h4>
-          <ul>
-            <li>Real-world example 1</li>
-            <li>Real-world example 2</li>
-          </ul>
-          
-          <h3>🎯 Next Steps</h3>
-          <p>Actionable recommendations or further exploration</p>
-          
-          Keep your responses helpful, thorough, and conversational with clear visual hierarchy.`,
-          messages: [
-            {
-              role: "user",
-              content: message
-            }
-          ],
-          max_tokens: 2000,
-          temperature: 0.7,
-        };
-
-        try {
-          const response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': process.env.CLAUDE_API_KEY,
-              'anthropic-version': '2023-06-01'
-            },
-            body: JSON.stringify(claudeRequest)
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API error: ${response.status} - ${errorText}`);
-          }
-
-          data = await response.json();
-          const aiResponse = data.content[0]?.text || "I'm sorry, I couldn't generate a detailed response.";
-
-          aiInfo = `<div style="font-size: 15px; font-weight: bold; color: #FFFFFF; padding: 10px 0 5px 5px; display: flex; align-items: center;">
-            <span style="color: #FFFFFF; margin-right: 5px;">•</span> EXPANDED ADDITIONAL INFORMATION
-          </div>
-          <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white;">
-            ${aiResponse}
-          </div>`;
-
-        } catch (apiError) {
-          console.error('Error calling Claude API for expanded AI response:', apiError);
-          aiInfo = `<div style="font-size: 15px; font-weight: bold; color: #FFFFFF; padding: 10px 0 5px 5px; display: flex; align-items: center;">
-            <span style="color: #FFFFFF; margin-right: 5px;">•</span> ADDITIONAL INFORMATION
-          </div>
-          <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white;">
-            I apologize, but I encountered an error while trying to generate a more detailed response. Please try again.
-          </div>`;
-        }
-      } else if (showMoreDb) {
-        aiInfo = "";
-      } else {
-        // Regular AI call with database context
-        let dbContext = '';
-        if (allResults.posts.length > 0 || allResults.links.length > 0) {
-          dbContext = 'Based on the database search results, ';
-          if (allResults.posts.length > 0) {
-            dbContext += `I found ${allResults.posts.length} related discussions. `;
-          }
-          if (allResults.links.length > 0) {
-            dbContext += `I also found ${allResults.links.length} relevant links. `;
-          }
-        }
-
-        const claudeRequest = {
-          model: "claude-3-haiku-20240307",
-          system: `You are Claude, an AI assistant embedded in a discussion platform called Turtle. You are having a conversation with ${username}.
-          
-          ${context ? `Context about the current discussion: ${context}` : ''}
-          
-          ${dbContext}
-          
-          IMPORTANT: Format your response using HTML structure with:
-          - Use <h3> for main sections (when appropriate)
-          - Use <h4> for subsections (when appropriate)
-          - Use <ul> and <li> for bullet points or lists
-          - Use <strong> for emphasis
-          - Use <p> for paragraphs
-          
-          For shorter responses, focus on:
-          <p>Clear, direct answer to the question</p>
-          
-          For longer responses, structure like:
-          <h3>🔍 Overview</h3>
-          <p>Brief explanation</p>
-          
-          <h4>Key Points</h4>
-          <ul>
-            <li><strong>Point 1:</strong> Explanation</li>
-            <li><strong>Point 2:</strong> Explanation</li>
-          </ul>
-          
-          Keep responses helpful, concise, and conversational. Provide insights based on available information with clear visual hierarchy.`,
-          messages: [
-            {
-              role: "user",
-              content: message
-            }
-          ],
-          max_tokens: 1000,
-          temperature: 0.7,
-        };
-
-        try {
-          const response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': process.env.CLAUDE_API_KEY,
-              'anthropic-version': '2023-06-01'
-            },
-            body: JSON.stringify(claudeRequest)
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to get response: ${errorText}`);
-          }
-
-          data = await response.json();
-          const aiResponse = data.content[0]?.text || "I'm sorry, I couldn't generate a response.";
-
-          aiInfo = `<div style="font-size: 15px; font-weight: bold; color: #FFFFFF; padding: 10px 0 5px 5px; display: flex; align-items: center;">
-            <span style="color: #FFFFFF; margin-right: 5px;">•</span> ADDITIONAL INFORMATION
-          </div>
-          <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white;">
-            ${aiResponse}
-          </div>
-          <div style="color: #4ca0ff; font-size: 13px; padding: 5px 0 10px 5px; cursor: pointer;" class="show-more-results show-more-ai" data-query="${encodeURIComponent(message)}" data-type="ai">Show more</div>`;
-        } catch (apiError) {
-          console.error('Error calling Claude API:', apiError);
-          aiInfo = `<div style="font-size: 15px; font-weight: bold; color: #FFFFFF; padding: 10px 0 5px 5px; display: flex; align-items: center;">
-            <span style="color: #FFFFFF; margin-right: 5px;">•</span> ADDITIONAL INFORMATION
-          </div>
-          <div style="padding: 5px 5px 15px 5px; font-size: 13px; line-height: 1.4; color: white;">
-            I apologize, but I encountered an error while trying to generate a response. Please try again.
-          </div>`;
-        }
-      }
-    }
-
-    // Create the final response
-    let finalResponse;
-    if (showMoreDb) {
-      finalResponse = databaseInfo;
-    } else if (showMoreAi) {
-      finalResponse = aiInfo;
-    } else {
-      finalResponse = `${databaseInfo}${aiInfo}`;
-    }
-
-    return NextResponse.json({
-      response: finalResponse,
-      model: data?.model || "claude-3-haiku-20240307",
-      usage: data?.usage || null,
-      dataAvailable: dataAvailable,
-      hasMoreDb: !showMoreDb && (allResults.posts?.length > 2 || allResults.links?.length > 2),
-      hasMoreAi: !showMoreAi,
-      isExpandedDb: showMoreDb,
-      isExpandedAi: showMoreAi
-    }, { status: 200 });
-
+    return educationalPlatforms.slice(0, 2);
   } catch (error) {
-    console.error('Error in manual query:', error);
-    throw error;
+    console.error('Error generating fallback links:', error);
+    return [];
   }
+}
+
+// Extract and generate external links based on insights content
+async function extractAndGenerateExternalLinks(query, postData, keywords, insightsContent = null) {
+  try {
+    const externalLinks = [];
+
+    // First, try to generate AI-powered links based on insights content if available
+    if (insightsContent) {
+      console.log('Generating AI-powered external links based on insights content');
+      try {
+        const aiGeneratedLinks = await generateRelevantExternalLinks(query, keywords, insightsContent);
+        if (aiGeneratedLinks && aiGeneratedLinks.length > 0) {
+          externalLinks.push(...aiGeneratedLinks);
+          console.log('Added', aiGeneratedLinks.length, 'AI-generated educational links');
+        }
+      } catch (aiError) {
+        console.warn('AI link generation failed:', aiError.message);
+      }
+    }
+
+    // If we still don't have enough links, extract from post content as supplementary
+    if (externalLinks.length < 3 && postData && postData.postContent) {
+      console.log('Extracting supplementary links from post content');
+      const urlRegex = /https?:\/\/[^\s<>"']+/g;
+      const foundUrls = postData.postContent.match(urlRegex) || [];
+      
+      foundUrls.slice(0, 4 - externalLinks.length).forEach(url => {
+        // Filter out video platforms and focus on educational content
+        if (!url.includes('youtube.com') && !url.includes('youtu.be') && !url.includes('tiktok.com')) {
+          const cleanUrl = url.replace(/[.,;!?)]+$/, ''); // Remove trailing punctuation
+          externalLinks.push({
+            title: cleanUrl.length > 50 ? cleanUrl.substring(0, 50) + '...' : cleanUrl,
+            url: cleanUrl,
+            description: 'Additional resource from discussion'
+          });
+        }
+      });
+    }
+
+    // If we still don't have any links, generate fallback educational links
+    if (externalLinks.length === 0) {
+      console.log('Generating fallback educational links');
+      const fallbackLinks = generateFallbackEducationalLinks(keywords, query);
+      externalLinks.push(...fallbackLinks);
+    }
+
+    return externalLinks.slice(0, 4);
+  } catch (error) {
+    console.error('Error extracting and generating external links:', error);
+    return generateFallbackEducationalLinks(keywords, query);
+  }
+}
+
+// Format discussion card HTML
+function formatDiscussionCard(discussion) {
+  const commentCount = discussion.discussions || 0;
+  const linkCount = discussion.linkCount || 0;
+  
+  return `
+    <div style="padding: 12px; margin: 8px 0; border: 1px solid #333; border-radius: 8px; background-color: rgba(20, 20, 20, 0.6);">
+      <div style="font-size: 14px; color: white; margin-bottom: 6px; line-height: 1.3;">
+        ${discussion.title}
+      </div>
+      <div style="font-size: 12px; color: #4ca0ff; margin-bottom: 8px;">@${discussion.username}</div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <div style="background-color: #1a1a1a; color: #aaa; padding: 3px 8px; border-radius: 10px; font-size: 11px;">
+          💬 ${commentCount} comment${commentCount !== 1 ? 's' : ''}
+        </div>
+        <div style="background-color: #1a1a1a; color: #aaa; padding: 3px 8px; border-radius: 10px; font-size: 11px;">
+          🔗 ${linkCount} link${linkCount !== 1 ? 's' : ''}
+        </div>
+        <a href="/discussion?id=${discussion.id}" style="background-color: #2e2e2e; color: #4ca0ff; border: none; padding: 3px 10px; border-radius: 10px; font-size: 11px; text-decoration: none; margin-left: auto;">View</a>
+      </div>
+    </div>
+  `;
+}
+
+// Format link card HTML
+function formatLinkCard(link) {
+  const votes = link.votes || 0;
+  const formattedVotes = votes > 1000 ? (votes / 1000).toFixed(1) + 'k' : votes.toString();
+  
+  return `
+    <div style="padding: 12px; margin: 8px 0; border: 1px solid #2e88ff; border-radius: 8px; background-color: rgba(46, 136, 255, 0.1);">
+      <div style="font-size: 14px; color: white; margin-bottom: 6px; line-height: 1.3; word-break: break-word;">
+        ${link.title}
+      </div>
+      <div style="font-size: 12px; color: #4ca0ff; margin-bottom: 8px;">@${link.contributorUsername}</div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="color: #aaa; font-size: 11px; display: flex; align-items: center;">
+          <span style="margin-right: 4px;">👍</span>
+          ${formattedVotes}
+        </div>
+        <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="background-color: #2e2e2e; color: #4ca0ff; border: none; padding: 3px 10px; border-radius: 10px; font-size: 11px; text-decoration: none;">Visit</a>
+      </div>
+    </div>
+  `;
 }

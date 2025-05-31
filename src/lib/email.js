@@ -18,7 +18,7 @@ export async function sendEmail({ to, subject, html }) {
   // Send email
   try {
     const info = await transporter.sendMail({
-      from: `"flock" <${process.env.EMAIL_FROM}>`,
+      from: `"flokkk" <${process.env.EMAIL_FROM}>`,
       to,
       subject,
       html,
@@ -40,24 +40,24 @@ export function generateVerificationEmail(user, token) {
 
   return {
     to: user.email,
-    subject: 'Verify your flock account',
+    subject: 'Verify your flokkk account',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #4A5568; text-align: center;">Welcome to flock!</h1>
+        <h1 style="color: #4A5568; text-align: center;">Welcome to flokkk!</h1>
         <p style="font-size: 16px; color: #4A5568;">Hi ${user.name},</p>
-        <p style="font-size: 16px; color: #4A5568;">Thanks for signing up for flock. To complete your registration, please verify your email address.</p>
+        <p style="font-size: 16px; color: #4A5568;">Thanks for signing up for flokkk. To complete your registration, please verify your email address.</p>
         
         <div style="text-align: center; margin: 30px 0;">
           <a href="${verificationUrl}" style="background-color: #4299E1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify My Email</a>
         </div>
         
-        <p style="font-size: 14px; color: #718096;">If you didn't sign up for flock, you can safely ignore this email.</p>
+        <p style="font-size: 14px; color: #718096;">If you didn't sign up for flokkk, you can safely ignore this email.</p>
         
         <p style="font-size: 14px; color: #718096;">This link will expire in 24 hours.</p>
         
         <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 20px 0;">
         
-        <p style="font-size: 12px; color: #A0AEC0; text-align: center;">© ${new Date().getFullYear()} flock. All rights reserved.</p>
+        <p style="font-size: 12px; color: #A0AEC0; text-align: center;">© ${new Date().getFullYear()} flokkk. All rights reserved.</p>
       </div>
     `,
   };

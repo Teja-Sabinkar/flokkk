@@ -1,12 +1,12 @@
-// src/app/(dashboard)/recently-viewed/page.js - Updated (removed DesktopSidebarToggle)
+// src/app/(dashboard)/recently-viewed/page.js - Updated with custom toggle
 'use client';
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/layout/Header/Header';
 import SidebarNavigation from '@/components/layout/SidebarNavigation/SidebarNavigation';
 import RecentlyViewedContainer from '@/components/recentlyviewed/RecentlyViewedContainer';
-import RightSidebarContainer from '@/components/ai/RightSidebarContainer';
-import RightSidebarToggle from '@/components/ai/RightSidebarToggle';
+import RecentlyViewedRightSidebar from '@/components/recentlyviewed/RecentlyViewedRightSidebar';
+import RecentlyViewedRightSidebarToggle from '@/components/recentlyviewed/RecentlyViewedRightSidebarToggle';
 import styles from './page.module.css';
 
 export default function RecentlyViewedPage() {
@@ -18,7 +18,7 @@ export default function RecentlyViewedPage() {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [timeFilter, setTimeFilter] = useState('all'); // 'all', 'day', 'week', or 'month'
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Add state for right sidebar visibility and mobile view detection
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(() => {
     // Initially visible only if screen width >= 1300px (desktop)
@@ -28,7 +28,8 @@ export default function RecentlyViewedPage() {
     return true; // Default to true for SSR
   });
   const [isMobileView, setIsMobileView] = useState(false);
-  
+  const [rightSidebarWidth, setRightSidebarWidth] = useState(330);
+
   // Check for mobile view and update sidebar visibility
   useEffect(() => {
     const checkMobileView = () => {
@@ -47,12 +48,12 @@ export default function RecentlyViewedPage() {
       window.removeEventListener('resize', checkMobileView);
     };
   }, []);
-  
+
   // Fetch user data if not using a context
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem('token');
-      
+
       if (token) {
         try {
           const response = await fetch('/api/auth/me', {
@@ -60,11 +61,21 @@ export default function RecentlyViewedPage() {
               Authorization: `Bearer ${token}`
             }
           });
-          
+
           if (response.ok) {
             const userData = await response.json();
+
+            // Debug: Log the response to see what we're getting
+            console.log('User data from /api/auth/me:', userData);
+
             // Ensure we have a valid avatar URL or null
-            userData.avatar = userData.avatar || null;
+            userData.avatar = userData.avatar || userData.profilePicture || null;
+
+            // Ensure we have username - try multiple possible field names
+            if (!userData.username && userData.name) {
+              userData.username = userData.name;
+            }
+
             setUser(userData);
           }
         } catch (error) {
@@ -72,7 +83,7 @@ export default function RecentlyViewedPage() {
         }
       }
     };
-    
+
     fetchUserData();
   }, []);
 
@@ -81,21 +92,21 @@ export default function RecentlyViewedPage() {
     const fetchRecentlyViewed = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const token = localStorage.getItem('token');
-        
+
         if (token) {
           const response = await fetch('/api/recently-viewed', {
             headers: {
               Authorization: `Bearer ${token}`
             }
           });
-          
+
           if (!response.ok) {
             throw new Error(`Error fetching recently viewed items: ${response.status}`);
           }
-          
+
           const data = await response.json();
           setRecentlyViewedItems(data.items || []);
         }
@@ -106,8 +117,16 @@ export default function RecentlyViewedPage() {
         setIsLoading(false);
       }
     };
-    
+
     fetchRecentlyViewed();
+  }, []);
+
+  // Load saved sidebar width on component mount
+  useEffect(() => {
+    const savedWidth = localStorage.getItem('rightSidebarWidth');
+    if (savedWidth) {
+      setRightSidebarWidth(Number(savedWidth));
+    }
   }, []);
 
   // Handle sidebar toggle
@@ -125,6 +144,11 @@ export default function RecentlyViewedPage() {
     setIsRightSidebarVisible(!isRightSidebarVisible);
   };
 
+  // Handle right sidebar width change
+  const handleRightSidebarWidthChange = (width) => {
+    setRightSidebarWidth(width);
+  };
+
   // Handle clear history
   const handleClearHistory = async () => {
     try {
@@ -136,7 +160,7 @@ export default function RecentlyViewedPage() {
             Authorization: `Bearer ${token}`
           }
         });
-        
+
         if (response.ok) {
           setRecentlyViewedItems([]);
         }
@@ -149,10 +173,10 @@ export default function RecentlyViewedPage() {
   // Filter items based on time period
   const getFilteredItems = () => {
     if (timeFilter === 'all') return recentlyViewedItems;
-    
+
     const now = new Date();
     let cutoffDate;
-    
+
     switch (timeFilter) {
       case 'day':
         // Last 24 hours
@@ -169,17 +193,17 @@ export default function RecentlyViewedPage() {
       default:
         return recentlyViewedItems;
     }
-    
+
     // Function to parse different time formats
     const parseTimeAgo = (timeAgo) => {
       if (!timeAgo) return new Date(0); // Default to very old
-      
+
       const match = timeAgo.match(/(\d+)\s+(\w+)\s+ago/);
       if (!match) return new Date(0);
-      
+
       const [_, amount, unit] = match;
       const value = parseInt(amount);
-      
+
       switch (unit) {
         case 'second':
         case 'seconds':
@@ -206,7 +230,7 @@ export default function RecentlyViewedPage() {
           return new Date(0);
       }
     };
-    
+
     return recentlyViewedItems.filter(item => {
       const viewedDate = parseTimeAgo(item.lastViewed);
       return viewedDate >= cutoffDate;
@@ -218,19 +242,19 @@ export default function RecentlyViewedPage() {
     .filter(item => {
       // Apply search query
       if (!searchQuery) return true;
-      
+
       const lowerQuery = searchQuery.toLowerCase();
-      
+
       // Search in post content
-      const contentMatch = 
+      const contentMatch =
         (item.title && item.title.toLowerCase().includes(lowerQuery)) ||
         (item.description && item.description.toLowerCase().includes(lowerQuery));
-      
+
       // Search in username
-      const usernameMatch = 
-        (item.author && item.author.username && 
+      const usernameMatch =
+        (item.author && item.author.username &&
           item.author.username.toLowerCase().includes(lowerQuery));
-      
+
       // Return true if either content or username matches
       return contentMatch || usernameMatch;
     });
@@ -238,6 +262,7 @@ export default function RecentlyViewedPage() {
   // If no user data from API, provide a fallback
   const userWithFallback = user || {
     name: 'Guest',
+    username: 'Guest',
     avatar: null,
     notifications: 0
   };
@@ -254,13 +279,13 @@ export default function RecentlyViewedPage() {
     <div className={styles.pageContainer}>
       {/* Header fixed at the top */}
       <div className={styles.headerContainer}>
-        <Header 
+        <Header
           user={userWithFallback}
           onMenuToggle={toggleSidebar}
           isMobileMenuOpen={isSidebarOpen}
         />
       </div>
-      
+
       {/* Main content area */}
       <div className={styles.mainContent}>
         {/* Left sidebar with navigation */}
@@ -269,17 +294,17 @@ export default function RecentlyViewedPage() {
             <SidebarNavigation isOpen={isSidebarOpen} />
           </div>
         </div>
-        
+
         {/* Mobile overlay for sidebar */}
         {isSidebarOpen && (
-          <div 
-            className={styles.mobileOverlay} 
+          <div
+            className={styles.mobileOverlay}
             onClick={handleOverlayClick}
           />
         )}
-        
-        {/* Content area with recently viewed items */}
-        <div className={styles.contentContainer}>
+
+        {/* Content area with recently viewed items - Apply expanded class when sidebar is hidden */}
+        <div className={`${styles.contentContainer} ${!isRightSidebarVisible ? styles.expanded : ''}`}>
           <div className={styles.contentScrollable}>
             <div className={styles.pageHeader}>
               <h1>Recently Viewed</h1>
@@ -287,12 +312,12 @@ export default function RecentlyViewedPage() {
                 Content you've viewed recently across the platform
               </p>
             </div>
-            
+
             {/* Filter Bar */}
             <div className={styles.filterBar}>
               <div className={styles.filterBarLeft}>
                 <div className={styles.filterDropdown}>
-                  <select 
+                  <select
                     value={timeFilter}
                     onChange={(e) => setTimeFilter(e.target.value)}
                     className={styles.filterSelect}
@@ -304,7 +329,7 @@ export default function RecentlyViewedPage() {
                   </select>
                 </div>
               </div>
-              
+
               <div className={styles.filterBarRight}>
                 <div className={styles.searchContainer}>
                   <input
@@ -321,9 +346,9 @@ export default function RecentlyViewedPage() {
                     </svg>
                   </button>
                 </div>
-                
+
                 <div className={styles.viewToggle}>
-                  <button 
+                  <button
                     className={`${styles.viewToggleButton} ${viewMode === 'grid' ? styles.active : ''}`}
                     onClick={() => setViewMode('grid')}
                     aria-label="Grid view"
@@ -335,7 +360,7 @@ export default function RecentlyViewedPage() {
                       <rect x="3" y="14" width="7" height="7"></rect>
                     </svg>
                   </button>
-                  <button 
+                  <button
                     className={`${styles.viewToggleButton} ${viewMode === 'list' ? styles.active : ''}`}
                     onClick={() => setViewMode('list')}
                     aria-label="List view"
@@ -352,7 +377,7 @@ export default function RecentlyViewedPage() {
                 </div>
               </div>
             </div>
-            
+
             {isLoading ? (
               <div className={styles.loadingContainer}>
                 <p>Loading recently viewed items...</p>
@@ -362,25 +387,28 @@ export default function RecentlyViewedPage() {
                 <p>Error loading recently viewed items: {error}</p>
               </div>
             ) : (
-              <RecentlyViewedContainer 
-                items={displayItems} 
+              <RecentlyViewedContainer
+                items={displayItems}
                 viewMode={viewMode}
               />
             )}
           </div>
         </div>
 
-        {/* Unified Right sidebar toggle - visible on both desktop and mobile */}
-        <RightSidebarToggle 
-          isRightSidebarVisible={isRightSidebarVisible} 
-          handleRightSidebarToggle={handleRightSidebarToggle} 
+        {/* Custom Right sidebar toggle - with current width */}
+        <RecentlyViewedRightSidebarToggle
+          isRightSidebarVisible={isRightSidebarVisible}
+          handleRightSidebarToggle={handleRightSidebarToggle}
+          sidebarWidth={rightSidebarWidth}
         />
 
-        {/* Right sidebar with AI assistant - Part of the flex layout in desktop */}
-        <RightSidebarContainer
+        {/* Right sidebar with custom widgets component */}
+        <RecentlyViewedRightSidebar
           user={userWithFallback}
           isRightSidebarVisible={isRightSidebarVisible}
           isMobileView={isMobileView}
+          onClose={handleRightSidebarToggle}
+          onWidthChange={handleRightSidebarWidthChange}
         />
       </div>
     </div>

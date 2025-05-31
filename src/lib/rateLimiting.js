@@ -8,7 +8,7 @@ import { connectToDatabase } from './mongodb';
 export class RateLimiter {
     constructor() {
         this.windowMs = 60 * 60 * 1000; // 1 hour window
-        this.maxRequests = 10; // 10 requests per hour per user
+        this.maxRequests = 30; // 30 requests per hour per user (updated from 10)
         this.collectionName = 'ratelimits';
     }
 
@@ -23,10 +23,10 @@ export class RateLimiter {
             const now = new Date();
             const windowStart = new Date(now.getTime() - this.windowMs);
 
-            // Different limits for different request types
+            // Different limits for different request types - UPDATED LIMITS
             const limits = {
-                suggestion: 20, // Higher limit for suggestions (they're cheaper)
-                manual: 10      // Lower limit for manual queries
+                suggestion: 60, // Higher limit for suggestions (updated from 20)
+                manual: 30      // Lower limit for manual queries (updated from 10)
             };
 
             const maxRequests = limits[type] || this.maxRequests;
@@ -109,9 +109,10 @@ export class RateLimiter {
             const windowStart = new Date(now.getTime() - this.windowMs);
             const key = `${userId}_${type}`;
 
+            // UPDATED LIMITS
             const limits = {
-                suggestion: 20,
-                manual: 10
+                suggestion: 60, // Updated from 20
+                manual: 30      // Updated from 10
             };
 
             const maxRequests = limits[type] || this.maxRequests;
@@ -177,8 +178,8 @@ export function withRateLimit(handler) {
                 });
             }
 
-            // Add rate limit headers
-            res.setHeader('X-RateLimit-Limit', requestType === 'suggestion' ? '20' : '10');
+            // Add rate limit headers - UPDATED VALUES
+            res.setHeader('X-RateLimit-Limit', requestType === 'suggestion' ? '60' : '30');
             res.setHeader('X-RateLimit-Remaining', rateLimit.remainingRequests.toString());
             res.setHeader('X-RateLimit-Reset', rateLimit.resetTime.toISOString());
 

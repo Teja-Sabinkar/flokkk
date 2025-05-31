@@ -1,0 +1,191 @@
+/* src/components/recentlyviewed/RecentlyViewedRightSidebar.module.css */
+.rightSidebarContainer {
+  width: var(--sidebar-width, 330px);
+  flex-shrink: 0;
+  height: 100%;
+  background-color: #0f0f0f;
+  position: relative;
+  overflow: hidden;
+  transition: width 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+  z-index: 50;
+  transform-origin: right center;
+}
+
+/* Resizing state - disable transitions during resize for smooth experience */
+.rightSidebarContainer.resizing {
+  transition: none;
+}
+
+.messagesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 14px;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Main content wrapper with flexbox for positioning AiChat at bottom */
+.sidebarContentWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  overflow: hidden;
+}
+
+.widgetsArea {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #444 #1a1a1a;
+  padding: 14px 14px 0 14px;
+}
+
+.widgetsArea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.widgetsArea::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.widgetsArea::-webkit-scrollbar-thumb {
+  background-color: #444;
+  border-radius: 6px;
+}
+
+/* Resize handle styles */
+.resizeHandle {
+  position: absolute;
+  left: -10px;
+  top: 0;
+  height: 100%;
+  width: 20px;
+  cursor: col-resize;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.2;
+  transition: opacity 0.2s;
+}
+
+.resizeHandle:hover,
+.resizeHandle.isResizing {
+  opacity: 1;
+  background-color: rgba(65, 105, 225, 0.1);
+}
+
+.resizeBar {
+  width: 15px;
+  height: 100px;
+  background-color: #4169e1;
+  border-radius: 4px;
+}
+
+/* Visibility states */
+.visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.hidden {
+  width: 0 !important;
+  opacity: 0;
+  border-left: none;
+  overflow: hidden;
+}
+
+.widgetsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* AI Chat component styling */
+.aiChatWrapper {
+  background-color: #0f0f0f;
+  flex-shrink: 0;
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+   gap: 6px;
+   margin-bottom: 10px;
+}
+
+  .promptText {
+    font-size: 14px;
+    font-weight: 600;
+    color: #a1a1a1;
+  }
+
+  .title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #4169e1;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 1300px) {
+    .rightSidebarContainer {
+      position: fixed;
+      top: 60px;
+      right: 0;
+      bottom: 0;
+      width: 320px;
+      height: auto;
+      box-shadow: -4px 0 16px rgba(0, 0, 0, 0.2);
+      /* Override transitions for mobile */
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    /* Hide resize handle on mobile */
+    .resizeHandle {
+      display: none;
+    }
+
+    /* Mobile visible state - slide in */
+    .rightSidebarContainer.visible {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    /* Mobile hidden state - slide out */
+    .rightSidebarContainer.hidden {
+      width: 400px !important;
+      transform: translateX(100%);
+      opacity: 0;
+      border-left: none;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .widgetsArea {
+      padding: 16px 16px 0 16px;
+    }
+
+    .widgetsContainer {
+      gap: 12px;
+      padding-bottom: 16px;
+    }
+
+    .statsContent {
+      gap: 8px;
+    }
+
+    .statItem {
+      padding: 10px 6px;
+    }
+
+    .statValue {
+      font-size: 16px;
+    }
+
+    .aiChatWrapper {
+      padding: 0 0 32px 0;
+    }
+  }

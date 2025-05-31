@@ -1,5 +1,3 @@
-/* src/app/(dashboard)/subscriptions/page.module.css - Fixed positioning */
-/* Main container for the entire page */
 .pageContainer {
   display: flex;
   flex-direction: column;
@@ -40,7 +38,7 @@
 /* Main content area - fixed to use row layout */
 .mainContent {
   display: flex;
-  flex-direction: row; /* Ensure horizontal layout */
+  flex-direction: row;
   position: fixed;
   top: 60px;
   left: 0;
@@ -56,7 +54,7 @@
   width: 330px;
   flex-shrink: 0;
   background-color: #121212;
-  position: relative; /* Changed from absolute */
+  position: relative;
   height: 100%;
   overflow: hidden;
   transition: transform 0.3s ease;
@@ -71,7 +69,7 @@
   padding-bottom: 20px;
 }
 
-/* Content container - FIXED: Account for right sidebar */
+/* Content container - changed to relative positioning */
 .contentContainer {
   flex: 1;
   position: relative;
@@ -80,14 +78,12 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  /* IMPORTANT: Ensure content doesn't overflow into sidebar */
-  min-width: 0; /* Allow flex item to shrink */
-  max-width: calc(100% - var(--sidebar-width, 330px) - 20px); /* Account for sidebar + padding */
+  transition: width 0.3s ease;
 }
 
-/* When right sidebar is hidden, allow content to expand */
-.contentContainer.expandedContent {
-  max-width: 100%;
+.contentContainer.expanded {
+  width: 100%;
+  transition: width 0.3s ease;
 }
 
 .contentScrollable {
@@ -97,8 +93,6 @@
   background-color: #0f0f0f;
   padding-bottom: 40px;
   scrollbar-width: none;
-  /* ADDED: Ensure proper box sizing */
-  box-sizing: border-box;
 }
 
 .contentScrollable::-webkit-scrollbar {
@@ -136,7 +130,8 @@
   gap: 15px;
 }
 
-.filterBarLeft, .filterBarRight {
+.filterBarLeft,
+.filterBarRight {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -237,14 +232,14 @@
   color: #fff;
 }
 
-/* Error message */
-.errorMessage {
-  background-color: rgba(255, 87, 87, 0.2);
-  border-left: 4px solid #ff5757;
-  padding: 12px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
-  color: #fff;
+/* Loading and error containers */
+.loadingContainer,
+.errorContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: #999;
 }
 
 /* Mobile overlay for sidebar toggle */
@@ -260,7 +255,185 @@
   backdrop-filter: blur(4px);
 }
 
-/* Responsive adjustments - switch to absolute positioning for mobile */
+/* Right sidebar container styles */
+.rightSidebarContainer {
+  width: var(--sidebar-width, 330px);
+  flex-shrink: 0;
+  height: 100%;
+  background-color: #0f0f0f;
+  position: relative;
+  overflow: hidden;
+  transition: width 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+  z-index: 49;
+  transform-origin: right center;
+}
+
+/* Resizing state - disable transitions during resize for smooth experience */
+.rightSidebarContainer.resizing {
+  transition: none;
+}
+
+.messagesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 14px;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Main content wrapper with flexbox for positioning AiChat at bottom */
+.sidebarContentWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  overflow: hidden;
+}
+
+.widgetsArea {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #444 #1a1a1a;
+  padding: 14px 14px 0 14px;
+}
+
+.widgetsArea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.widgetsArea::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.widgetsArea::-webkit-scrollbar-thumb {
+  background-color: #444;
+  border-radius: 6px;
+}
+
+/* Resize handle styles */
+.resizeHandle {
+  position: absolute;
+  left: -10px;
+  top: 0;
+  height: 100%;
+  width: 20px;
+  cursor: col-resize;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.2;
+  transition: opacity 0.2s;
+}
+
+.resizeHandle:hover,
+.resizeHandle.isResizing {
+  opacity: 1;
+  background-color: rgba(65, 105, 225, 0.1);
+}
+
+.resizeBar {
+  width: 15px;
+  height: 100px;
+  background-color: #4169e1;
+  border-radius: 4px;
+}
+
+/* Visibility states */
+.visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.hidden {
+  width: 0 !important;
+  opacity: 0;
+  border-left: none;
+  overflow: hidden;
+}
+
+.widgetsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* AI Chat component styling */
+.aiChatWrapper {
+  background-color: #0f0f0f;
+  flex-shrink: 0;
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.promptText {
+  font-size: 14px;
+  font-weight: 600;
+  color: #a1a1a1;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #4169e1;
+}
+
+/* Right sidebar toggle styles */
+.rightSidebarToggle {
+  position: fixed;
+  right: var(--toggle-right-position, 0px);
+  top: 100px;
+  transform: translateY(-50%);
+  border-top: 1px solid #4169e1;
+  border-left: 1px solid #4169e1;
+  border-bottom: 1px solid #4169e1;
+  border-right: none;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  color: #fff;
+  width: 28px;
+  height: 80px;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  cursor: pointer;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
+  background-color: #4169e1da;
+  backdrop-filter: blur(1px);
+  font-size: 8px;
+  display: flex;
+  transition: right 0.3s ease, opacity 0.2s ease;
+  opacity: 1;
+}
+
+.rightSidebarToggle.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rightSidebarToggle:hover {
+  background-color: #4169e1;
+}
+
+/* Flock AI text in button */
+.aiText {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 2px;
+}
+
+/* Responsive adjustments */
 @media (max-width: 1300px) {
   .sidebarContainer {
     position: absolute;
@@ -276,7 +449,6 @@
 
   .contentContainer {
     width: 100%;
-    max-width: 100%; /* Remove sidebar constraint on mobile */
   }
 
   .mobileOverlay {
@@ -289,30 +461,64 @@
     display: block;
     left: 0px;
   }
+
+  /* Right sidebar mobile adjustments */
+  .rightSidebarContainer {
+    position: fixed;
+    right: 0;
+    top: 60px;
+    bottom: 0;
+    width: 320px !important;
+    height: auto;
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    z-index: 49;
+    /* Ensure it's below the toggle button */
+  }
+
+  /* Mobile visible state - slide in */
+  .rightSidebarContainer.visible {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  /* Mobile hidden state - slide out */
+  .rightSidebarContainer.hidden {
+    width: 320px !important;
+    transform: translateX(100%);
+    opacity: 0;
+    border-left: none;
+  }
+
+  /* Hide resize handle on mobile */
+  .resizeHandle {
+    display: none;
+  }
+
+  .rightSidebarToggle {
+    transition: right 0.3s ease, opacity 0.2s ease;
+    /* Ensure toggle is always above sidebar */
+  }
 }
 
 @media (max-width: 992px) {
-  .sidebarContainer {
-    width: 240px;
-  }
 
   .open~.mobileOverlay,
   .open+.mobileOverlay,
   .open~* .mobileOverlay {
-    left: 240px;
+    left: 0px;
   }
-  
-  /* Filter bar responsive adjustments */
+
   .filterBar {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .filterBarRight {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .searchContainer {
     width: 100%;
   }
@@ -340,18 +546,17 @@
   .pageDescription {
     font-size: 14px;
   }
-  
-  /* Filter bar responsive adjustments */
+
   .filterBarRight {
     flex-wrap: wrap;
     gap: 10px;
   }
-  
+
   .searchContainer {
     order: 1;
     width: 100%;
   }
-  
+
   .viewToggle {
     order: 2;
   }
@@ -377,7 +582,51 @@
     font-size: 20px;
   }
 
-  .viewToggle {
-   display: none;
+  .viewToggleButton {
+    display: none;
+  }
+
+  /* Right sidebar mobile adjustments for small screens */
+  .rightSidebarContainer {
+    width: 330px !important;
+  }
+
+  .rightSidebarContainer.hidden {
+    width: 330px !important;
+  }
+
+  .widgetsArea {
+    padding: 16px 16px 0 16px;
+  }
+
+  .widgetsContainer {
+    gap: 12px;
+  }
+
+  .rightSidebarToggle {
+    height: 70px;
+    width: 24px;
+  }
+
+  .aiText {
+    font-size: 14px;
+    letter-spacing: 1px;
+  }
+
+  .aiChatWrapper {
+    padding: 0 0 32px 0;
+  }
+  
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

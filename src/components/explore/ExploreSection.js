@@ -9,9 +9,6 @@ const ExploreSection = ({ title, items = [] }) => {
 
   return (
     <div className={styles.section}>
-      <div className={styles.sectionHeader}>
-        <h2 className={styles.title}>{title}</h2>
-      </div>
       
       {hasItems ? (
         <div className={styles.gridContainer}>

@@ -62,7 +62,7 @@
   background-color: #121212;
   overflow: hidden;
   transition: transform 0.3s ease;
-  z-index: 100;
+  z-index: 998;
   /* Ensure sidebar is above overlay */
 }
 
@@ -84,10 +84,8 @@
   flex: 1;
   position: absolute;
   top: 0;
-  left: 330px;
-  /* Match sidebar width */
-  right: 340px;
-  /* Match right sidebar width */
+  left: 330px; /* Match sidebar width */
+  right: 330px; /* Base width for right sidebar */
   bottom: 0;
   background-color: #0f0f0f;
   overflow: hidden;
@@ -132,12 +130,15 @@
   right: 0;
   width: 100%;
   height: 100%;
+  overflow-x: hidden;
   overflow-y: auto;
   background-color: #0f0f0f;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  /* Ensure padding is included in width calculation */
+  padding-top: 20px;
+  /* Added justify-content to push elements to top and bottom */
+  justify-content: space-between;
 }
 
 /* Mobile overlay for sidebar toggle */
@@ -235,6 +236,31 @@
   transform: translateX(0);
 }
 
+.sidebarTopContent {
+  width: 100%;
+}
+
+/* Style for the AiChat wrapper at the bottom */
+.aiChatWrapper {
+  width: 100%;
+  padding: 0 16px;
+  margin-top: auto;
+  /* Push it to the bottom if there's extra space */
+  margin-bottom: 20px;
+}
+
+.homeRightSidebarWrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  height: 100%;
+  z-index: 0;
+}
+
+
+
 /* Hide sidebar by default in mobile view */
 @media (max-width: 1300px) {
   .rightSidebarContainer {
@@ -247,7 +273,7 @@
   }
 }
 
-/* Flock AI text in button */
+/* Toggle button text (renamed from aiText for clarity) */
 .aiText {
   writing-mode: vertical-rl;
   text-orientation: mixed;

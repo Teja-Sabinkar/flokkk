@@ -5,7 +5,8 @@
   border-radius: 6px;
   overflow: hidden;
   color: #d1d1d1;
-  position: relative; /* For resize handle */
+  position: relative;
+  /* For resize handle */
   transform: translateX(0%);
   background-color: #0f0f0f;
 }
@@ -16,9 +17,9 @@
   left: -10px;
   top: 0;
   height: 100%;
-  width: 20px; /* Much wider for easier grabbing */
+  width: 20px;
   cursor: col-resize;
-  z-index: 1000; /* Ensure it's above everything */
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -26,7 +27,7 @@
   transition: opacity 0.2s;
 }
 
-.resizeHandle:hover, 
+.resizeHandle:hover,
 .resizeHandle.isResizing {
   opacity: 1;
   background-color: rgba(65, 105, 225, 0.1);
@@ -85,7 +86,6 @@
   word-wrap: break-word;
   overflow-x: hidden;
   overflow-y: visible;
-  padding: 8px 12px;
 }
 
 /* NEW: Style headings within messages */
@@ -370,6 +370,7 @@
 }
 
 @keyframes typing {
+
   0%,
   100% {
     transform: translateY(0);
@@ -419,7 +420,8 @@
   font-size: 14px;
   outline: none;
   width: 100%;
-  resize: none; /* Prevent manual resizing */
+  resize: none;
+  /* Prevent manual resizing */
   overflow-y: auto;
   transition: height 0.2s ease;
   line-height: 1.4;
@@ -431,12 +433,14 @@
 
 .chatControls {
   display: flex;
-  align-items: flex-end; /* Align to bottom */
+  align-items: flex-end;
+  /* Align to bottom */
   padding-right: 4px;
-  padding-bottom: 4px; 
-  padding-top: 4px; 
+  padding-bottom: 4px;
+  padding-top: 4px;
   background-color: #252525;
-  align-self: flex-end; /* Keep at bottom of flex container */
+  align-self: flex-end;
+  /* Keep at bottom of flex container */
 }
 
 .sendButton {
@@ -461,13 +465,6 @@
   background-color: #333;
   cursor: not-allowed;
   opacity: 0.7;
-}
-
-.modelSelectorContainer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-direction: row-reverse;
 }
 
 .dbIndicator {
@@ -558,9 +555,10 @@
 
 @media (max-width: 1300px) {
   .resizeHandle {
-    display: none; /* Hide resize handle completely in mobile view */
+    display: none;
+    /* Hide resize handle completely in mobile view */
   }
-  
+
   /* Reset any resize-specific styling */
   .chatbotContainer {
     width: 100% !important;

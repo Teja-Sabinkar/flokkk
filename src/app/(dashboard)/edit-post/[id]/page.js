@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect, use } from 'react'; // Added 'use' import
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import DiscussionPageHeader from '@/components/layout/DiscussionPageHeader/DiscussionPageHeader';
 import DiscussionPageSidebarNavigation from '@/components/layout/DiscussionPageSidebarNavigation/DiscussionPageSidebarNavigation';
+import RemoveCommunityLink from '@/components/studio/RemoveCommunityLink';
 import { getPostById, updatePost } from '@/lib/posts';
 import styles from './page.module.css';
 
 export default function EditPostPage({ params }) {
-  // Fix: Use React.use() to unwrap params Promise
   const resolvedParams = use(params);
   const postId = resolvedParams?.id;
   
@@ -20,7 +20,7 @@ export default function EditPostPage({ params }) {
   const [error, setError] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [formData, setFormData] = useState({
-    status: 'published', // Moved to top
+    status: 'published',
     title: '',
     content: '',
     tags: ''
@@ -30,8 +30,11 @@ export default function EditPostPage({ params }) {
   const [creatorLinks, setCreatorLinks] = useState([]);
   const [newCreatorLink, setNewCreatorLink] = useState({ title: '', url: '', description: '' });
   
-  // Community Links state (display only)
+  // Community Links state - NOW EDITABLE
   const [communityLinks, setCommunityLinks] = useState([]);
+  
+  // NEW: Search state for filtering links
+  const [linkSearchQuery, setLinkSearchQuery] = useState('');
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -42,44 +45,37 @@ export default function EditPostPage({ params }) {
   const [isYouTubePost, setIsYouTubePost] = useState(false);
   const [youtubeChannelHashtag, setYoutubeChannelHashtag] = useState(null);
 
-  // Helper function to detect YouTube posts
+  // NEW: Remove Community Link Modal State
+  const [removeLinkModal, setRemoveLinkModal] = useState({
+    isOpen: false,
+    linkData: null,
+    linkIndex: null
+  });
+
+  // Helper functions for YouTube detection
   const detectYouTubePost = (postData) => {
     if (!postData) return false;
-    
-    // Check if videoUrl contains YouTube domains
     const hasYouTubeUrl = postData.videoUrl && (
       postData.videoUrl.includes('youtube.com') || 
       postData.videoUrl.includes('youtu.be')
     );
-    
-    // Check if thumbnail URL contains YouTube domains
     const hasYouTubeThumbnail = postData.image && (
       postData.image.includes('i.ytimg.com') || 
       postData.image.includes('img.youtube.com')
     );
-    
     return hasYouTubeUrl || hasYouTubeThumbnail;
   };
 
-  // Helper function to identify YouTube channel hashtag from hashtags
   const identifyYouTubeChannelHashtag = (hashtags, videoUrl) => {
     if (!hashtags || !Array.isArray(hashtags) || !videoUrl) return null;
-    
-    // For existing posts, we'll try to identify the channel hashtag
-    // This is a best-effort approach for posts created before this feature
     const channelHashtags = hashtags.filter(tag => {
-      // Look for hashtags that might be channel names (no spaces, reasonable length)
       return tag.length > 3 && tag.length < 50 && !tag.includes(' ');
     });
-    
-    // Return the first potential channel hashtag (this is a heuristic)
     return channelHashtags.length > 0 ? channelHashtags[0] : null;
   };
 
-  // Helper function to filter out YouTube channel hashtag from display
   const getDisplayTags = (allTags, protectedHashtag) => {
     if (!allTags || !protectedHashtag) return allTags;
-    
     return allTags.filter(tag => {
       const normalizedTag = tag.startsWith('#') ? tag : `#${tag}`;
       const normalizedProtected = protectedHashtag.startsWith('#') ? protectedHashtag : `#${protectedHashtag}`;
@@ -87,13 +83,11 @@ export default function EditPostPage({ params }) {
     });
   };
 
-  // Helper function to get all tags for preview (including protected)
   const getAllTagsForPreview = () => {
     let inputTags = formData.tags
       ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
       : [];
     
-    // Add YouTube channel hashtag if it exists and isn't already in the list
     if (youtubeChannelHashtag) {
       const normalizedProtected = youtubeChannelHashtag.startsWith('#') ? youtubeChannelHashtag : `#${youtubeChannelHashtag}`;
       const hasProtectedTag = inputTags.some(tag => {
@@ -109,6 +103,32 @@ export default function EditPostPage({ params }) {
     return inputTags;
   };
 
+  // NEW: Filter links based on search query
+  const filterLinks = (links) => {
+    if (!linkSearchQuery.trim()) return links;
+    
+    const query = linkSearchQuery.toLowerCase();
+    return links.filter(link => {
+      const title = (link.title || '').toLowerCase();
+      const url = (link.url || '').toLowerCase();
+      const description = (link.description || '').toLowerCase();
+      
+      return title.includes(query) || 
+             url.includes(query) || 
+             description.includes(query);
+    });
+  };
+
+  // NEW: Handle search input change
+  const handleLinkSearchChange = (e) => {
+    setLinkSearchQuery(e.target.value);
+  };
+
+  // NEW: Clear search
+  const clearLinkSearch = () => {
+    setLinkSearchQuery('');
+  };
+
   // Fetch post data and current user
   useEffect(() => {
     const fetchData = async () => {
@@ -116,18 +136,14 @@ export default function EditPostPage({ params }) {
         setIsLoading(true);
         setError(null);
 
-        // Check for token
         const token = localStorage.getItem('token');
         if (!token) {
           router.push('/login');
           return;
         }
 
-        // Get current user
         const userResponse = await fetch('/api/auth/me', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
 
         if (!userResponse.ok) {
@@ -137,36 +153,23 @@ export default function EditPostPage({ params }) {
         const userData = await userResponse.json();
         setUser(userData);
 
-        // Get post data
         if (!postId) {
           throw new Error('Post ID is required');
         }
 
         const postData = await getPostById(postId, token);
-
         setPost(postData);
         
-        // Detect if this is a YouTube post
         const isYouTube = detectYouTubePost(postData);
         setIsYouTubePost(isYouTube);
-        console.log('YouTube post detected:', isYouTube);
         
-        // Identify protected YouTube channel hashtag
         let protectedHashtag = null;
         if (isYouTube) {
-          // First check if it's stored in the post data (for future implementations)
-          protectedHashtag = postData.youtubeChannelHashtag;
-          
-          // If not stored, try to identify it from existing hashtags
-          if (!protectedHashtag) {
-            protectedHashtag = identifyYouTubeChannelHashtag(postData.hashtags, postData.videoUrl);
-          }
-          
+          protectedHashtag = postData.youtubeChannelHashtag || 
+                            identifyYouTubeChannelHashtag(postData.hashtags, postData.videoUrl);
           setYoutubeChannelHashtag(protectedHashtag);
-          console.log('Protected YouTube channel hashtag:', protectedHashtag);
         }
         
-        // Filter out YouTube channel hashtag from input display
         const allHashtags = postData.hashtags || [];
         let displayTags = allHashtags;
         
@@ -178,14 +181,11 @@ export default function EditPostPage({ params }) {
           status: postData.status || 'published',
           title: postData.title || '',
           content: postData.content || '',
-          tags: displayTags.join(', ') // Only show non-protected tags in input
+          tags: displayTags.join(', ')
         });
         
-        // Set creator links
         setCreatorLinks(postData.creatorLinks || []);
-        
-        // Set community links (read-only)
-        setCommunityLinks(postData.communityLinks || []);
+        setCommunityLinks(postData.communityLinks || []); // SET COMMUNITY LINKS
         
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -206,26 +206,16 @@ export default function EditPostPage({ params }) {
   // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Thumbnail change handler with YouTube restriction
+  // Thumbnail handlers with YouTube restriction
   const handleThumbnailChange = (e) => {
-    // Prevent thumbnail changes for YouTube posts
-    if (isYouTubePost) {
-      console.log('Thumbnail change blocked: YouTube post detected');
-      return;
-    }
-
+    if (isYouTubePost) return;
     const file = e.target.files[0];
     if (file) {
       setThumbnailFile(file);
       setRemoveThumbnail(false);
-
-      // Create a preview
       const reader = new FileReader();
       reader.onload = (event) => {
         post.thumbnailPreview = event.target.result;
@@ -235,64 +225,65 @@ export default function EditPostPage({ params }) {
     }
   };
 
-  // Thumbnail removal handler with YouTube restriction
   const handleRemoveThumbnail = () => {
-    // Prevent thumbnail removal for YouTube posts
-    if (isYouTubePost) {
-      console.log('Thumbnail removal blocked: YouTube post detected');
-      return;
-    }
-
+    if (isYouTubePost) return;
     setThumbnailFile(null);
     setRemoveThumbnail(true);
     post.thumbnailPreview = null;
     setPost({ ...post });
   };
 
-  // Handle new creator link input changes
+  // Handle creator link changes
   const handleCreatorLinkChange = (e) => {
     const { name, value } = e.target;
-    setNewCreatorLink(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setNewCreatorLink(prev => ({ ...prev, [name]: value }));
   };
 
-  // Add a new creator link
   const handleAddCreatorLink = (e) => {
     e.preventDefault();
-
-    if (!newCreatorLink.title || !newCreatorLink.url) {
-      return; // Don't add empty links
-    }
-
-    // Add new link with a temporary ID
-    setCreatorLinks(prev => [
-      ...prev,
-      {
-        ...newCreatorLink,
-        id: `temp-${Date.now()}`
-      }
-    ]);
-
-    // Reset new link form
+    if (!newCreatorLink.title || !newCreatorLink.url) return;
+    
+    setCreatorLinks(prev => [...prev, {
+      ...newCreatorLink,
+      id: `temp-${Date.now()}`
+    }]);
     setNewCreatorLink({ title: '', url: '', description: '' });
   };
 
-  // Remove a creator link
   const handleRemoveCreatorLink = (linkId) => {
     setCreatorLinks(prev => prev.filter(link => link.id !== linkId));
   };
 
-  // Modified remove hashtag with YouTube channel protection
-  const removeHashtag = (tagToRemove) => {
-    // Don't remove if this is the protected YouTube channel hashtag
-    if (tagToRemove === youtubeChannelHashtag) {
-      console.log('Cannot remove protected YouTube channel hashtag:', tagToRemove);
-      return;
+  // UPDATED: Handle community link removal with confirmation modal
+  const handleRemoveCommunityLink = (linkIndex) => {
+    const linkToRemove = communityLinks[linkIndex];
+    setRemoveLinkModal({
+      isOpen: true,
+      linkData: linkToRemove,
+      linkIndex: linkIndex
+    });
+  };
+
+  // NEW: Confirm community link removal
+  const confirmRemoveCommunityLink = async () => {
+    if (removeLinkModal.linkIndex !== null) {
+      setCommunityLinks(prev => prev.filter((_, index) => index !== removeLinkModal.linkIndex));
     }
+  };
+
+  // NEW: Close remove link modal
+  const closeRemoveLinkModal = () => {
+    setRemoveLinkModal({
+      isOpen: false,
+      linkData: null,
+      linkIndex: null
+    });
+  };
+
+  // Modified hashtag removal with YouTube protection
+  const removeHashtag = (tagToRemove) => {
+    if (tagToRemove === youtubeChannelHashtag) return;
     
-    // Remove the hashtag from the tags string
     const currentTags = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
     const updatedTags = currentTags.filter(tag => {
       const normalizedTag = tag.startsWith('#') ? tag : `#${tag}`;
@@ -300,25 +291,20 @@ export default function EditPostPage({ params }) {
       return normalizedTag !== normalizedToRemove;
     });
     
-    setFormData(prev => ({
-      ...prev,
-      tags: updatedTags.join(', ')
-    }));
+    setFormData(prev => ({ ...prev, tags: updatedTags.join(', ') }));
   };
 
-  // Handle form submission
+  // UPDATED: Handle form submission with community links
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      // Process tags - combine input tags with protected YouTube hashtag
       let processedTags = formData.tags
         ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
         : [];
 
-      // Add YouTube channel hashtag back if it exists and isn't already included
       if (youtubeChannelHashtag) {
         const normalizedProtected = youtubeChannelHashtag.startsWith('#') ? youtubeChannelHashtag : `#${youtubeChannelHashtag}`;
         const hasProtectedTag = processedTags.some(tag => {
@@ -331,28 +317,32 @@ export default function EditPostPage({ params }) {
         }
       }
 
-      // Prepare updated post data
       const updatedPostData = {
         status: formData.status,
         title: formData.title,
         content: formData.content,
-        tags: processedTags, // Include protected hashtag
-        links: creatorLinks, // Send creator links
+        tags: processedTags,
+        links: creatorLinks,
+        communityLinks: communityLinks, // INCLUDE COMMUNITY LINKS
         thumbnailFile: thumbnailFile,
         removeThumbnail: removeThumbnail
       };
 
-      // Make API call to update post
-      const result = await updatePost(postId, updatedPostData);
+      console.log('Updating post with community links:', communityLinks);
 
-      // Update local state
+      const result = await updatePost(postId, updatedPostData);
       setPost(result.post);
 
-      // Show success message
-      alert('Post updated successfully!');
+      // DISPATCH CUSTOM EVENT FOR REAL-TIME UPDATE
+      window.dispatchEvent(new CustomEvent('post-updated', {
+        detail: {
+          postId: postId,
+          updatedPost: result.post,
+          communityLinks: communityLinks
+        }
+      }));
 
-      // Redirect back to studio page after successful update
-      router.push('/studio');
+      alert('Post updated successfully!');
 
     } catch (err) {
       console.error('Error saving post:', err);
@@ -362,12 +352,10 @@ export default function EditPostPage({ params }) {
     }
   };
 
-  // Handle cancellation
   const handleCancel = () => {
     router.push('/studio');
   };
 
-  // Format date for display
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -392,10 +380,7 @@ export default function EditPostPage({ params }) {
     return (
       <div className={styles.errorContainer}>
         <p className={styles.errorMessage}>{error}</p>
-        <button
-          className={styles.retryButton}
-          onClick={() => router.push('/studio')}
-        >
+        <button className={styles.retryButton} onClick={() => router.push('/studio')}>
           Back to Studio
         </button>
       </div>
@@ -411,12 +396,10 @@ export default function EditPostPage({ params }) {
       />
 
       <div className={styles.mainContent}>
-        {/* Sidebar navigation */}
         <div className={styles.sidebarContainer}>
           <DiscussionPageSidebarNavigation isOpen={isMobileMenuOpen} />
         </div>
 
-        {/* Main content area */}
         <div className={`${styles.contentContainer} ${isMobileMenuOpen ? styles.menuOpen : ''}`}>
           <div className={styles.editPostContent}>
             <div className={styles.editPostHeader}>
@@ -447,9 +430,7 @@ export default function EditPostPage({ params }) {
             </div>
 
             {submitError && (
-              <div className={styles.errorMessage}>
-                {submitError}
-              </div>
+              <div className={styles.errorMessage}>{submitError}</div>
             )}
 
             <div className={styles.postInfo}>
@@ -458,24 +439,17 @@ export default function EditPostPage({ params }) {
                 <span>Last Updated: {formatDate(post.updatedAt)}</span>
               </div>
               <div className={styles.postStatus}>
-                <span className={
-                  post.status === 'published'
-                    ? styles.publishedStatus
-                    : styles.draftStatus
-                }>
+                <span className={post.status === 'published' ? styles.publishedStatus : styles.draftStatus}>
                   {post.status === 'published' ? 'Published' : 'Draft'}
                 </span>
               </div>
             </div>
 
-            {/* REMOVED: editPostLayout grid - now single column */}
             <div className={styles.editFormContainer}>
               
-              {/* Status field - moved to top */}
+              {/* Status field */}
               <div className={styles.formGroup}>
-                <label htmlFor="status" className={styles.formLabel}>
-                  Status
-                </label>
+                <label htmlFor="status" className={styles.formLabel}>Status</label>
                 <select
                   id="status"
                   name="status"
@@ -490,9 +464,7 @@ export default function EditPostPage({ params }) {
 
               {/* Title field */}
               <div className={styles.formGroup}>
-                <label htmlFor="title" className={styles.formLabel}>
-                  Title
-                </label>
+                <label htmlFor="title" className={styles.formLabel}>Title</label>
                 <input
                   type="text"
                   id="title"
@@ -505,11 +477,10 @@ export default function EditPostPage({ params }) {
                 />
               </div>
 
-              {/* Thumbnail section with YouTube restrictions */}
+              {/* Thumbnail section */}
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Thumbnail</label>
                 
-                {/* YouTube restriction notice */}
                 {isYouTubePost && (
                   <div className={styles.youtubeNotice}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -541,7 +512,6 @@ export default function EditPostPage({ params }) {
                     )}
                   </div>
                   
-                  {/* Conditionally disabled thumbnail actions */}
                   <div className={styles.thumbnailActions}>
                     <label 
                       htmlFor="thumbnailInput" 
@@ -585,9 +555,7 @@ export default function EditPostPage({ params }) {
 
               {/* Content field */}
               <div className={styles.formGroup}>
-                <label htmlFor="content" className={styles.formLabel}>
-                  Content
-                </label>
+                <label htmlFor="content" className={styles.formLabel}>Content</label>
                 <textarea
                   id="content"
                   name="content"
@@ -600,13 +568,10 @@ export default function EditPostPage({ params }) {
                 />
               </div>
 
-              {/* Tags field with YouTube channel hashtag protection */}
+              {/* Tags field */}
               <div className={styles.formGroup}>
-                <label htmlFor="tags" className={styles.formLabel}>
-                  Tags (comma-separated)
-                </label>
+                <label htmlFor="tags" className={styles.formLabel}>Tags (comma-separated)</label>
                 
-                {/* YouTube channel hashtag protection notice */}
                 {isYouTubePost && youtubeChannelHashtag && (
                   <div className={styles.youtubeNotice}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -627,14 +592,12 @@ export default function EditPostPage({ params }) {
                   className={styles.formInput}
                   placeholder="technology, news, discussion"
                 />
-                {/* Show all tags including protected hashtag in preview */}
                 {getAllTagsForPreview().length > 0 && (
                   <div className={styles.tagsPreview}>
                     {getAllTagsForPreview().map((tag, index) => (
                       tag.trim() && (
                         <span key={index} className={styles.tagItem}>
                           #{tag.trim()}
-                          {/* Show remove button unless it's the protected YouTube hashtag */}
                           {!(isYouTubePost && youtubeChannelHashtag && 
                             (tag.trim() === youtubeChannelHashtag || `#${tag.trim()}` === youtubeChannelHashtag)) && (
                             <button
@@ -653,62 +616,105 @@ export default function EditPostPage({ params }) {
                 )}
               </div>
 
-              {/* Links section - now side by side */}
+              {/* Links section - UPDATED WITH SEARCH BAR */}
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Links</label>
+                
+                {/* NEW: Search Bar for Links */}
+                <div className={styles.linkSearchContainer}>
+                  <input
+                    type="text"
+                    placeholder="Search links by title, URL, or description..."
+                    className={styles.linkSearchInput}
+                    value={linkSearchQuery}
+                    onChange={handleLinkSearchChange}
+                  />
+                  {linkSearchQuery && (
+                    <button
+                      className={styles.linkSearchClearButton}
+                      onClick={clearLinkSearch}
+                      title="Clear search"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  )}
+                  <div className={styles.linkSearchIcon}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                  </div>
+                </div>
+
                 <div className={styles.linksContainer}>
                   
                   {/* Creator Links Section */}
                   <div className={styles.linksSectionContainer}>
                     <h4 className={styles.linksSectionTitle}>Creator Links</h4>
                     <div className={styles.linksSection}>
-                      {creatorLinks.length > 0 ? (
-                        <div className={styles.linksList}>
-                          {creatorLinks.map((link, index) => (
-                            <div key={link.id || index} className={styles.linkItem}>
-                              <div className={styles.linkInfo}>
-                                <h4 className={styles.linkTitle}>{link.title}</h4>
-                                <a
-                                  href={link.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={styles.linkUrl}
-                                >
-                                  {link.url}
-                                </a>
-                                {link.description && (
-                                  <p className={styles.linkDescription}>{link.description}</p>
-                                )}
-                                <div className={styles.linkMeta}>
-                                  <span className={styles.linkType}>Creator</span>
-                                  {link.voteCount !== undefined && (
-                                    <span className={styles.linkVotes}>
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M9 18v-6H5l7-7 7 7h-4v6H9z"></path>
-                                      </svg>
-                                      {link.voteCount || link.votes || 0}
-                                    </span>
-                                  )}
+                      {(() => {
+                        const filteredCreatorLinks = filterLinks(creatorLinks);
+                        
+                        return (
+                          <>
+                            {creatorLinks.length > 0 ? (
+                              filteredCreatorLinks.length > 0 ? (
+                                <div className={styles.linksList}>
+                                  {filteredCreatorLinks.map((link, index) => (
+                                    <div key={link.id || index} className={styles.linkItem}>
+                                      <div className={styles.linkInfo}>
+                                        <h4 className={styles.linkTitle}>{link.title}</h4>
+                                        <a
+                                          href={link.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className={styles.linkUrl}
+                                        >
+                                          {link.url}
+                                        </a>
+                                        {link.description && (
+                                          <p className={styles.linkDescription}>{link.description}</p>
+                                        )}
+                                        <div className={styles.linkMeta}>
+                                          <span className={styles.linkType}>Creator</span>
+                                          {link.voteCount !== undefined && (
+                                            <span className={styles.linkVotes}>
+                                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M9 18v-6H5l7-7 7 7h-4v6H9z"></path>
+                                              </svg>
+                                              {link.voteCount || link.votes || 0}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <button
+                                        className={styles.removeLink}
+                                        onClick={() => handleRemoveCreatorLink(link.id || index)}
+                                        aria-label="Remove link"
+                                      >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  ))}
                                 </div>
-                              </div>
-                              <button
-                                className={styles.removeLink}
-                                onClick={() => handleRemoveCreatorLink(link.id || index)}
-                                aria-label="Remove link"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className={styles.noLinks}>No creator links added yet</p>
-                      )}
+                              ) : (
+                                <div className={styles.noResultsMessage}>
+                                  No results found for "{linkSearchQuery}"
+                                </div>
+                              )
+                            ) : (
+                              <p className={styles.noLinks}>No creator links added yet</p>
+                            )}
+                          </>
+                        );
+                      })()}
 
-                      {/* Add new creator link form */}
                       <div className={styles.addLinkForm}>
                         <h4 className={styles.addLinkHeading}>Add Creator Link</h4>
                         <div className={styles.linkFormGroup}>
@@ -751,48 +757,84 @@ export default function EditPostPage({ params }) {
                     </div>
                   </div>
 
-                  {/* Community Links Section - Display Only */}
+                  {/* Community Links Section - NOW EDITABLE WITH SEARCH FILTERING */}
                   <div className={styles.linksSectionContainer}>
                     <h4 className={styles.linksSectionTitle}>Community Links</h4>
                     <div className={styles.linksSection}>
-                      {communityLinks.length > 0 ? (
-                        <div className={styles.linksList}>
-                          {communityLinks.map((link, index) => (
-                            <div key={index} className={styles.linkItemReadonly}>
-                              <div className={styles.linkInfo}>
-                                <h4 className={styles.linkTitle}>{link.title}</h4>
-                                <a
-                                  href={link.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={styles.linkUrl}
-                                >
-                                  {link.url}
-                                </a>
-                                {link.description && (
-                                  <p className={styles.linkDescription}>{link.description}</p>
-                                )}
-                                <div className={styles.linkMeta}>
-                                  <span className={styles.linkType}>Community</span>
-                                  <span className={styles.linkContributor}>
-                                    by @{link.contributorUsername}
-                                  </span>
-                                  <span className={styles.linkVotes}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M9 18v-6H5l7-7 7 7h-4v6H9z"></path>
-                                    </svg>
-                                    {link.voteCount || link.votes || 0}
-                                  </span>
+                      {(() => {
+                        const filteredCommunityLinks = filterLinks(communityLinks);
+                        
+                        return (
+                          <>
+                            {communityLinks.length > 0 ? (
+                              filteredCommunityLinks.length > 0 ? (
+                                <div className={styles.linksList}>
+                                  {filteredCommunityLinks.map((link, index) => {
+                                    // Find the original index for removal
+                                    const originalIndex = communityLinks.findIndex(originalLink => 
+                                      originalLink.title === link.title && 
+                                      originalLink.url === link.url &&
+                                      originalLink.contributorUsername === link.contributorUsername
+                                    );
+                                    
+                                    return (
+                                      <div key={index} className={styles.linkItem}>
+                                        <div className={styles.linkInfo}>
+                                          <h4 className={styles.linkTitle}>{link.title}</h4>
+                                          <a
+                                            href={link.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={styles.linkUrl}
+                                          >
+                                            {link.url}
+                                          </a>
+                                          {link.description && (
+                                            <p className={styles.linkDescription}>{link.description}</p>
+                                          )}
+                                          <div className={styles.linkMeta}>
+                                            <span className={styles.linkType}>Community</span>
+                                            <span className={styles.linkContributor}>
+                                              by @{link.contributorUsername}
+                                            </span>
+                                            <span className={styles.linkVotes}>
+                                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M9 18v-6H5l7-7 7 7h-4v6H9z"></path>
+                                              </svg>
+                                              {link.voteCount || link.votes || 0}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        {/* UPDATED: Remove button now opens confirmation modal */}
+                                        <button
+                                          className={styles.removeLink}
+                                          onClick={() => handleRemoveCommunityLink(originalIndex)}
+                                          aria-label="Remove community link"
+                                          title="Remove this community link"
+                                        >
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                          </svg>
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className={styles.noLinks}>No community links yet</p>
-                      )}
+                              ) : (
+                                <div className={styles.noResultsMessage}>
+                                  No results found for "{linkSearchQuery}"
+                                </div>
+                              )
+                            ) : (
+                              <p className={styles.noLinks}>No community links yet</p>
+                            )}
+                          </>
+                        );
+                      })()}
+                      
                       <div className={styles.communityLinksNote}>
-                        <p>Community links are contributed by your followers and cannot be edited here.</p>
+                        <p>You can remove community links contributed by your followers.</p>
                       </div>
                     </div>
                   </div>
@@ -803,11 +845,18 @@ export default function EditPostPage({ params }) {
           </div>
         </div>
 
-        {/* Overlay for mobile when menu is open */}
         {isMobileMenuOpen && (
           <div className={styles.mobileOverlay} onClick={handleMenuToggle}></div>
         )}
       </div>
+
+      {/* Remove Community Link Confirmation Modal */}
+      <RemoveCommunityLink
+        isOpen={removeLinkModal.isOpen}
+        onClose={closeRemoveLinkModal}
+        onConfirm={confirmRemoveCommunityLink}
+        linkData={removeLinkModal.linkData}
+      />
     </div>
   );
 }

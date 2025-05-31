@@ -1,0 +1,313 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    overflow: hidden;
+}
+
+.mainContent {
+    display: flex;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    padding-top: 60px;
+    /* Account for fixed header */
+}
+
+/* Sidebar container */
+.sidebarContainer {
+    position: fixed;
+    top: 0px;
+    /* Below header */
+    left: 0;
+    width: 330px;
+    height: calc(100vh - 60px);
+    z-index: 999;
+    transition: transform 0.3s ease;
+}
+
+/* Force sidebar to be hidden initially */
+.sidebarHidden {
+    transform: translateX(-100%);
+}
+
+/* Override the sidebar component's internal transform styles */
+.sidebarContainer nav {
+    transform: none !important;
+    transition: none !important;
+}
+
+/* When sidebar is hidden, apply transform to the nav element */
+.sidebarHidden nav {
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s ease !important;
+}
+
+/* When sidebar is open (no sidebarHidden class), ensure it's visible */
+.sidebarContainer:not(.sidebarHidden) nav {
+    transform: translateX(0) !important;
+    top: 60px;
+}
+
+/* Overlay for mobile */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Chat Container - Always full width */
+.chatContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #0f0f0f;
+    overflow: hidden;
+}
+
+/* Welcome Section */
+.welcomeSection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.aiSelector {
+    position: absolute;
+    top: 80px;
+    right: 20px;
+}
+
+.aiDropdown {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: 1px solid #3a3a3a;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    outline: none;
+}
+
+.aiDropdown:hover {
+    background-color: #3a3a3a;
+}
+
+/* Chat mode header for AI selector */
+.chatModeHeader {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}
+
+.aiDropdownSmall {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: 1px solid #3a3a3a;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+}
+
+.aiDropdownSmall:hover {
+    background-color: #3a3a3a;
+}
+
+.welcomeTitle {
+    font-size: 32px;
+    font-weight: 400;
+    margin-bottom: 40px;
+    text-align: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.suggestions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.suggestionButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background-color: transparent;
+    border: 1px solid #3a3a3a;
+    border-radius: 20px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.suggestionButton:hover {
+    background-color: #2a2a2a;
+    border-color: #4a4a4a;
+    transform: translateY(-2px);
+}
+
+.suggestionIcon {
+    font-size: 18px;
+}
+
+.suggestionText {
+    font-weight: 500;
+}
+
+.examplePrompts {
+    width: 100%;
+    max-width: 600px;
+}
+
+.promptsTitle {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.promptButton {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 20px;
+    background-color: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 12px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 12px;
+    text-align: left;
+    font-size: 14px;
+}
+
+.promptButton:hover {
+    background-color: #3a3a3a;
+    transform: translateX(4px);
+}
+
+.promptIcon {
+    font-size: 16px;
+    opacity: 0.7;
+}
+
+/* Messages Area */
+.messagesArea {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+}
+
+/* Messages Container - Matching ExploreRightSidebar exactly */
+.messagesContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    animation: fadeIn 0.3s ease;
+    max-width: 1000px;
+    margin: 0 auto;
+    scrollbar-width: thin;
+    scrollbar-color: #444 #1a1a1a;
+}
+
+/* Input Section - New container for AiChat */
+.inputSection {
+    padding: 10px 20px;
+    width: 1000px;
+    margin: 0 auto;
+}
+
+/* Mobile Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebarContainer {
+        width: 280px;
+    }
+
+    .welcomeTitle {
+        font-size: 24px;
+    }
+
+    .suggestions {
+        gap: 8px;
+    }
+
+    .suggestionButton {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .aiSelector {
+        position: static;
+        margin-bottom: 20px;
+    }
+
+    .chatModeHeader {
+        top: 10px;
+        right: 10px;
+    }
+
+    .messagesContainer {
+        padding: 16px;
+    }
+
+    .inputSection {
+        padding: 8px 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebarContainer {
+        width: 72px;
+        /* Match the sidebar component's mobile width */
+    }
+
+    .messagesContainer {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .inputSection {
+        padding: 0;
+        width: 360px;
+        margin-bottom: 10px;
+    }
+
+}

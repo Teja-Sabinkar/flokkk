@@ -1,7 +1,6 @@
-/* src/components/ai/RightSidebarToggle.module.css */
 .rightSidebarToggle {
     position: fixed;
-    right: 0px; /* Positioned away from the edge for better UX */
+    right: var(--toggle-right-position, 0px);
     top: 100px;
     transform: translateY(-50%);
     border-top: 1px solid #4169e1;
@@ -15,26 +14,39 @@
     height: 80px;
     align-items: center;
     justify-content: center;
-    z-index: 999;
+    z-index: 0;
     cursor: pointer;
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
-    transition: right 0.3s ease;
     background-color: #4169e1da;
     backdrop-filter: blur(1px);
     font-size: 8px;
-    display: flex; /* Always visible on both desktop and mobile */
+    display: flex;
+    /* Smooth transition to follow resize handle */
+    transition: right 0.1s ease, opacity 0.2s ease;
+    opacity: 1;
+}
+
+.rightSidebarToggle.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .rightSidebarToggle:hover {
     background-color: #4169e1;
 }
 
+/* Active state when sidebar is visible */
 .rightSidebarToggle.active {
-    color: white;
-    right: var(--sidebar-width, 330px); /* Moves with sidebar on both desktop and mobile */
+    /* Additional styling when sidebar is open if needed */
 }
 
-/* Flock AI text in button */
+/* Hidden state during initialization */
+.rightSidebarToggle.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Flokkk AI text in button */
 .aiText {
     writing-mode: vertical-rl;
     text-orientation: mixed;
@@ -45,24 +57,20 @@
 }
 
 /* Responsive adjustments for smaller screens */
-
 @media (max-width: 1300px) {
     .rightSidebarToggle {
-        right: 0px; /* Slightly closer to edge on very small screens */
-    }
-    
-    .rightSidebarToggle.active {
-        right: 400px; /* Slight adjustment for mobile */
+        transition: right 0.3s ease, opacity 0.2s ease;
     }
 }
 
-
 @media (max-width: 480px) {
     .rightSidebarToggle {
-        right: 0px; /* Slightly closer to edge on very small screens */
+        height: 70px;
+        width: 24px;
     }
-    
-    .rightSidebarToggle.active {
-        right: 329px; /* Slight adjustment for mobile */
+
+    .aiText {
+        font-size: 14px;
+        letter-spacing: 1px;
     }
 }
