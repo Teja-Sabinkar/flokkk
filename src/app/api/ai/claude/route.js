@@ -16,7 +16,7 @@ let rateLimiter = {
 let responseCache = {
   generateCacheKey: () => 'key',
   get: async () => null,
-  set: async () => {}
+  set: async () => { }
 };
 
 // Try to import utilities
@@ -40,7 +40,7 @@ try {
 
 export async function POST(request) {
   console.log('Claude API route called');
-  
+
   try {
     // Get authentication info if available
     const headersList = headers();
@@ -49,7 +49,7 @@ export async function POST(request) {
     let username = 'Anonymous User';
 
     console.log('Setting up database connections...');
-    
+
     // Connect to database with error handling
     try {
       await connectToDatabase();
@@ -184,8 +184,8 @@ export async function POST(request) {
     } catch (processingError) {
       console.error('Request processing error:', processingError);
       return NextResponse.json(
-        { 
-          error: 'Processing failed', 
+        {
+          error: 'Processing failed',
           details: processingError.message,
           response: "I encountered an error processing your request. Please try again."
         },
@@ -206,8 +206,8 @@ export async function POST(request) {
   } catch (error) {
     console.error('Claude AI handler error:', error);
     return NextResponse.json(
-      { 
-        error: 'Internal server error', 
+      {
+        error: 'Internal server error',
         details: error.message,
         response: "I'm experiencing technical difficulties. Please try again in a moment."
       },
@@ -219,7 +219,7 @@ export async function POST(request) {
 // Handle suggestion queries
 async function handleSuggestionQuery(message, suggestionType, postId, username) {
   console.log('Processing suggestion:', suggestionType, 'for post:', postId);
-  
+
   try {
     if (suggestionType === 'summarize') {
       return await handleSummarizeDiscussionSuggestion(message, postId, username);
@@ -252,12 +252,96 @@ async function handleSuggestionQuery(message, suggestionType, postId, username) 
 // Handle manual queries from input field with enhanced relevance filtering
 async function handleManualQuery(message, context, username, postId) {
   console.log('Processing manual query:', message);
-  
+
   try {
+    // Check if user is asking "who are you" type questions
+    const whoAreYouPatterns = [
+      /who\s+are\s+you/i,
+      /what\s+are\s+you/i,
+      /tell\s+me\s+about\s+yourself/i,
+      /introduce\s+yourself/i,
+      /what\s+is\s+your\s+name/i,
+      /who\s+is\s+this/i,
+
+      // Additional patterns:
+      /what\s+do\s+you\s+do/i,
+      /what\s+can\s+you\s+do/i,
+      /what\s+are\s+your\s+capabilities/i,
+      /explain\s+yourself/i,
+      /describe\s+yourself/i,
+      /what\s+is\s+this\s+bot/i,
+      /what\s+kind\s+of\s+(assistant|ai|bot)\s+are\s+you/i,
+      /tell\s+me\s+what\s+you\s+do/i,
+      /what\s*\'?s\s+your\s+(purpose|role|function|job)/i,
+      /what\s+are\s+you\s+for/i,
+      /are\s+you\s+(an\s+)?(ai|bot|assistant)/i,
+      /what\s+type\s+of\s+(ai|bot|assistant)/i,
+      /can\s+you\s+introduce\s+yourself/i,
+      /tell\s+me\s+your\s+purpose/i,
+      /explain\s+what\s+you\s+do/i,
+      /who\s+am\s+i\s+(talking|speaking)\s+to/i,
+      /what\s+am\s+i\s+(talking|speaking)\s+to/i,
+      /what\s+exactly\s+are\s+you/i,
+      /help\s+me\s+understand\s+what\s+you\s+are/i,
+      /flockkk/i  // Direct mention of the bot name
+    ];
+
+    const isWhoAreYouQuestion = whoAreYouPatterns.some(pattern => pattern.test(message.trim()));
+
+    if (isWhoAreYouQuestion) {
+      console.log('Detected "who are you" question, returning random formatted introduction');
+
+      // Array of alternate responses
+      const whoAreYouResponses = [
+        // Original response
+        `<div style="padding: 15px 0; color: #ccc; font-size: 14px; line-height: 1.6;">
+          Hi there! I'm flockkk. I'm an AI assistant created to help you discover content and gain insights within this community platform.
+        </div>`,
+
+        // Alternate 1 - More casual/friendly
+        `<div style="padding: 15px 0; color: #ccc; font-size: 14px; line-height: 1.6;">
+          Hey! I'm flockkk, your AI companion for exploring this community. I'm here to help you find interesting discussions, discover useful links, and uncover insights from all the content shared here.
+        </div>`,
+
+        // Alternate 2 - More professional/informative
+        `<div style="padding: 15px 0; color: #ccc; font-size: 14px; line-height: 1.6;">
+          Hello! I'm flockkk, an AI-powered content discovery assistant. My role is to help you navigate through community discussions, find relevant resources, and provide meaningful insights based on the collective knowledge shared on this platform.
+        </div>`,
+
+        // Alternate 3 - Conversational/welcoming
+        `<div style="padding: 15px 0; color: #ccc; font-size: 14px; line-height: 1.6;">
+          Nice to meet you! I'm flockkk, and I'm here to be your guide through this community. Think of me as your personal assistant for finding the best discussions, most useful links, and valuable insights that match what you're looking for.
+        </div>`,
+
+        // Alternate 4 - Direct/helpful
+        `<div style="padding: 15px 0; color: #ccc; font-size: 14px; line-height: 1.6;">
+          I'm flockkk! I'm an AI assistant designed specifically for this community platform. My job is to help you discover relevant content, connect you with interesting discussions, and provide insights that enhance your experience here.
+        </div>`,
+
+        // Alternate 5 - Enthusiastic/engaging
+        `<div style="padding: 15px 0; color: #ccc; font-size: 14px; line-height: 1.6;">
+          Great question! I'm flockkk, your AI-powered community explorer. I love helping people like you discover amazing content, find exactly what they're looking for, and gain fresh perspectives from the wealth of knowledge shared in this community.
+        </div>`
+      ];
+
+      // Randomly select one response
+      const randomIndex = Math.floor(Math.random() * whoAreYouResponses.length);
+      const formattedIntroduction = whoAreYouResponses[randomIndex];
+
+      return {
+        response: formattedIntroduction,
+        model: "claude-3-haiku-20240307",
+        usage: null,
+        dataAvailable: [],
+        hasMoreDb: false,
+        hasMoreAi: false
+      };
+    }
+
     // Extract keywords from user's question
     const keywords = await extractKeywordsFromText(message);
     console.log('Extracted keywords:', keywords);
-    
+
     // Find relevant discussions and links from database
     const searchResults = await findRelevantDiscussionsAndLinks(keywords, 15); // Get more results for better filtering
     console.log('Found search results:', searchResults.discussions.length, 'discussions,', searchResults.links.length, 'links');
@@ -271,7 +355,7 @@ async function handleManualQuery(message, context, username, postId) {
     const topDiscussions = searchResults.discussions
       .filter(discussion => !discussion.relevanceScore || discussion.relevanceScore >= minDiscussionScore)
       .slice(0, 2);
-    
+
     const topLinks = searchResults.links
       .filter(link => !link.relevanceScore || link.relevanceScore >= minLinkScore)
       .slice(0, 2);
@@ -302,17 +386,17 @@ async function handleManualQuery(message, context, username, postId) {
     const remainingDiscussions = searchResults.discussions
       .filter(discussion => !discussion.relevanceScore || discussion.relevanceScore >= minDiscussionScore)
       .slice(2); // Skip the first 2 we already showed
-    
+
     const remainingLinks = searchResults.links
       .filter(link => !link.relevanceScore || link.relevanceScore >= minLinkScore)
       .slice(2); // Skip the first 2 we already showed
 
     // Additional validation for remaining results
-    const validRemainingDiscussions = remainingDiscussions.filter(discussion => 
+    const validRemainingDiscussions = remainingDiscussions.filter(discussion =>
       validateContentRelevance(discussion.title, keywords)
     );
-    
-    const validRemainingLinks = remainingLinks.filter(link => 
+
+    const validRemainingLinks = remainingLinks.filter(link =>
       validateContentRelevance(link.title, keywords) || validateContentRelevance(link.description, keywords)
     );
 
@@ -362,11 +446,11 @@ async function handleManualQuery(message, context, username, postId) {
 // Handle summarize discussion suggestion
 async function handleSummarizeDiscussionSuggestion(message, postId, username) {
   console.log('Handling summarize suggestion for post:', postId);
-  
+
   try {
     // Extract comprehensive data from current post
     const postData = await extractCurrentPostData(postId);
-    
+
     if (!postData) {
       console.warn('No post data found for ID:', postId);
       return {
@@ -417,7 +501,7 @@ async function handleSummarizeDiscussionSuggestion(message, postId, username) {
 // Handle similar topics discussion suggestion with enhanced relevance filtering
 async function handleSimilarTopicsDiscussionSuggestion(message, postId, username) {
   console.log('Handling similar topics suggestion for post:', postId);
-  
+
   try {
     // Extract post data and keywords
     const postData = await extractCurrentPostData(postId);
@@ -436,7 +520,7 @@ async function handleSimilarTopicsDiscussionSuggestion(message, postId, username
     // Extract keywords from post title and content
     const keywords = await extractKeywordsFromPost(postData);
     console.log('Keywords extracted for similar topics:', keywords);
-    
+
     // Find similar content from database with enhanced filtering
     const searchResults = await findRelevantDiscussionsAndLinks(keywords, 15);
     console.log('Similar content found:', searchResults.discussions.length, 'discussions,', searchResults.links.length, 'links');
@@ -450,17 +534,17 @@ async function handleSimilarTopicsDiscussionSuggestion(message, postId, username
     const topDiscussions = searchResults.discussions
       .filter(discussion => !discussion.relevanceScore || discussion.relevanceScore >= minDiscussionScore)
       .slice(0, 2);
-    
+
     const topLinks = searchResults.links
       .filter(link => !link.relevanceScore || link.relevanceScore >= minLinkScore)
       .slice(0, 2);
 
     // Additional validation for similar topics
-    const validDiscussions = topDiscussions.filter(discussion => 
+    const validDiscussions = topDiscussions.filter(discussion =>
       validateContentRelevance(discussion.title, keywords)
     );
-    
-    const validLinks = topLinks.filter(link => 
+
+    const validLinks = topLinks.filter(link =>
       validateContentRelevance(link.title, keywords) || validateContentRelevance(link.description, keywords)
     );
 
@@ -490,16 +574,16 @@ async function handleSimilarTopicsDiscussionSuggestion(message, postId, username
     const remainingDiscussions = searchResults.discussions
       .filter(discussion => !discussion.relevanceScore || discussion.relevanceScore >= minDiscussionScore)
       .slice(2);
-    
+
     const remainingLinks = searchResults.links
       .filter(link => !link.relevanceScore || link.relevanceScore >= minLinkScore)
       .slice(2);
 
-    const validRemainingDiscussions = remainingDiscussions.filter(discussion => 
+    const validRemainingDiscussions = remainingDiscussions.filter(discussion =>
       validateContentRelevance(discussion.title, keywords)
     );
-    
-    const validRemainingLinks = remainingLinks.filter(link => 
+
+    const validRemainingLinks = remainingLinks.filter(link =>
       validateContentRelevance(link.title, keywords) || validateContentRelevance(link.description, keywords)
     );
 
@@ -541,26 +625,26 @@ async function handleSimilarTopicsDiscussionSuggestion(message, postId, username
 // Handle show more requests
 async function handleShowMoreRequest(showMoreType, originalQuery, message, postId, username) {
   console.log('Processing show more request:', { showMoreType, originalQuery, postId });
-  
+
   try {
     let result;
-    
+
     switch (showMoreType) {
       case 'more-discussions-links':
         console.log('Handling more discussions/links');
         result = await handleShowMoreDiscussionsLinks(originalQuery, postId, username);
         break;
-      
+
       case 'more-insights':
         console.log('Handling more insights');
         result = await handleShowMoreInsights(originalQuery, postId, username);
         break;
-      
+
       case 'more-insights-links':
         console.log('Handling more insights and links');
         result = await handleShowMoreInsightsAndLinks(originalQuery, postId, username);
         break;
-      
+
       default:
         console.warn('Unknown show more type:', showMoreType);
         result = {
@@ -572,10 +656,10 @@ async function handleShowMoreRequest(showMoreType, originalQuery, message, postI
           hasMoreAi: false
         };
     }
-    
+
     console.log('Show more request completed successfully');
     return result;
-    
+
   } catch (error) {
     console.error('Error in handleShowMoreRequest:', error);
     return {
@@ -592,10 +676,10 @@ async function handleShowMoreRequest(showMoreType, originalQuery, message, postI
 // Handle show more discussions and links with enhanced relevance filtering
 async function handleShowMoreDiscussionsLinks(originalQuery, postId, username) {
   console.log('Processing show more discussions/links for:', { originalQuery, postId });
-  
+
   try {
     let keywords = [];
-    
+
     // Extract keywords safely
     try {
       if (postId) {
@@ -606,7 +690,7 @@ async function handleShowMoreDiscussionsLinks(originalQuery, postId, username) {
           console.log('Keywords from post:', keywords);
         }
       }
-      
+
       if (keywords.length === 0) {
         console.log('Extracting keywords from query:', originalQuery);
         keywords = await extractKeywordsFromText(originalQuery);
@@ -711,15 +795,15 @@ async function handleShowMoreDiscussionsLinks(originalQuery, postId, username) {
 // Helper function to validate content relevance
 function validateContentRelevance(content, keywords) {
   if (!content || !keywords || keywords.length === 0) return false;
-  
+
   const contentLower = content.toLowerCase();
-  
+
   // For multi-word keywords (phrases), check if phrase exists
   const phraseKeywords = keywords.filter(keyword => keyword.includes(' '));
   if (phraseKeywords.length > 0) {
     return phraseKeywords.some(phrase => contentLower.includes(phrase.toLowerCase()));
   }
-  
+
   // For single words, require at least 2 matches for multi-word queries
   if (keywords.length > 1) {
     const matchedWords = keywords.filter(keyword => {
@@ -728,7 +812,7 @@ function validateContentRelevance(content, keywords) {
     });
     return matchedWords.length >= Math.ceil(keywords.length / 2);
   }
-  
+
   // For single keyword, just check if it exists with word boundaries
   const wordRegex = new RegExp(`\\b${keywords[0].toLowerCase()}\\b`, 'i');
   return wordRegex.test(contentLower);
@@ -737,11 +821,11 @@ function validateContentRelevance(content, keywords) {
 // Handle show more insights (Claude AI elaborated response)
 async function handleShowMoreInsights(originalQuery, postId, username) {
   console.log('Processing show more insights for:', { originalQuery, postId });
-  
+
   try {
     let keywords = [];
     let contextData = null;
-    
+
     // Extract keywords and context safely
     try {
       if (postId) {
@@ -752,7 +836,7 @@ async function handleShowMoreInsights(originalQuery, postId, username) {
           console.log('Keywords from post context:', keywords);
         }
       }
-      
+
       if (keywords.length === 0) {
         console.log('Extracting keywords from query:', originalQuery);
         keywords = await extractKeywordsFromText(originalQuery);
@@ -807,12 +891,12 @@ async function handleShowMoreInsights(originalQuery, postId, username) {
       if (aiGeneratedLinks && aiGeneratedLinks.length > 0) {
         externalLinks.push(...aiGeneratedLinks);
       }
-      
+
       // Also extract any existing links from post content as supplementary
       if (contextData && contextData.postContent) {
         const urlRegex = /https?:\/\/[^\s<>"']+/g;
         const foundUrls = contextData.postContent.match(urlRegex) || [];
-        
+
         foundUrls.slice(0, Math.max(0, 4 - externalLinks.length)).forEach(url => {
           if (!url.includes('youtube.com') && !url.includes('youtu.be') && !url.includes('tiktok.com')) {
             const cleanUrl = url.replace(/[.,;!?)]+$/, ''); // Remove trailing punctuation
@@ -824,7 +908,7 @@ async function handleShowMoreInsights(originalQuery, postId, username) {
           }
         });
       }
-      
+
       console.log('Educational external links found:', externalLinks.length);
     } catch (linksError) {
       console.warn('External links extraction failed:', linksError.message);
@@ -876,7 +960,7 @@ async function handleShowMoreInsights(originalQuery, postId, username) {
 // Handle show more insights and links (for summarize suggestion)
 async function handleShowMoreInsightsAndLinks(originalQuery, postId, username) {
   console.log('Processing show more insights and links for:', { originalQuery, postId });
-  
+
   try {
     // Extract comprehensive data from current post
     let postData = null;
@@ -923,7 +1007,7 @@ async function handleShowMoreInsightsAndLinks(originalQuery, postId, username) {
       console.warn('Keyword extraction failed for insights and links:', keywordError.message);
       keywords = extractKeywordsSimple(originalQuery || '');
     }
-    
+
     // Find relevant discussions and links
     let searchResults = { discussions: [], links: [] };
     try {
@@ -1021,7 +1105,7 @@ async function handleShowMoreInsightsAndLinks(originalQuery, postId, username) {
 // Extract current post data (postTitle, postContent, links, comments)
 async function extractCurrentPostData(postId) {
   console.log('Extracting post data for ID:', postId);
-  
+
   try {
     if (!postId) {
       console.warn('No postId provided to extractCurrentPostData');
@@ -1046,14 +1130,14 @@ async function extractCurrentPostData(postId) {
     // Get comments for this post
     let comments = [];
     try {
-      comments = await Comment.find({ 
+      comments = await Comment.find({
         postId: new ObjectId(postId),
         isDeleted: { $ne: true }
       })
-      .sort({ likes: -1, createdAt: -1 })
-      .limit(10) // Limit to prevent memory issues
-      .lean();
-      
+        .sort({ likes: -1, createdAt: -1 })
+        .limit(10) // Limit to prevent memory issues
+        .lean();
+
       console.log('Comments found:', comments.length);
     } catch (commentError) {
       console.warn('Error fetching comments:', commentError.message);
@@ -1096,11 +1180,11 @@ async function extractKeywordsFromPost(postData) {
 async function extractKeywordsFromText(text) {
   try {
     console.log('Extracting contextual keywords from:', text.substring(0, 100) + '...');
-    
+
     // Use simple keyword extraction as primary method for phrases
     const simplePhrases = extractKeywordsSimple(text);
     console.log('Simple extraction found phrases:', simplePhrases);
-    
+
     // Try AI keyword extraction for better contextual understanding
     let aiKeywords = [];
     try {
@@ -1109,31 +1193,31 @@ async function extractKeywordsFromText(text) {
     } catch (aiError) {
       console.warn('AI keyword extraction failed, using simple extraction:', aiError.message);
     }
-    
+
     // Combine and prioritize meaningful phrases
     const allKeywords = [];
-    
+
     // First, add AI-generated contextual phrases (these are usually better)
     if (aiKeywords.length > 0) {
       allKeywords.push(...aiKeywords);
     }
-    
+
     // Then add simple extraction phrases that aren't already covered
     simplePhrases.forEach(phrase => {
-      const isAlreadyCovered = allKeywords.some(existing => 
-        existing.toLowerCase().includes(phrase.toLowerCase()) || 
+      const isAlreadyCovered = allKeywords.some(existing =>
+        existing.toLowerCase().includes(phrase.toLowerCase()) ||
         phrase.toLowerCase().includes(existing.toLowerCase())
       );
-      
+
       if (!isAlreadyCovered) {
         allKeywords.push(phrase);
       }
     });
-    
+
     // Remove duplicates and limit to 10 most relevant
     const uniqueKeywords = [...new Set(allKeywords)];
     const finalKeywords = uniqueKeywords.slice(0, 10);
-    
+
     console.log('Final contextual keywords:', finalKeywords);
     return finalKeywords;
   } catch (error) {
@@ -1146,73 +1230,73 @@ async function extractKeywordsFromText(text) {
 // Simple keyword extraction with contextual phrases
 function extractKeywordsSimple(text) {
   if (!text || typeof text !== 'string') return [];
-  
+
   try {
     const cleanText = text
       .replace(/https?:\/\/[^\s]+/g, '') // Remove URLs
       .replace(/[^\w\s]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-    
+
     const stopWords = new Set([
-      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 
-      'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 
-      'will', 'would', 'could', 'should', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 
-      'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 'her', 
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+      'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did',
+      'will', 'would', 'could', 'should', 'this', 'that', 'these', 'those', 'i', 'you', 'he',
+      'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 'her',
       'its', 'our', 'their', 'how', 'what', 'when', 'where', 'why', 'who', 'from', 'can', 'about',
       'get', 'make', 'take', 'go', 'come', 'see', 'know', 'think', 'say', 'want', 'need', 'like'
     ]);
-    
+
     const words = cleanText.toLowerCase().split(/\s+/).filter(word => word.length > 2);
     const phrases = [];
-    
+
     // Extract 2-word meaningful phrases
     for (let i = 0; i < words.length - 1; i++) {
       const word1 = words[i];
       const word2 = words[i + 1];
-      
+
       // Skip if either word is a stop word
       if (stopWords.has(word1) || stopWords.has(word2)) continue;
-      
+
       // Skip numbers only combinations
       if (/^\d+$/.test(word1) && /^\d+$/.test(word2)) continue;
-      
+
       const phrase = `${word1} ${word2}`;
       if (phrase.length > 4) {
         phrases.push(phrase);
       }
     }
-    
+
     // Extract 3-word meaningful phrases for better context
     for (let i = 0; i < words.length - 2; i++) {
       const word1 = words[i];
       const word2 = words[i + 1];
       const word3 = words[i + 2];
-      
+
       // Skip if any word is a stop word
       if (stopWords.has(word1) || stopWords.has(word2) || stopWords.has(word3)) continue;
-      
+
       // Prioritize phrases with proper nouns or important terms
       const phrase = `${word1} ${word2} ${word3}`;
       const hasCapitalizedWord = cleanText.includes(word1.charAt(0).toUpperCase() + word1.slice(1)) ||
-                                 cleanText.includes(word2.charAt(0).toUpperCase() + word2.slice(1)) ||
-                                 cleanText.includes(word3.charAt(0).toUpperCase() + word3.slice(1));
-      
+        cleanText.includes(word2.charAt(0).toUpperCase() + word2.slice(1)) ||
+        cleanText.includes(word3.charAt(0).toUpperCase() + word3.slice(1));
+
       if (hasCapitalizedWord && phrase.length > 6) {
         phrases.push(phrase);
       }
     }
-    
+
     // Also include single important words as fallback
-    const importantSingleWords = words.filter(word => 
-      !stopWords.has(word) && 
-      word.length > 3 && 
+    const importantSingleWords = words.filter(word =>
+      !stopWords.has(word) &&
+      word.length > 3 &&
       !(/^\d+$/.test(word)) // Exclude pure numbers
     );
-    
+
     // Combine phrases and important single words, prioritizing phrases
     const allKeywords = [...new Set([...phrases, ...importantSingleWords])];
-    
+
     return allKeywords.slice(0, 10);
   } catch (error) {
     console.error('Error in simple keyword extraction:', error);
@@ -1267,7 +1351,7 @@ Examples:
 
     const data = await response.json();
     const aiResponse = data.content[0]?.text || "";
-    
+
     return aiResponse
       .split(',')
       .map(keyword => keyword.trim())
@@ -1293,11 +1377,11 @@ async function findRelevantDiscussionsAndLinks(keywords, limit = 10) {
     const phraseRegexes = keywords
       .filter(keyword => keyword.includes(' ')) // Multi-word phrases
       .map(phrase => new RegExp(phrase.replace(/\s+/g, '\\s+'), 'i'));
-    
+
     const wordRegexes = keywords
       .filter(keyword => !keyword.includes(' ')) // Single words
       .map(word => new RegExp(`\\b${word}\\b`, 'i')); // Word boundaries for exact matches
-    
+
     const allRegexes = [...phraseRegexes, ...wordRegexes];
 
     // Enhanced search query that prioritizes phrase matches
@@ -1372,7 +1456,7 @@ async function findRelevantDiscussionsAndLinks(keywords, limit = 10) {
           $limit: Math.min(limit * 2, 50) // Get more results for better filtering
         }
       ]);
-      
+
       console.log('Found discussions before filtering:', discussions.length);
     } catch (discussionError) {
       console.warn('Error finding discussions:', discussionError.message);
@@ -1405,7 +1489,7 @@ async function findRelevantDiscussionsAndLinks(keywords, limit = 10) {
           post.creatorLinks.forEach((link, index) => {
             const relevanceScore = calculateEnhancedLinkRelevance(link, keywords, phraseRegexes, wordRegexes);
             const minThreshold = phraseRegexes.length > 0 ? 8 : 5; // Higher threshold for phrase searches
-            
+
             if (relevanceScore >= minThreshold) {
               linkResults.push({
                 id: `${post._id.toString()}-creator-${index}`,
@@ -1427,7 +1511,7 @@ async function findRelevantDiscussionsAndLinks(keywords, limit = 10) {
           post.communityLinks.forEach((link, index) => {
             const relevanceScore = calculateEnhancedLinkRelevance(link, keywords, phraseRegexes, wordRegexes);
             const minThreshold = phraseRegexes.length > 0 ? 8 : 5; // Higher threshold for phrase searches
-            
+
             if (relevanceScore >= minThreshold) {
               linkResults.push({
                 id: `${post._id.toString()}-community-${index}`,
@@ -1505,7 +1589,7 @@ function calculateEnhancedLinkRelevance(link, keywords, phraseRegexes, wordRegex
   wordRegexes.forEach(wordRegex => {
     const word = wordRegex.source.replace(/\\b/g, '').toLowerCase();
     const wordBoundaryRegex = new RegExp(`\\b${word}\\b`, 'i');
-    
+
     if (wordBoundaryRegex.test(title)) score += 3; // Medium score for word in title
     if (wordBoundaryRegex.test(description)) score += 2; // Lower score for word in description
     if (wordBoundaryRegex.test(url)) score += 1; // Low score for word in URL
@@ -1523,12 +1607,12 @@ function calculateEnhancedLinkRelevance(link, keywords, phraseRegexes, wordRegex
         return wordRegex.test(title) || wordRegex.test(description);
       }
     });
-    
+
     // Bonus for matching multiple keywords (helps with contextual relevance)
     if (matchedWords.length > 1) {
       score += matchedWords.length * 2;
     }
-    
+
     // Penalty if less than half of keywords match (filters out weak matches)
     if (matchedWords.length < Math.ceil(keywords.length / 2)) {
       score = Math.max(0, score - 5);
@@ -1563,7 +1647,7 @@ async function generateBriefSummary(postData, username) {
     }
 
     let contentToSummarize = '';
-    
+
     if (postData.postTitle) {
       contentToSummarize += `Title: ${postData.postTitle}\n\n`;
     }
@@ -1573,13 +1657,13 @@ async function generateBriefSummary(postData, username) {
     }
 
     if (postData.creatorLinks && postData.creatorLinks.length > 0) {
-      contentToSummarize += `Creator Links:\n${postData.creatorLinks.slice(0, 3).map(link => 
+      contentToSummarize += `Creator Links:\n${postData.creatorLinks.slice(0, 3).map(link =>
         `- ${link.title}: ${(link.description || 'No description').substring(0, 80)}`
       ).join('\n')}\n\n`;
     }
 
     if (postData.comments && postData.comments.length > 0) {
-      contentToSummarize += `Top Comments:\n${postData.comments.slice(0, 3).map(comment => 
+      contentToSummarize += `Top Comments:\n${postData.comments.slice(0, 3).map(comment =>
         `- ${comment.username}: ${comment.content.substring(0, 80)}`
       ).join('\n')}\n`;
     }
@@ -1749,17 +1833,17 @@ Please provide comprehensive insights specifically about "${query}" with proper 
 
     const data = await response.json();
     const generatedContent = data.content[0]?.text || "Here are some detailed insights about this topic.";
-    
+
     // Validation: Check if the response is actually about the queried topic
     const queryWords = query.toLowerCase().split(' ');
     const contentLower = generatedContent.toLowerCase();
     const hasRelevantContent = queryWords.some(word => word.length > 3 && contentLower.includes(word));
-    
+
     if (!hasRelevantContent) {
       console.warn('Generated content seems unrelated to query:', query);
       return `<h3>About ${query}</h3><p>Here are detailed insights about ${query} based on available information and community discussions.</p>`;
     }
-    
+
     return generatedContent;
   } catch (error) {
     console.error('Error generating elaborated insights:', error);
@@ -1817,7 +1901,7 @@ Do not mention formatting instructions in your response - just provide the conte
 
     const data = await response.json();
     let content = data.content[0]?.text || "Here's a detailed summary of the discussion.";
-    
+
     // Clean up any mentions of formatting instructions that might slip through
     content = content
       .replace(/with proper HTML formatting[:\.]?/gi, '')
@@ -1825,7 +1909,7 @@ Do not mention formatting instructions in your response - just provide the conte
       .replace(/with HTML structure[:\.]?/gi, '')
       .replace(/Here (?:is|are) (?:a )?detailed (?:summary|analysis|overview) (?:of|about) .+ with .+formatting[:\.]?\s*/gi, '')
       .trim();
-    
+
     return `<div style="padding: 15px 0; color: #ccc; font-size: 13px; line-height: 1.5;">${content}</div>`;
   } catch (error) {
     console.error('Error generating elaborated summary:', error);
@@ -1886,14 +1970,14 @@ Suggest relevant educational links specifically about "${query}" as JSON array.`
 
     const data = await response.json();
     let aiResponse = data.content[0]?.text || "";
-    
+
     // Clean up any formatting mentions that might slip through
     aiResponse = aiResponse
       .replace(/with proper HTML formatting[:\.]?/gi, '')
       .replace(/using HTML formatting[:\.]?/gi, '')
       .replace(/with HTML structure[:\.]?/gi, '')
       .trim();
-    
+
     try {
       // Try to parse the JSON response
       const suggestedLinks = JSON.parse(aiResponse);
@@ -1906,7 +1990,7 @@ Suggest relevant educational links specifically about "${query}" as JSON array.`
       }
     } catch (parseError) {
       console.warn('Failed to parse AI-generated links JSON:', parseError.message);
-      
+
       // Fallback: Extract any URLs mentioned in the response
       const urlMatches = aiResponse.match(/https?:\/\/[^\s"',]+/g);
       if (urlMatches && urlMatches.length > 0) {
@@ -1920,7 +2004,7 @@ Suggest relevant educational links specifically about "${query}" as JSON array.`
 
     // If AI generation fails, return some generic educational resources based on the actual query
     return generateFallbackEducationalLinks(keywords, query);
-    
+
   } catch (error) {
     console.error('Error generating relevant external links:', error);
     return generateFallbackEducationalLinks(keywords, query);
@@ -1932,7 +2016,7 @@ function generateFallbackEducationalLinks(keywords, query = null) {
   try {
     const fallbackLinks = [];
     const searchTerm = query || keywords[0] || 'technology';
-    
+
     // Generate some educational platform links based on the actual query or keywords
     const educationalPlatforms = [
       {
@@ -1983,7 +2067,7 @@ async function extractAndGenerateExternalLinks(query, postData, keywords, insigh
       console.log('Extracting supplementary links from post content');
       const urlRegex = /https?:\/\/[^\s<>"']+/g;
       const foundUrls = postData.postContent.match(urlRegex) || [];
-      
+
       foundUrls.slice(0, 4 - externalLinks.length).forEach(url => {
         // Filter out video platforms and focus on educational content
         if (!url.includes('youtube.com') && !url.includes('youtu.be') && !url.includes('tiktok.com')) {
@@ -2015,7 +2099,7 @@ async function extractAndGenerateExternalLinks(query, postData, keywords, insigh
 function formatDiscussionCard(discussion) {
   const commentCount = discussion.discussions || 0;
   const linkCount = discussion.linkCount || 0;
-  
+
   return `
     <div style="padding: 12px; margin: 8px 0; border: 1px solid #333; border-radius: 8px; background-color: rgba(20, 20, 20, 0.6);">
       <div style="font-size: 14px; color: white; margin-bottom: 6px; line-height: 1.3;">
@@ -2039,7 +2123,7 @@ function formatDiscussionCard(discussion) {
 function formatLinkCard(link) {
   const votes = link.votes || 0;
   const formattedVotes = votes > 1000 ? (votes / 1000).toFixed(1) + 'k' : votes.toString();
-  
+
   return `
     <div style="padding: 12px; margin: 8px 0; border: 1px solid #2e88ff; border-radius: 8px; background-color: rgba(46, 136, 255, 0.1);">
       <div style="font-size: 14px; color: white; margin-bottom: 6px; line-height: 1.3; word-break: break-word;">
