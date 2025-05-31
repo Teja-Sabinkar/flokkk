@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import DiscussionPageHeader from '@/components/layout/DiscussionPageHeader/DiscussionPageHeader';
 import DiscussionPageSidebarNavigation from '@/components/layout/DiscussionPageSidebarNavigation/DiscussionPageSidebarNavigation';
 import AiChat from '@/components/aichat/AiChat'; // Import AiChat component
-import aiChatStyles from '@/components/AiChat/AiChat.module.css'; // Import AiChat styles
+import aiChatStyles from '@/components/aichat/AiChat.module.css'; // Import AiChat styles
 import styles from './page.module.css';
 
 export default function AIchatPage() {
