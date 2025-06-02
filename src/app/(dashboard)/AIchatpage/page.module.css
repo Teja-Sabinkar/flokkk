@@ -242,6 +242,7 @@
     overflow-y: auto;
     flex: 1;
     animation: fadeIn 0.3s ease;
+    min-width: 300px;
     max-width: 1000px;
     margin: 0 auto;
     scrollbar-width: thin;
