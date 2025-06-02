@@ -49,14 +49,14 @@ export default function SidebarNavigation({ isOpen }) {
       ),
     },
     {
-      name: 'flokkk A.I.',
+      name: 'floocc A.I.',
       path: '/AIchatpage',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
       ),
-      specialClass: styles.flokkkAI,
+      specialClass: styles.flooccAI,
     },
     {
       name: 'About',
@@ -105,8 +105,8 @@ export default function SidebarNavigation({ isOpen }) {
           } else if (item.name === 'Help') {
             // Add special handling for Help to properly highlight when on feedback page
             isActive = pathname === '/settings/feedback';
-          } else if (item.name === 'Flokkk A.I.') {
-            // Special handling for Flokkk A.I. page
+          } else if (item.name === 'floocc A.I.') {
+            // Special handling for floocc A.I. page
             isActive = pathname === '/AIchatpage' || pathname.startsWith('/AIchatpage/');
           } else {
             isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);

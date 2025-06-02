@@ -287,7 +287,7 @@ export default function AIchatPage() {
                         {!hasUserMessages && (
                             <div className={styles.welcomeSection}>
                                 <h1 className={styles.welcomeTitle}>
-                                    {selectedAI === 'Claude' && 'flokkk A.I'}
+                                    {selectedAI === 'Claude' && 'floocc A.I'}
                                 </h1>
                                 <div className={`${aiChatStyles.chatMessage} ${aiChatStyles.system}`}>
                                     <div className={aiChatStyles.messageContent}>

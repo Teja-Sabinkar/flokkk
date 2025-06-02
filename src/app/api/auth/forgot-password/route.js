@@ -53,7 +53,7 @@ export async function POST(request) {
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h1 style="color: #4A5568; text-align: center;">Reset Your Password</h1>
               <p style="font-size: 16px; color: #4A5568;">Hi ${user.name},</p>
-              <p style="font-size: 16px; color: #4A5568;">We received a request to reset your password for your flokkk account. Click the button below to reset it. This link will expire in 10 minutes.</p>
+              <p style="font-size: 16px; color: #4A5568;">We received a request to reset your password for your floocc account. Click the button below to reset it. This link will expire in 10 minutes.</p>
               
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${resetUrl}" style="background-color: #4299E1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
@@ -63,7 +63,7 @@ export async function POST(request) {
               
               <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 20px 0;">
               
-              <p style="font-size: 12px; color: #A0AEC0; text-align: center;">© ${new Date().getFullYear()} flokkk. All rights reserved.</p>
+              <p style="font-size: 12px; color: #A0AEC0; text-align: center;">© ${new Date().getFullYear()} floocc. All rights reserved.</p>
             </div>
           `,
         });

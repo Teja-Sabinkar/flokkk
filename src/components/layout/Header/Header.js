@@ -564,7 +564,7 @@ export default function Header({ user, onMenuToggle, isMobileMenuOpen }) {
           {/* Logo on the left */}
           <div className={styles.logoContainer}>
             <Link href="/home" className={styles.logo}>
-              flokkk
+              floocc
             </Link>
           </div>
         </div>

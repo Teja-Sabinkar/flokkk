@@ -709,7 +709,7 @@ export default function DiscussionPageHeader({ user, onMenuToggle, isMobileMenuO
           {/* Logo on the left */}
           <div className={styles.logoContainer}>
             <Link href="/home" className={styles.logo}>
-              flokkk
+              floocc
             </Link>
           </div>
         </div>

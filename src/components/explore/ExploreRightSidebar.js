@@ -438,7 +438,7 @@ export default function ExploreRightSidebar({
         {!hasUserMessages && (
           <div className={styles.headerText}>
             <p className={styles.promptText}>Something on your mind?</p>
-            <h2 className={styles.title}>Ask Flokkk</h2>
+            <h2 className={styles.title}>Ask floocc</h2>
           </div>
         )}
 
