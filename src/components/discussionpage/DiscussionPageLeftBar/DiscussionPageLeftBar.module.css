@@ -2,7 +2,7 @@
   width: 330px;
   display: flex;
   flex-direction: column;
-  background-color: #0f0f0f;
+  background-color: #060606;
   color: #fff;
   border-radius: 4px;
   overflow: auto;
@@ -198,7 +198,7 @@
 
 .searchInput:focus {
   outline: none;
-  border-color: #4169e1;
+  border-color: #578fed;
   background-color: #252525;
 }
 
@@ -342,6 +342,7 @@
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  width: 230px;
 }
 
 .noLinksMessage {

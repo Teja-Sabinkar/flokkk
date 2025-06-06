@@ -209,7 +209,7 @@ export default function AiChat({ onSubmit }) {
                         onChange={handleInputChange}
                         onFocus={handleFocus}
                         onBlur={handleBlur}
-                        placeholder={isRateLimited ? "Rate limit reached..." : "Ask floocc..."}
+                        placeholder={isRateLimited ? "Rate limit reached..." : "Ask flokkk..."}
                         className={styles.inputField}
                         disabled={isRateLimited}
                     />

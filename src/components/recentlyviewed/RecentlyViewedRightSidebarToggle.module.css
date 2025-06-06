@@ -18,7 +18,7 @@
     z-index: 0;
     cursor: pointer;
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
-    background-color: #4169e1da;
+    background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
     backdrop-filter: blur(1px);
     font-size: 8px;
     display: flex;
@@ -32,9 +32,6 @@
     pointer-events: none;
 }
 
-.rightSidebarToggle:hover {
-    background-color: #4169e1;
-}
 
 /* Active state when sidebar is visible */
 .rightSidebarToggle.active {

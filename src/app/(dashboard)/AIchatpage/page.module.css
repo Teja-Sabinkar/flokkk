@@ -79,7 +79,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: #0f0f0f;
+    background-color: #060606;
     overflow: hidden;
 }
 
@@ -94,6 +94,60 @@
     max-width: 1000px;
     margin: 0 auto;
     width: 100%;
+}
+
+/* Welcome Logo Styles with Staggered Pulsing Animation */
+.welcomeLogoContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.welcomeLogo {
+    display: block;
+    filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.3));
+}
+
+/* Staggered Pulsing Lines Animation */
+.pulsingLine {
+    animation: svgPulse 3s infinite ease-in-out;
+}
+
+.line1 {
+    animation-delay: 0s;
+}
+
+.line2 {
+    animation-delay: 0.2s;
+}
+
+.line3 {
+    animation-delay: 0.4s;
+}
+
+.line4 {
+    animation-delay: 0.6s;
+}
+
+@keyframes svgPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    25% {
+        opacity: 1.2;
+        transform: scale(1.02);
+        filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1);
+        filter: none;
+    }
 }
 
 .aiSelector {
@@ -141,14 +195,13 @@
 }
 
 .welcomeTitle {
-    font-size: 32px;
-    font-weight: 400;
+
     margin-bottom: 40px;
-    text-align: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 23px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.5px;
 }
 
 .suggestions {
@@ -266,6 +319,15 @@
         font-size: 24px;
     }
 
+    .welcomeLogo {
+        width: 60px;
+        height: 60px;
+    }
+
+    .welcomeLogoContainer {
+        margin-bottom: 20px;
+    }
+
     .suggestions {
         gap: 8px;
     }
@@ -300,6 +362,20 @@
         /* Match the sidebar component's mobile width */
     }
 
+    .welcomeLogo {
+        width: 50px;
+        height: 50px;
+    }
+
+    .welcomeLogoContainer {
+        margin-bottom: 16px;
+    }
+
+    .welcomeTitle {
+        font-size: 20px;
+        margin-bottom: 30px;
+    }
+
     .messagesContainer {
         padding: 12px;
         gap: 10px;
@@ -310,5 +386,4 @@
         width: 360px;
         margin-bottom: 10px;
     }
-
 }

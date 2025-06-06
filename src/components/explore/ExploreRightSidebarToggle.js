@@ -85,7 +85,7 @@ export default function ExploreRightSidebarToggle({
             onClick={handleRightSidebarToggle}
             aria-label="Toggle explore sidebar"
         >
-            <span className={styles.aiText}>floocc</span>
+            <span className={styles.aiText}>flokkk</span>
         </button>
     );
 }

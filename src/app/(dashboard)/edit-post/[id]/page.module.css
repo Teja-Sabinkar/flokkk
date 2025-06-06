@@ -90,11 +90,11 @@
     width: 100%;
     padding: 12px 50px 12px 16px;
     font-size: 14px;
-    background-color: #252525;
-    border: 1px solid #3a3a3a;
-    border-radius: 8px;
+    background-color: #1e1e1e;
+    border: 1px solid #333;
     color: #fff;
     transition: border-color 0.2s;
+    border-radius: 4px;
 }
 
 .linkSearchInput:focus {
@@ -197,8 +197,8 @@
 .linkTextarea {
     width: 100%;
     min-height: 60px;
-    background-color: #252525;
-    border: 1px solid #3a3a3a;
+    background-color: #1e1e1e;
+    border: 1px solid #333;
     border-radius: 4px;
     padding: 8px 12px;
     color: #fff;
@@ -302,7 +302,7 @@
 
 .editPostPage {
     min-height: 100vh;
-    background-color: #0f0f0f;
+    background-color: #060606;
     color: #ffffff;
 }
 
@@ -350,6 +350,8 @@
     padding: 24px 32px;
     overflow-y: auto;
     /* Added to make content vertically scrollable */
+    scrollbar-width: thin;
+    scrollbar-color: #444 #1a1a1a;
 }
 
 /* Styling when menu is open - applies to all screen sizes */
@@ -378,7 +380,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: #0f0f0f;
+    background-color: #060606;
     color: #fff;
 }
 
@@ -408,7 +410,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: #0f0f0f;
+    background-color: #060606;
     color: #fff;
     padding: 0 24px;
     text-align: center;
@@ -524,7 +526,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    background-color: #1c1c1c;
+    border: 1px solid #2d2d2d;
     border-radius: 6px;
     margin-bottom: 24px;
     font-size: 13px;
@@ -556,11 +558,11 @@
 
 /* UPDATED: Single column layout - no grid */
 .editFormContainer {
-    background-color: #1a1a1a;
+    background-color: #060606;
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid #2a2a2a;
+    border: 1px solid #2d2d2d;
     width: 100%;
     /* UPDATED: Full width */
 }
@@ -583,11 +585,13 @@
     width: 100%;
     padding: 12px;
     font-size: 14px;
-    background-color: #252525;
-    border: 1px solid #3a3a3a;
+    background-color: #1e1e1e;
+    border: 1px solid #333;
     border-radius: 4px;
     color: #fff;
     transition: border-color 0.2s;
+    scrollbar-width: thin;
+    scrollbar-color: #444 #1a1a1a;
 }
 
 .formInput:focus,
@@ -648,11 +652,11 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-bottom: 24px;
+    margin-top: 24px;
 }
 
 .linkItem {
-    background-color: #1f1f1f;
+    background-color: #1e1e1e;
     border: 1px solid #333;
     border-radius: 6px;
     padding: 12px;
@@ -731,8 +735,6 @@
 }
 
 .addLinkForm {
-    background-color: #1f1f1f;
-    border: 1px solid #333;
     border-radius: 6px;
     padding: 16px;
     margin-top: 16px;
@@ -753,8 +755,8 @@
     width: 100%;
     padding: 10px;
     font-size: 13px;
-    background-color: #252525;
-    border: 1px solid #3a3a3a;
+    background-color: #1e1e1e;
+    border: 1px solid #333;
     border-radius: 4px;
     color: #fff;
 }

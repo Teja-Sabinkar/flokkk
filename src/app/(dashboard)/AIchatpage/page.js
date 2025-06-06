@@ -282,12 +282,39 @@ export default function AIchatPage() {
 
                     {/* Messages Container - Modified to show welcome section only when no user messages */}
                     <div className={styles.messagesContainer}>
-                        
+
                         {/* Welcome Section - Only show when no user messages exist */}
                         {!hasUserMessages && (
                             <div className={styles.welcomeSection}>
+                                {/* Pulsing SVG Logo */}
+                                <div className={styles.welcomeLogoContainer}>
+                                    <svg width="120" height="120" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className={styles.welcomeLogo}>
+                                        <defs>
+                                            <linearGradient id="welcomeLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" style={{ stopColor: "#4f46e5", stopOpacity: 1 }} />
+                                                <stop offset="100%" style={{ stopColor: "#06b6d4", stopOpacity: 1 }} />
+                                            </linearGradient>
+                                        </defs>
+
+                                        {/* Rounded rectangle background */}
+                                        <rect x="15" y="15" width="170" height="170" rx="35" ry="35" fill="url(#welcomeLogoGradient)" />
+
+                                        {/* Main vertical line (left) */}
+                                        <rect x="40" y="40" width="20" height="120" fill="white" rx="10" className={`${styles.pulsingLine} ${styles.line1}`} />
+
+                                        {/* Top horizontal line */}
+                                        <rect x="40" y="40" width="120" height="20" fill="white" rx="10" className={`${styles.pulsingLine} ${styles.line2}`} />
+
+                                        {/* Middle horizontal line (shorter) */}
+                                        <rect x="90" y="85" width="70" height="20" fill="white" rx="10" className={`${styles.pulsingLine} ${styles.line3}`} />
+
+                                        {/* Small square/dot bottom right */}
+                                        <rect x="125" y="125" width="25" height="25" fill="white" rx="6" className={`${styles.pulsingLine} ${styles.line4}`} />
+                                    </svg>
+                                </div>
+
                                 <h1 className={styles.welcomeTitle}>
-                                    {selectedAI === 'Claude' && 'floocc A.I'}
+                                    {selectedAI === 'Claude' && 'flokkk A.I'}
                                 </h1>
                                 <div className={`${aiChatStyles.chatMessage} ${aiChatStyles.system}`}>
                                     <div className={aiChatStyles.messageContent}>

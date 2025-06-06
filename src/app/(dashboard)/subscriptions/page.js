@@ -288,7 +288,7 @@ const SubscriptionRightSidebar = ({
         {!hasUserMessages && (
           <div className={styles.headerText}>
             <p className={styles.promptText}>Something on your mind?</p>
-            <h2 className={styles.title}>Ask floocc</h2>
+            <h2 className={styles.title}>Ask flokkk</h2>
           </div>
         )}
 
@@ -379,7 +379,7 @@ const SubscriptionRightSidebarToggle = ({
             onClick={handleRightSidebarToggle}
             aria-label="Toggle subscriptions sidebar"
         >
-            <span className={styles.aiText}>floocc</span>
+            <span className={styles.aiText}>flokkk</span>
         </button>
     );
 };

@@ -85,7 +85,7 @@ export default function SubscriptionRightSidebarToggle({
             onClick={handleRightSidebarToggle}
             aria-label="Toggle subscriptions sidebar"
         >
-            <span className={styles.aiText}>floocc</span>
+            <span className={styles.aiText}>flokkk</span>
         </button>
     );
 }

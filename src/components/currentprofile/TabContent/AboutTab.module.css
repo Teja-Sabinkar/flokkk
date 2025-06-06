@@ -7,11 +7,11 @@
 
 .aboutSection,
 .socialSection {
-  background-color: #1a1a1a;
+  background-color: #0c0c0c;
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 24px;
-  border: 1px solid #252525;
+  border: 1px solid #2a2a2a;
 }
 
 .aboutSection:hover {

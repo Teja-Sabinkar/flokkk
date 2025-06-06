@@ -299,7 +299,7 @@ export default function DiscussionPage() {
             onClick={handleRightSidebarToggle}
             aria-label="Toggle AI sidebar"
           >
-            <span className={styles.aiText}>floocc</span>
+            <span className={styles.aiText}>flokkk</span>
           </button>
 
           {/* Right sidebar with AI and recommendations - UPDATED with rightBarWrapper class and visibility state */}

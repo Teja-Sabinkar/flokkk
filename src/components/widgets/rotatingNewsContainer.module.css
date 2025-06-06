@@ -1,6 +1,6 @@
 /* src/components/widgets/rotatingNewsContainer.module.css */
 .rotatingNewsContainer {
-    background-color: #171717;
+    background-color: #0d0d0d;
     border-radius: 8px;
     padding: 16px 16px 8px 16px;
     border: 1px solid #2a2a2a;
@@ -25,7 +25,7 @@
 }
 
 .radioIcon {
-    color: #4169e1;
+    color: #578fed;
 }
 
 .newsCounter {
@@ -83,7 +83,7 @@
 /* News Content */
 .newsContent {
     padding: 12px;
-    background-color: #1e1e1e;
+    background-color: #0d0d0d;
     border-radius: 6px;
     border: 1px solid #333;
     transition: all 0.2s ease;
@@ -140,7 +140,7 @@
 }
 
 .newsSource {
-    color: #4169e1;
+    color: #578fed;
     font-weight: 500;
 }
 
@@ -176,8 +176,7 @@
 }
 
 .controlButton:hover {
-    background-color: #4169e1;
-    border-color: #5577ff;
+    border-color: #578fed;
     color: #fff;
     transform: scale(1.1);
 }

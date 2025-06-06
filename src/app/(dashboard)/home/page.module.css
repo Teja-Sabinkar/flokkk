@@ -34,7 +34,7 @@
   z-index: 1000;
   height: 60px;
   /* Should match the header height */
-  background-color: #0f0f0f;
+  background-color: #060606;
 }
 
 /* Main content area with three columns */
@@ -45,7 +45,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #0f0f0f;
+  background-color: #060606;
   overflow: hidden;
   z-index: 0;
 }
@@ -101,7 +101,7 @@
   overflow-y: auto;
   /* Enable independent scrolling */
   padding: 20px;
-  background-color: #0f0f0f;
+  background-color: #060606;
   /* Ensure bottom is covered */
   padding-bottom: 40px;
   scrollbar-width: none;

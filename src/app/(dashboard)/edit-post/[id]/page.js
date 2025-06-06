@@ -12,7 +12,7 @@ import styles from './page.module.css';
 export default function EditPostPage({ params }) {
   const resolvedParams = use(params);
   const postId = resolvedParams?.id;
-  
+
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [post, setPost] = useState(null);
@@ -25,22 +25,22 @@ export default function EditPostPage({ params }) {
     content: '',
     tags: ''
   });
-  
+
   // Creator Links state
   const [creatorLinks, setCreatorLinks] = useState([]);
   const [newCreatorLink, setNewCreatorLink] = useState({ title: '', url: '', description: '' });
-  
+
   // Community Links state - NOW EDITABLE
   const [communityLinks, setCommunityLinks] = useState([]);
-  
+
   // NEW: Search state for filtering links
   const [linkSearchQuery, setLinkSearchQuery] = useState('');
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [removeThumbnail, setRemoveThumbnail] = useState(false);
-  
+
   // YouTube post detection and protection
   const [isYouTubePost, setIsYouTubePost] = useState(false);
   const [youtubeChannelHashtag, setYoutubeChannelHashtag] = useState(null);
@@ -56,11 +56,11 @@ export default function EditPostPage({ params }) {
   const detectYouTubePost = (postData) => {
     if (!postData) return false;
     const hasYouTubeUrl = postData.videoUrl && (
-      postData.videoUrl.includes('youtube.com') || 
+      postData.videoUrl.includes('youtube.com') ||
       postData.videoUrl.includes('youtu.be')
     );
     const hasYouTubeThumbnail = postData.image && (
-      postData.image.includes('i.ytimg.com') || 
+      postData.image.includes('i.ytimg.com') ||
       postData.image.includes('img.youtube.com')
     );
     return hasYouTubeUrl || hasYouTubeThumbnail;
@@ -87,35 +87,35 @@ export default function EditPostPage({ params }) {
     let inputTags = formData.tags
       ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
       : [];
-    
+
     if (youtubeChannelHashtag) {
       const normalizedProtected = youtubeChannelHashtag.startsWith('#') ? youtubeChannelHashtag : `#${youtubeChannelHashtag}`;
       const hasProtectedTag = inputTags.some(tag => {
         const normalizedTag = tag.startsWith('#') ? tag : `#${tag}`;
         return normalizedTag === normalizedProtected;
       });
-      
+
       if (!hasProtectedTag) {
         inputTags.push(youtubeChannelHashtag);
       }
     }
-    
+
     return inputTags;
   };
 
   // NEW: Filter links based on search query
   const filterLinks = (links) => {
     if (!linkSearchQuery.trim()) return links;
-    
+
     const query = linkSearchQuery.toLowerCase();
     return links.filter(link => {
       const title = (link.title || '').toLowerCase();
       const url = (link.url || '').toLowerCase();
       const description = (link.description || '').toLowerCase();
-      
-      return title.includes(query) || 
-             url.includes(query) || 
-             description.includes(query);
+
+      return title.includes(query) ||
+        url.includes(query) ||
+        description.includes(query);
     });
   };
 
@@ -159,34 +159,34 @@ export default function EditPostPage({ params }) {
 
         const postData = await getPostById(postId, token);
         setPost(postData);
-        
+
         const isYouTube = detectYouTubePost(postData);
         setIsYouTubePost(isYouTube);
-        
+
         let protectedHashtag = null;
         if (isYouTube) {
-          protectedHashtag = postData.youtubeChannelHashtag || 
-                            identifyYouTubeChannelHashtag(postData.hashtags, postData.videoUrl);
+          protectedHashtag = postData.youtubeChannelHashtag ||
+            identifyYouTubeChannelHashtag(postData.hashtags, postData.videoUrl);
           setYoutubeChannelHashtag(protectedHashtag);
         }
-        
+
         const allHashtags = postData.hashtags || [];
         let displayTags = allHashtags;
-        
+
         if (isYouTube && protectedHashtag) {
           displayTags = getDisplayTags(allHashtags, protectedHashtag);
         }
-        
+
         setFormData({
           status: postData.status || 'published',
           title: postData.title || '',
           content: postData.content || '',
           tags: displayTags.join(', ')
         });
-        
+
         setCreatorLinks(postData.creatorLinks || []);
         setCommunityLinks(postData.communityLinks || []); // SET COMMUNITY LINKS
-        
+
       } catch (err) {
         console.error('Error fetching data:', err);
         setError(err.message || 'Failed to load post data');
@@ -242,7 +242,7 @@ export default function EditPostPage({ params }) {
   const handleAddCreatorLink = (e) => {
     e.preventDefault();
     if (!newCreatorLink.title || !newCreatorLink.url) return;
-    
+
     setCreatorLinks(prev => [...prev, {
       ...newCreatorLink,
       id: `temp-${Date.now()}`
@@ -283,14 +283,14 @@ export default function EditPostPage({ params }) {
   // Modified hashtag removal with YouTube protection
   const removeHashtag = (tagToRemove) => {
     if (tagToRemove === youtubeChannelHashtag) return;
-    
+
     const currentTags = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
     const updatedTags = currentTags.filter(tag => {
       const normalizedTag = tag.startsWith('#') ? tag : `#${tag}`;
       const normalizedToRemove = tagToRemove.startsWith('#') ? tagToRemove : `#${tagToRemove}`;
       return normalizedTag !== normalizedToRemove;
     });
-    
+
     setFormData(prev => ({ ...prev, tags: updatedTags.join(', ') }));
   };
 
@@ -311,7 +311,7 @@ export default function EditPostPage({ params }) {
           const normalizedTag = tag.startsWith('#') ? tag : `#${tag}`;
           return normalizedTag === normalizedProtected;
         });
-        
+
         if (!hasProtectedTag) {
           processedTags.push(youtubeChannelHashtag);
         }
@@ -446,7 +446,7 @@ export default function EditPostPage({ params }) {
             </div>
 
             <div className={styles.editFormContainer}>
-              
+
               {/* Status field */}
               <div className={styles.formGroup}>
                 <label htmlFor="status" className={styles.formLabel}>Status</label>
@@ -480,7 +480,7 @@ export default function EditPostPage({ params }) {
               {/* Thumbnail section */}
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Thumbnail</label>
-                
+
                 {isYouTubePost && (
                   <div className={styles.youtubeNotice}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -491,7 +491,7 @@ export default function EditPostPage({ params }) {
                     YouTube video thumbnails cannot be modified
                   </div>
                 )}
-                
+
                 <div className={styles.thumbnailSection}>
                   <div className={styles.thumbnailPreview}>
                     {post.thumbnailPreview || post.image ? (
@@ -511,10 +511,10 @@ export default function EditPostPage({ params }) {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className={styles.thumbnailActions}>
-                    <label 
-                      htmlFor="thumbnailInput" 
+                    <label
+                      htmlFor="thumbnailInput"
                       className={`${styles.thumbnailUploadButton} ${isYouTubePost ? styles.disabledButton : ''}`}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -571,7 +571,7 @@ export default function EditPostPage({ params }) {
               {/* Tags field */}
               <div className={styles.formGroup}>
                 <label htmlFor="tags" className={styles.formLabel}>Tags (comma-separated)</label>
-                
+
                 {isYouTubePost && youtubeChannelHashtag && (
                   <div className={styles.youtubeNotice}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -582,7 +582,7 @@ export default function EditPostPage({ params }) {
                     YouTube channel hashtag "{youtubeChannelHashtag}" cannot be removed
                   </div>
                 )}
-                
+
                 <input
                   type="text"
                   id="tags"
@@ -598,17 +598,17 @@ export default function EditPostPage({ params }) {
                       tag.trim() && (
                         <span key={index} className={styles.tagItem}>
                           #{tag.trim()}
-                          {!(isYouTubePost && youtubeChannelHashtag && 
+                          {!(isYouTubePost && youtubeChannelHashtag &&
                             (tag.trim() === youtubeChannelHashtag || `#${tag.trim()}` === youtubeChannelHashtag)) && (
-                            <button
-                              type="button"
-                              className={styles.removeTagButton}
-                              onClick={() => removeHashtag(tag.trim())}
-                              aria-label="Remove tag"
-                            >
-                              ×
-                            </button>
-                          )}
+                              <button
+                                type="button"
+                                className={styles.removeTagButton}
+                                onClick={() => removeHashtag(tag.trim())}
+                                aria-label="Remove tag"
+                              >
+                                ×
+                              </button>
+                            )}
                         </span>
                       )
                     ))}
@@ -619,7 +619,7 @@ export default function EditPostPage({ params }) {
               {/* Links section - UPDATED WITH SEARCH BAR */}
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Links</label>
-                
+
                 {/* NEW: Search Bar for Links */}
                 <div className={styles.linkSearchContainer}>
                   <input
@@ -650,14 +650,56 @@ export default function EditPostPage({ params }) {
                 </div>
 
                 <div className={styles.linksContainer}>
-                  
+
                   {/* Creator Links Section */}
                   <div className={styles.linksSectionContainer}>
                     <h4 className={styles.linksSectionTitle}>Creator Links</h4>
                     <div className={styles.linksSection}>
+
+                      <div className={styles.addLinkForm}>
+                        <h4 className={styles.addLinkHeading}>Add Creator Link</h4>
+                        <div className={styles.linkFormGroup}>
+                          <input
+                            type="text"
+                            name="title"
+                            value={newCreatorLink.title}
+                            onChange={handleCreatorLinkChange}
+                            className={styles.linkInput}
+                            placeholder="Link title"
+                          />
+                        </div>
+                        <div className={styles.linkFormGroup}>
+                          <input
+                            type="url"
+                            name="url"
+                            value={newCreatorLink.url}
+                            onChange={handleCreatorLinkChange}
+                            className={styles.linkInput}
+                            placeholder="https://example.com"
+                          />
+                        </div>
+                        <div className={styles.linkFormGroup}>
+                          <textarea
+                            name="description"
+                            value={newCreatorLink.description}
+                            onChange={handleCreatorLinkChange}
+                            className={styles.linkTextarea}
+                            placeholder="Link description (optional)"
+                            rows={2}
+                          />
+                        </div>
+                        <button
+                          className={styles.addLinkButton}
+                          onClick={handleAddCreatorLink}
+                        >
+                          Add Creator Link
+                        </button>
+                      </div>
+
+
                       {(() => {
                         const filteredCreatorLinks = filterLinks(creatorLinks);
-                        
+
                         return (
                           <>
                             {creatorLinks.length > 0 ? (
@@ -715,45 +757,6 @@ export default function EditPostPage({ params }) {
                         );
                       })()}
 
-                      <div className={styles.addLinkForm}>
-                        <h4 className={styles.addLinkHeading}>Add Creator Link</h4>
-                        <div className={styles.linkFormGroup}>
-                          <input
-                            type="text"
-                            name="title"
-                            value={newCreatorLink.title}
-                            onChange={handleCreatorLinkChange}
-                            className={styles.linkInput}
-                            placeholder="Link title"
-                          />
-                        </div>
-                        <div className={styles.linkFormGroup}>
-                          <input
-                            type="url"
-                            name="url"
-                            value={newCreatorLink.url}
-                            onChange={handleCreatorLinkChange}
-                            className={styles.linkInput}
-                            placeholder="https://example.com"
-                          />
-                        </div>
-                        <div className={styles.linkFormGroup}>
-                          <textarea
-                            name="description"
-                            value={newCreatorLink.description}
-                            onChange={handleCreatorLinkChange}
-                            className={styles.linkTextarea}
-                            placeholder="Link description (optional)"
-                            rows={2}
-                          />
-                        </div>
-                        <button
-                          className={styles.addLinkButton}
-                          onClick={handleAddCreatorLink}
-                        >
-                          Add Creator Link
-                        </button>
-                      </div>
                     </div>
                   </div>
 
@@ -763,7 +766,7 @@ export default function EditPostPage({ params }) {
                     <div className={styles.linksSection}>
                       {(() => {
                         const filteredCommunityLinks = filterLinks(communityLinks);
-                        
+
                         return (
                           <>
                             {communityLinks.length > 0 ? (
@@ -771,12 +774,12 @@ export default function EditPostPage({ params }) {
                                 <div className={styles.linksList}>
                                   {filteredCommunityLinks.map((link, index) => {
                                     // Find the original index for removal
-                                    const originalIndex = communityLinks.findIndex(originalLink => 
-                                      originalLink.title === link.title && 
+                                    const originalIndex = communityLinks.findIndex(originalLink =>
+                                      originalLink.title === link.title &&
                                       originalLink.url === link.url &&
                                       originalLink.contributorUsername === link.contributorUsername
                                     );
-                                    
+
                                     return (
                                       <div key={index} className={styles.linkItem}>
                                         <div className={styles.linkInfo}>
@@ -832,7 +835,7 @@ export default function EditPostPage({ params }) {
                           </>
                         );
                       })()}
-                      
+
                       <div className={styles.communityLinksNote}>
                         <p>You can remove community links contributed by your followers.</p>
                       </div>

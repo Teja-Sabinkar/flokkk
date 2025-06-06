@@ -61,9 +61,9 @@
     justify-content: center;
     min-width: 100px;
     padding: 16px 20px;
-    background-color: #171717;
+    background-color: #0c0c0c;
     border-radius: 12px;
-    border: 1px solid #333;
+    border: 1px solid #2a2a2a;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
 }
@@ -75,7 +75,7 @@
 }
 
 .categoryCard.active {
-    border-color: #4169e1;
+    border-color: #578fed;
 }
 
 .iconContainer {

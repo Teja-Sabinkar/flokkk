@@ -170,13 +170,13 @@
   width: 100%;
   border-radius: 4px;
   overflow: hidden;
-  background-color: #171717;
+  background-color: #0c0c0c;
   border: 1px solid #333;
   transition: border-color 0.2s ease;
 }
 
 .commentBoxFocused {
-  border-color: #4169e1;
+  border-color: #578fed;
 }
 
 .commentToolbar {
@@ -219,7 +219,7 @@
 .commentInput {
   width: 100%;
   min-height: 100px;
-  background-color: #171717;
+  background-color: #0c0c0c;
   border: none;
   padding: 12px;
   color: #fff;
@@ -246,7 +246,7 @@
   justify-content: flex-end;
   align-items: center;
   padding: 8px;
-  background-color: #171717;
+  background-color: #0c0c0c;
 }
 
 .commentButton {

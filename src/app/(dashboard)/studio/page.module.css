@@ -1,6 +1,6 @@
 .studioPage {
   min-height: 100vh;
-  background-color: #0f0f0f;
+  background-color: #060606;
   color: #ffffff;
 }
 
@@ -80,7 +80,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #0f0f0f;
+  background-color: #060606;
   color: #fff;
 }
 
@@ -109,7 +109,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #0f0f0f;
+  background-color: #060606;
   color: #fff;
   padding: 0 24px;
   text-align: center;

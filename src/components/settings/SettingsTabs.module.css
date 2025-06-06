@@ -1,6 +1,7 @@
 .tabsContainer {
   display: flex;
-  background-color: #1a1a1a;
+  background-color: #0c0c0c;
+  border: 1px solid #2a2a2a;
   padding: 0.5rem;
   border-radius: 0.25rem;
   margin-bottom: 1.5rem;
@@ -23,7 +24,7 @@
 }
 
 .active {
-  background-color: #4169e1;
+  background-color: #578fed;
   color: white;
 }
 

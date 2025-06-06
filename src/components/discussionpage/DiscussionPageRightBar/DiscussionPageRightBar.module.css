@@ -8,7 +8,7 @@
   position: relative;
   /* For resize handle */
   transform: translateX(0%);
-  background-color: #0f0f0f;
+  background-color: #060606;
 }
 
 /* Resize handle styles */
@@ -36,7 +36,7 @@
 .resizeBar {
   width: 10px;
   height: 100px;
-  background-color: #4169e1;
+  background-color: #578fed;
   border-radius: 4px;
 }
 

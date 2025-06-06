@@ -64,6 +64,7 @@
   margin: 0;
   color: #fff;
   width: 92%;
+  word-break: break-all;
 }
 
 .linkTitle a {

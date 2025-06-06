@@ -2,7 +2,7 @@
     width: 100%;
     padding: 12px;
     margin-bottom: 8px;
-    background-color: #121212;
+    background-color: #0c0c0c;
     border-radius: 8px;
     color: white;
 }
@@ -42,7 +42,7 @@
 }
 
 .inputContainer.focused {
-    border-color: #4169e1;
+    border-color: #578fed;
 }
 
 .inputContainer.disabled {

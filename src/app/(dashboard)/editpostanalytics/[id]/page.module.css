@@ -1,6 +1,6 @@
 .analyticsPage {
     min-height: 100vh;
-    background-color: #0f0f0f;
+    background-color: #060606;
     color: #ffffff;
 }
 
@@ -76,7 +76,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: #0f0f0f;
+    background-color: #060606;
     color: #fff;
 }
 
@@ -106,7 +106,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: #0f0f0f;
+    background-color: #060606;
     color: #fff;
     padding: 0 24px;
     text-align: center;
@@ -178,11 +178,11 @@
 }
 
 .postInfo {
-    background-color: #1a1a1a;
+    background-color: #141414;
     border-radius: 8px;
     padding: 20px 24px;
     margin-bottom: 24px;
-    border: 1px solid #2a2a2a;
+        border: 1px solid #2d2d2d;
 }
 
 .postHeader {
@@ -245,11 +245,11 @@
 }
 
 .thumbnailSection {
-    background-color: #1a1a1a;
+    background-color: #141414;
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid #2a2a2a;
+        border: 1px solid #2d2d2d;
 }
 
 .sectionTitle {
@@ -264,7 +264,7 @@
     aspect-ratio: 16/9;
     border-radius: 6px;
     overflow: hidden;
-    background-color: #252525;
+    background-color: #1e1e1e;
     border: 1px solid #3a3a3a;
 }
 
@@ -291,11 +291,11 @@
 }
 
 .analyticsCard {
-    background-color: #1a1a1a;
+    background-color: #141414;
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid #2a2a2a;
+        border: 1px solid #2d2d2d;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
@@ -333,11 +333,11 @@
 }
 
 .engagementCard {
-    background-color: #1a1a1a;
+    background-color: #141414;
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid #2a2a2a;
+        border: 1px solid #2d2d2d;
 }
 
 .engagementStats {
@@ -358,7 +358,7 @@
     justify-content: center;
     width: 48px;
     height: 48px;
-    background-color: #252525;
+    background-color: #1e1e1e;
     border-radius: 50%;
     color: #4169e1;
 }
@@ -380,11 +380,11 @@
 }
 
 .analyticsChartSection {
-    background-color: #1a1a1a;
+    background-color: #141414;
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid #2a2a2a;
+        border: 1px solid #2d2d2d;
 }
 
 .viewHistoryChart {
@@ -424,7 +424,7 @@
     top: -35px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #252525;
+    background-color: #1e1e1e;
     color: #fff;
     padding: 6px 10px;
     border-radius: 4px;
@@ -445,7 +445,7 @@
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: #252525 transparent transparent transparent;
+    border-color: #1e1e1e transparent transparent transparent;
 }
 
 .chartLabel {
@@ -455,11 +455,11 @@
 }
 
 .recommendationsSection {
-    background-color: #1a1a1a;
+    background-color: #141414;
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid #2a2a2a;
+        border: 1px solid #2d2d2d;
 }
 
 .recommendationsList {
@@ -473,7 +473,7 @@
     align-items: center;
     gap: 12px;
     padding: 12px 0;
-    border-bottom: 1px solid #252525;
+    border-bottom: 1px solid #1e1e1e;
     font-size: 14px;
     color: #ddd;
 }
@@ -494,7 +494,7 @@
     justify-content: center;
     height: 200px;
     color: #666;
-    background-color: #252525;
+    background-color: #1e1e1e;
     border-radius: 4px;
     padding: 24px;
 }

@@ -11,11 +11,11 @@
 }
 
 .postCard {
-  background-color: #1a1a1a;
+  background-color: #0c0c0c;
   border-radius: 8px;
   padding: 16px;
   color: white;
-  border: 1px solid #252525;
+  border: 1px solid #2a2a2a;
 }
 
 .postCard:hover {
@@ -226,7 +226,7 @@
   position: absolute;
   top: 100%;
   right: 0;
-  background-color: #222;
+  background-color: #0c0c0c;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   min-width: 140px;

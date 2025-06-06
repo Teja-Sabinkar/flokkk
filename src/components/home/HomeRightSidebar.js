@@ -303,7 +303,7 @@ export default function HomeRightSidebar({
                     onClick={onToggle}
                     aria-label="Toggle sidebar"
                 >
-                    <span className={styles.toggleText}>floocc</span>
+                    <span className={styles.toggleText}>flokkk</span>
                 </button>
             )}
 

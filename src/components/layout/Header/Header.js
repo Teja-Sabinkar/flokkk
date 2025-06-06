@@ -1,4 +1,4 @@
-// Updated Header.js with real-time notification fetching and search functionality
+// Updated Header.js with new simplified static SVG logo
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -561,10 +561,33 @@ export default function Header({ user, onMenuToggle, isMobileMenuOpen }) {
             )}
           </button>
 
-          {/* Logo on the left */}
+          {/* Static SVG Logo */}
           <div className={styles.logoContainer}>
-            <Link href="/home" className={styles.logo}>
-              floocc
+            <Link href="/home" className={styles.logoLink}>
+              <svg width="40" height="40" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className={styles.logoSvg}>
+                <defs>
+                  <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style={{stopColor:"#4f46e5", stopOpacity:1}} />
+                    <stop offset="100%" style={{stopColor:"#06b6d4", stopOpacity:1}} />
+                  </linearGradient>
+                </defs>
+                
+                {/* Rounded rectangle background */}
+                <rect x="15" y="15" width="170" height="170" rx="35" ry="35" fill="url(#logoGradient)"/>
+                
+                {/* Main vertical line (left) */}
+                <rect x="40" y="40" width="20" height="120" fill="white" rx="10"/>
+                
+                {/* Top horizontal line */}
+                <rect x="40" y="40" width="120" height="20" fill="white" rx="10"/>
+                
+                {/* Middle horizontal line (shorter) */}
+                <rect x="90" y="85" width="70" height="20" fill="white" rx="10"/>
+                
+                {/* Small square/dot bottom right */}
+                <rect x="125" y="125" width="25" height="25" fill="white" rx="6"/>
+              </svg>
+              <span className={styles.logoText}>flokkk</span>
             </Link>
           </div>
         </div>

@@ -86,7 +86,7 @@ export default function RecentlyViewedRightSidebarToggle({
             onClick={handleRightSidebarToggle}
             aria-label="Toggle recently viewed sidebar"
         >
-            <span className={styles.aiText}>floocc</span>
+            <span className={styles.aiText}>flokkk</span>
         </button>
     );
 }

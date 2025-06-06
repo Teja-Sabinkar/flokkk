@@ -97,7 +97,7 @@ function SignupContent() {
           <div className="next-steps">
             <h2>Next Steps:</h2>
             <ol>
-              <li>Open the email from floocc</li>
+              <li>Open the email from flokkk</li>
               <li>Click the &quot;Verify My Email&quot; button</li>
               <li>Return to login once verified</li>
             </ol>
