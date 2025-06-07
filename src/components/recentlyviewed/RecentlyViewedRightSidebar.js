@@ -433,7 +433,6 @@ export default function RecentlyViewedRightSidebar({
         {!hasUserMessages && (
           <div className={styles.headerText}>
             <p className={styles.promptText}>Something on your mind?</p>
-            <h2 className={styles.title}>Ask flokkk</h2>
           </div>
         )}
 

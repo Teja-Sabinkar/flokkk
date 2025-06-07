@@ -45,20 +45,23 @@
 
 .logoLink {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   text-decoration: none;
   gap: 8px;
 }
 
 .logoSvg {
   display: block;
+  width: 30px;
+  height: 30px;
 }
+
 
 .logoText {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 23px;
-  font-weight: 700;
-  color: white;
+  font-weight: 600;
+  color: rgb(220, 220, 220);
   letter-spacing: -0.5px;
 }
 
@@ -661,7 +664,12 @@
     display: none;
   }
 
-  .mobileMenuButton{
+  .mobileMenuButton {
     margin-right: 0px;
+  }
+
+  .logoSvg {
+    width: 30px;
+    height: 30px;
   }
 }

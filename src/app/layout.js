@@ -3,8 +3,13 @@ import './fonts.css';
 import { Analytics } from '@vercel/analytics/react';
 
 export const metadata = {
-  title: 'Turtle2.0',
-  description: 'A Next.js application',
+  title: 'flokkk',
+  description: 'A modern discussion platform for sharing and discovering content',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 }
 
 export default function RootLayout({ children }) {
