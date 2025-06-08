@@ -2,9 +2,10 @@
     width: 100%;
     padding: 12px;
     margin-bottom: 8px;
-    background-color: #0c0c0c;
+    background-color: var(--bg-tertiary);
     border-radius: 8px;
-    color: white;
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .headerText {
@@ -14,16 +15,18 @@
 
 .promptText {
     font-size: 14px;
-    color: #999;
+    color: var(--text-tertiary);
     margin: 0;
     padding: 0;
+    transition: color 0.3s ease;
 }
 
 .title {
     font-size: 20px;
     font-weight: 600;
     margin: 4px 0 16px;
-    color: #4169e1;
+    color: var(--accent-color);
+    transition: color 0.3s ease;
 }
 
 .inputForm {
@@ -33,22 +36,22 @@
 .inputContainer {
     display: flex;
     align-items: center;
-    background-color: #1e1e1e;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
-    border: 1px solid #333;
-    transition: border-color 0.2s ease, opacity 0.2s ease;
+    border: 1px solid var(--border-color);
+    transition: border-color 0.2s ease, opacity 0.2s ease, background-color 0.3s ease;
     overflow: hidden;
     height: 45px;
 }
 
 .inputContainer.focused {
-    border-color: #578fed;
+    border-color: var(--accent-color);
 }
 
 .inputContainer.disabled {
     opacity: 0.6;
-    background-color: #1a1a1a;
-    border-color: #2a2a2a;
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
 }
 
 .inputField {
@@ -57,45 +60,49 @@
     padding: 0 16px;
     border: none;
     background: transparent;
-    color: white;
+    color: var(--text-primary);
     font-size: 14px;
     outline: none;
+    transition: color 0.3s ease;
 }
 
 .inputField::placeholder {
-    color: #666;
+    color: var(--text-tertiary);
+    transition: color 0.3s ease;
 }
 
 .inputField:disabled {
-    color: #555;
+    color: var(--text-tertiary);
     cursor: not-allowed;
 }
 
 .inputField:disabled::placeholder {
-    color: #444;
+    color: var(--text-tertiary);
+    opacity: 0.6;
 }
 
 .askButton {
     height: 34px;
     padding: 0 16px;
-    background-color: #2a2a2a;
-    color: white;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
     border: none;
     border-radius: 6px;
-    border-left: 1px solid #333;
+    border-left: 1px solid var(--border-color);
     cursor: pointer;
     font-weight: 500;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.3s ease, border-color 0.3s ease;
     margin: 6px 4px 6px 0;
 }
 
 .askButton:hover:not(:disabled) {
-    background-color: #4169e1;
+    background-color: var(--accent-color);
+    color: white;
 }
 
 .askButton:disabled {
-    background-color: #2a2a2a;
-    color: #666;
+    background-color: var(--bg-tertiary);
+    color: var(--text-tertiary);
     cursor: not-allowed;
     opacity: 0.6;
 }
@@ -105,7 +112,7 @@
     align-items: center;
     gap: 6px;
     font-size: 12px;
-    color: #777;
+    color: var(--text-tertiary);
     margin-top: 8px;
     justify-content: center;
     transition: color 0.2s ease;
@@ -129,13 +136,13 @@
 }
 
 .remainingRequests.rateLimited {
-    color: #ff5252;
+    color: var(--danger-color);
     font-weight: 500;
 }
 
 .remainingRequests.rateLimited svg {
     opacity: 1;
-    stroke: #ff5252;
+    stroke: var(--danger-color);
     animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -189,17 +196,18 @@
 
 /* Message type styling */
 .system {
-    color: #a1a1a1;
+    color: var(--text-tertiary);
     padding: 10px 14px;
     background-color: transparent;
     font-size: 16px;
     text-align: center;
     max-width: 80%;
     margin: 0 auto;
+    transition: color 0.3s ease;
 }
 
 .user {
-    background-color: #2962FF;
+    background-color: var(--accent-color);
     align-self: flex-end;
     max-width: 85%;
     padding: 12px 16px;
@@ -207,25 +215,28 @@
     margin-left: auto;
     margin-bottom: 20px;
     margin-top: 50px;
+    transition: background-color 0.3s ease;
 }
 
 .ai {
-    background-color: #181818;
+    background-color: var(--bg-secondary);
     align-self: flex-start;
-    color: #fff;
-    border: 1px solid #333;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .error {
     background-color: rgba(220, 53, 69, 0.2);
-    color: #ff6b6b;
+    color: var(--danger-color);
     border: 1px solid rgba(220, 53, 69, 0.3);
     padding: 12px 16px;
     border-radius: 12px;
     max-width: 85%;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Typing indicator animation */
@@ -240,10 +251,11 @@
 .typingIndicator span {
     width: 6px;
     height: 6px;
-    background-color: #6e6e6e;
+    background-color: var(--text-tertiary);
     border-radius: 50%;
     display: inline-block;
     animation: typing 1.4s infinite ease-in-out both;
+    transition: background-color 0.3s ease;
 }
 
 .typingIndicator span:nth-child(1) {
@@ -259,7 +271,6 @@
 }
 
 @keyframes typing {
-
     0%,
     100% {
         transform: translateY(0);
@@ -286,21 +297,23 @@
 
 /* Default message content styling */
 .messageContent h3 {
-    color: #ffffff !important;
+    color: var(--text-primary) !important;
     font-size: 16px !important;
     font-weight: 600 !important;
     margin: 15px 0 8px 0 !important;
     padding-bottom: 5px !important;
-    border-bottom: 1px solid #333 !important;
+    border-bottom: 1px solid var(--border-color) !important;
     line-height: 1.3 !important;
+    transition: color 0.3s ease, border-color 0.3s ease !important;
 }
 
 .messageContent h4 {
-    color: #cccccc !important;
+    color: var(--text-secondary) !important;
     font-size: 14px !important;
     font-weight: 500 !important;
     margin: 12px 0 6px 0 !important;
     line-height: 1.3 !important;
+    transition: color 0.3s ease !important;
 }
 
 /* Default bullet points */
@@ -315,25 +328,28 @@
 
 .messageContent li {
     margin: 4px 0 !important;
-    color: #ffffff !important;
+    color: var(--text-primary) !important;
     line-height: 1.4 !important;
     word-wrap: break-word !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    transition: color 0.3s ease !important;
 }
 
 /* Default paragraphs */
 .messageContent p {
     margin: 8px 0 !important;
     line-height: 1.5 !important;
-    color: #ffffff !important;
+    color: var(--text-primary) !important;
     word-wrap: break-word !important;
     max-width: 100% !important;
+    transition: color 0.3s ease !important;
 }
 
 .messageContent strong {
-    color: #4ca0ff !important;
+    color: var(--accent-color) !important;
     font-weight: 600 !important;
+    transition: color 0.3s ease !important;
 }
 
 .messageContent * {

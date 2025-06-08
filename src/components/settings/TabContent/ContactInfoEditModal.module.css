@@ -13,12 +13,13 @@
 }
 
 .modalContent {
-    background-color: #1a1a1a;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
     width: 90%;
     max-width: 500px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     overflow: hidden;
+    transition: background-color 0.3s ease;
 }
 
 .modalHeader {
@@ -26,30 +27,33 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #2d2d2d;
+    border-bottom: 1px solid var(--border-color);
+    transition: border-color 0.3s ease;
 }
 
 .modalTitle {
     font-size: 1.125rem;
     font-weight: 600;
-    color: #f3f4f6;
+    color: var(--text-primary);
     margin: 0;
+    transition: color 0.3s ease;
 }
 
 .closeButton {
     background: none;
     border: none;
     font-size: 1.5rem;
-    color: #9ca3af;
+    color: var(--text-tertiary);
     cursor: pointer;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: color 0.3s ease;
 }
 
 .closeButton:hover {
-    color: #f3f4f6;
+    color: var(--text-primary);
 }
 
 .modalBody {
@@ -64,31 +68,33 @@
     display: block;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #e5e7eb;
+    color: var(--text-secondary);
     margin-bottom: 8px;
+    transition: color 0.3s ease;
 }
 
 .input {
     width: 100%;
     padding: 10px 12px;
-    background-color: #1e1e1e;
-    border: 1px solid #374151;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
-    color: #f3f4f6;
+    color: var(--text-primary);
     font-size: 0.875rem;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.2s ease, background-color 0.3s ease, color 0.3s ease;
 }
 
 .input:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--accent-color);
 }
 
 .helpText {
     display: block;
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: var(--text-tertiary);
     margin-top: 4px;
+    transition: color 0.3s ease;
 }
 
 .modalFooter {
@@ -96,27 +102,28 @@
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    border-top: 1px solid #2d2d2d;
+    border-top: 1px solid var(--border-color);
+    transition: border-color 0.3s ease;
 }
 
 .cancelButton {
     background-color: transparent;
-    color: #9ca3af;
-    border: 1px solid #374151;
+    color: var(--text-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 0.25rem;
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .cancelButton:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: #f3f4f6;
+    background-color: var(--hover-overlay);
+    color: var(--text-primary);
 }
 
 .saveButton {
-    background-color: #3b82f6;
+    background-color: var(--accent-color);
     color: white;
     border: none;
     border-radius: 0.25rem;
@@ -139,9 +146,10 @@
 
 .errorMessage {
     background-color: rgba(220, 38, 38, 0.1);
-    color: #ef4444;
+    color: var(--danger-color);
     padding: 8px 12px;
     border-radius: 4px;
     margin-bottom: 16px;
     font-size: 0.875rem;
+    transition: color 0.3s ease;
 }

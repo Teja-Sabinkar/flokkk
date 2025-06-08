@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import RecentlyViewed from '@/components/home/RecentlyViewed';
 import AiChat from '@/components/aichat/AiChat';
 import styles from './HomeRightSidebar.module.css';
@@ -12,6 +13,7 @@ export default function HomeRightSidebar({
     onToggle,
     user
 }) {
+    const { theme } = useTheme();
     const [isResizing, setIsResizing] = useState(false);
     const [sidebarWidth, setSidebarWidth] = useState(330);
     const [initialX, setInitialX] = useState(0);

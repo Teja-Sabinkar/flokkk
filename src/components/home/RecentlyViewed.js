@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import Link from 'next/link';
 import styles from './RecentlyViewed.module.css';
 import Image from 'next/image';
 
 export default function RecentlyViewed({ initialItemCount = 3 }) {
+  const { theme } = useTheme();
   const [recentItems, setRecentItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);

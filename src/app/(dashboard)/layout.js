@@ -3,31 +3,17 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserProvider } from '@/context/UserContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Set the background color for all parent elements
+  // Initial theme setup from localStorage before providers are loaded
   useEffect(() => {
-    // This ensures all parent elements have the dark background
-    document.documentElement.style.backgroundColor = '#0f0f0f';
-    document.body.style.backgroundColor = '#0f0f0f';
-
-    // Add a dark backdrop that fills any potential gaps
-    const backdrop = document.createElement('div');
-    backdrop.style.position = 'fixed';
-    backdrop.style.top = '0';
-    backdrop.style.left = '0';
-    backdrop.style.right = '0';
-    backdrop.style.bottom = '0';
-    backdrop.style.zIndex = '-1';
-    backdrop.style.backgroundColor = '#0f0f0f';
-    document.body.appendChild(backdrop);
-
-    return () => {
-      document.body.removeChild(backdrop);
-    };
+    // Set initial theme from localStorage to prevent flicker
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
   }, []);
 
   useEffect(() => {
@@ -53,8 +39,8 @@ export default function DashboardLayout({ children }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#0f0f0f',
-        color: '#aaaaaa',
+        backgroundColor: 'var(--bg-primary, #0f0f0f)',
+        color: 'var(--text-tertiary, #aaaaaa)',
       }}>
         <p>Loading...</p>
       </div>
@@ -63,17 +49,20 @@ export default function DashboardLayout({ children }) {
 
   return (
     <UserProvider>
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: '#0f0f0f',
-        overflow: 'hidden'
-      }}>
-        {children}
-      </div>
+      <ThemeProvider>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'var(--bg-primary)',
+          overflow: 'hidden',
+          transition: 'background-color 0.3s ease'
+        }}>
+          {children}
+        </div>
+      </ThemeProvider>
     </UserProvider>
   );
 }

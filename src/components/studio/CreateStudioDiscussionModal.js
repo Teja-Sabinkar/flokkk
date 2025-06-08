@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import Image from 'next/image';
 import styles from './CreateStudioDiscussionModal.module.css';
 
@@ -46,6 +47,8 @@ const compressImage = (file, maxWidth = 1200, maxHeight = 800, quality = 0.8) =>
 };
 
 export default function CreateStudioDiscussionModal({ onClose, onSave }) {
+  const { theme } = useTheme();
+  
   // Form state
   const [videoUrl, setVideoUrl] = useState('');
   const [title, setTitle] = useState('');

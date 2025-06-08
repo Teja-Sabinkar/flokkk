@@ -2,7 +2,8 @@
   margin: 0 auto;
   max-width: 1200px;
   width: 100%;
-  color: white;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .tabContentContainer {
@@ -13,24 +14,20 @@
   gap: 20px;
 }
 
-
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .tabContentContainer {
     padding: 16px 0;
   }
-
 }
 
 @media (max-width: 480px) {
-
   .footerContainer {
     left: -15px;
   }
 
   .tabContentContainer > div {
     grid-template-columns: 1fr;
+    padding: 0px;
   }
-  
 }

@@ -1,5 +1,6 @@
 // src/components/recentlyviewed/RecentlyViewedRightSidebarToggle.js
 import { useEffect, useState } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import styles from './RecentlyViewedRightSidebarToggle.module.css';
 
 export default function RecentlyViewedRightSidebarToggle({
@@ -7,6 +8,7 @@ export default function RecentlyViewedRightSidebarToggle({
     handleRightSidebarToggle,
     sidebarWidth = 330
 }) {
+    const { theme } = useTheme(); // Add theme context
     const [screenSize, setScreenSize] = useState('desktop');
     const [isReady, setIsReady] = useState(false);
 
@@ -85,6 +87,7 @@ export default function RecentlyViewedRightSidebarToggle({
             className={getToggleClasses()}
             onClick={handleRightSidebarToggle}
             aria-label="Toggle recently viewed sidebar"
+            data-theme={theme} // Add theme data attribute
         >
             <span className={styles.aiText}>flokkk</span>
         </button>

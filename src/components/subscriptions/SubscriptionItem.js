@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import Image from 'next/image';
 import Link from 'next/link';
 import styles from './SubscriptionItem.module.css';
 
 const SubscriptionItem = ({ subscription, viewMode = 'grid' }) => {
+  const { theme } = useTheme(); // Add theme context
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   
@@ -31,7 +33,10 @@ const SubscriptionItem = ({ subscription, viewMode = 'grid' }) => {
   };
 
   return (
-    <div className={`${styles.container} ${viewMode === 'list' ? styles.listContainer : ''}`}>
+    <div 
+      className={`${styles.container} ${viewMode === 'list' ? styles.listContainer : ''}`}
+      data-theme={theme} // Add theme data attribute
+    >
       <div className={styles.header}>
         <div className={styles.creator}>
           <div className={styles.avatar} style={{ backgroundColor: subscription.avatarColor || '#6E56CF' }}>

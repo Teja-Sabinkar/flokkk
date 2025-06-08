@@ -6,10 +6,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #0f0f0f;
-  color: #fff;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   overflow: hidden;
   z-index: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Add a background element to cover any gaps */
@@ -20,8 +21,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #0f0f0f;
+  background-color: var(--bg-primary);
   z-index: -1;
+  transition: background-color 0.3s ease;
 }
 
 /* Header container */
@@ -32,7 +34,8 @@
   right: 0;
   z-index: 1000;
   height: 60px;
-  background-color: #0f0f0f;
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
 }
 
 /* Main content area - fixed to use row layout */
@@ -45,21 +48,22 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #060606;
+  background-color: var(--bg-secondary);
   overflow: hidden;
   z-index: 0;
+  transition: background-color 0.3s ease;
 }
 
 /* Left sidebar container - changed to relative positioning */
 .sidebarContainer {
   width: 330px;
   flex-shrink: 0;
-  background-color: #121212;
+  background-color: var(--bg-secondary);
   position: relative;
   /* Changed from absolute */
   height: 100%;
   overflow: hidden;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, background-color 0.3s ease;
   z-index: 100;
 }
 
@@ -67,8 +71,9 @@
   height: 100%;
   width: 100%;
   overflow-y: auto;
-  background-color: #121212;
+  background-color: var(--bg-secondary);
   padding-bottom: 20px;
+  transition: background-color 0.3s ease;
 }
 
 /* Content container - changed to relative positioning */
@@ -77,11 +82,11 @@
   position: relative;
   /* Changed from absolute */
   height: 100%;
-  background-color: #0f0f0f;
+  background-color: var(--bg-primary);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, background-color 0.3s ease;
 }
 
 .contentContainer.expanded {
@@ -93,9 +98,10 @@
   flex: 1;
   overflow-y: auto;
   padding: 30px;
-  background-color: #060606;
+  background-color: var(--bg-secondary);
   padding-bottom: 40px;
   scrollbar-width: none;
+  transition: background-color 0.3s ease;
 }
 
 .contentScrollable::-webkit-scrollbar {
@@ -111,13 +117,15 @@
   font-size: 24px;
   font-weight: 600;
   margin-bottom: 8px;
-  color: #fff;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .pageDescription {
   font-size: 16px;
-  color: #aaa;
+  color: var(--text-tertiary);
   margin-bottom: 20px;
+  transition: color 0.3s ease;
 }
 
 /* Loading container */
@@ -129,16 +137,19 @@
   padding: 60px 20px;
   text-align: center;
   min-height: 300px;
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
 }
 
 .loadingSpinner {
   width: 40px;
   height: 40px;
   border: 3px solid rgba(76, 160, 255, 0.2);
-  border-top: 3px solid #4ca0ff;
+  border-top: 3px solid var(--accent-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
+  transition: border-color 0.3s ease;
 }
 
 @keyframes spin {
@@ -152,20 +163,22 @@
 }
 
 .loadingContainer p {
-  color: #cccccc;
+  color: var(--text-tertiary);
   font-size: 16px;
   margin: 0;
+  transition: color 0.3s ease;
 }
 
 /* Small loading spinner for Load More button */
 .loadingSpinnerSmall {
   width: 16px;
   height: 16px;
-  border: 2px solid #333;
-  border-top: 2px solid #fff;
+  border: 2px solid var(--border-color);
+  border-top: 2px solid var(--text-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-right: 8px;
+  transition: border-color 0.3s ease;
 }
 
 /* Error container */
@@ -181,30 +194,34 @@
   border: 1px solid rgba(255, 82, 82, 0.2);
   margin: 20px 0;
   min-height: 300px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .errorIcon {
-  color: #ff5252;
+  color: var(--danger-color);
   margin-bottom: 24px;
   opacity: 0.8;
+  transition: color 0.3s ease;
 }
 
 .errorContainer h3 {
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 20px;
   font-weight: 600;
   margin-bottom: 12px;
+  transition: color 0.3s ease;
 }
 
 .errorContainer p {
-  color: #cccccc;
+  color: var(--text-secondary);
   font-size: 14px;
   margin-bottom: 24px;
   line-height: 1.5;
+  transition: color 0.3s ease;
 }
 
 .retryButton {
-  background: #ff5252;
+  background: var(--danger-color);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -212,11 +229,12 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease, background-color 0.3s ease;
 }
 
 .retryButton:hover {
-  background: #ff6b6b;
+  background: var(--danger-color);
+  opacity: 0.9;
   transform: translateY(-1px);
 }
 
@@ -233,37 +251,42 @@
   border: 1px solid rgba(46, 136, 255, 0.1);
   margin: 20px 0;
   min-height: 400px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .noContentIcon {
-  color: #4ca0ff;
+  color: var(--accent-color);
   margin-bottom: 24px;
   opacity: 0.8;
+  transition: color 0.3s ease;
 }
 
 .noContentTitle {
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 24px;
   font-weight: 600;
   margin-bottom: 12px;
   line-height: 1.3;
+  transition: color 0.3s ease;
 }
 
 .noContentDescription {
-  color: #cccccc;
+  color: var(--text-secondary);
   font-size: 16px;
   margin-bottom: 8px;
   line-height: 1.5;
   max-width: 400px;
+  transition: color 0.3s ease;
 }
 
 .noContentSuggestion {
-  color: #4ca0ff;
+  color: var(--accent-color);
   font-size: 15px;
   margin-bottom: 32px;
   font-weight: 500;
   line-height: 1.4;
   max-width: 450px;
+  transition: color 0.3s ease;
 }
 
 .noContentActions {
@@ -278,7 +301,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #4ca0ff 0%, #2e88ff 100%);
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-color) 100%);
   color: white;
   border: none;
   padding: 14px 24px;
@@ -286,14 +309,14 @@
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease, background-color 0.3s ease;
   box-shadow: 0 4px 12px rgba(46, 136, 255, 0.3);
 }
 
 .createDiscussionButton:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(46, 136, 255, 0.4);
-  background: linear-gradient(135deg, #5db0ff 0%, #3e98ff 100%);
+  opacity: 0.9;
 }
 
 .createDiscussionButton:active {
@@ -303,26 +326,27 @@
 
 .exploreOtherButton {
   background: transparent;
-  color: #888888;
-  border: 1px solid #444444;
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-color);
   padding: 12px 20px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .exploreOtherButton:hover {
-  color: #cccccc;
-  border-color: #666666;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border-color: var(--text-tertiary);
+  background: var(--hover-overlay);
 }
 
 .noContentText {
   font-size: 14px;
-  color: #777;
+  color: var(--text-tertiary);
   max-width: 400px;
+  transition: color 0.3s ease;
 }
 
 /* Load more button styles */
@@ -337,20 +361,20 @@
   align-items: center;
   justify-content: center;
   padding: 12px 24px;
-  background-color: #2a2a2a;
-  color: white;
-  border: 1px solid #444;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   min-width: 120px;
 }
 
 .loadMoreButton:hover:not(:disabled) {
-  background-color: #3a3a3a;
-  border-color: #555;
+  background-color: var(--hover-overlay);
+  border-color: var(--text-tertiary);
   transform: translateY(-2px);
 }
 

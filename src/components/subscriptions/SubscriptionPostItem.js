@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,6 +11,7 @@ import { useAppearanceTracker } from '@/hooks/useAppearanceTracker';
 
 const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
   const router = useRouter();
+  const { theme } = useTheme(); // Add theme context
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hideSuccess, setHideSuccess] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -357,7 +359,7 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
   };
 
   const generateColorFromUsername = (username) => {
-    if (!username) return '#3b5fe2'; // Default blue color
+    if (!username) return '#3b82f6'; // Default blue color
 
     // Simple hash function for consistent color generation
     let hash = 0;
@@ -376,9 +378,12 @@ const SubscriptionPostItem = ({ post, viewMode = 'grid', onHidePost }) => {
   };
 
   return (
-    <div className={`${styles.card} ${viewMode === 'list' ? styles.listCard : ''}`} ref={cardRef} data-post-id={post.id || post._id}>
-
-
+    <div 
+      className={`${styles.card} ${viewMode === 'list' ? styles.listCard : ''}`} 
+      ref={cardRef} 
+      data-post-id={post.id || post._id}
+      data-theme={theme} // Add theme data attribute
+    >
       {/* Post Header with User Info */}
       <div className={styles.postHeader}>
         <div className={styles.userInfo}>

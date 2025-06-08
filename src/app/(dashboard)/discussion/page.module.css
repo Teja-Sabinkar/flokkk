@@ -28,6 +28,13 @@
   /* Keep text on one line */
 }
 
+/* Light theme adjustments */
+html[data-theme="light"] .rightSidebarToggle {
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-color) 100%);
+  border-top: 1px solid transparent;
+  border-left: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+}
 
 .rightSidebarToggle {
   display: none;
@@ -56,7 +63,33 @@
   backdrop-filter: blur(1px);
 }
 
+/* Light theme styles for discussion page container */
+html[data-theme="light"] .discussionPageContainer {
+  background-color: #f8f9fa;
+  color: #1c1c1c;
+}
 
+html[data-theme="light"] .sidebarContainer {
+  background-color: #f8f9fa;
+}
+
+html[data-theme="light"] .contentContainer.menuOpen::before {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="light"] .leftSidebarToggle {
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #3b82f6;
+  border-top: 1px solid #3b82f6;
+  border-right: 1px solid #3b82f6;
+  border-bottom: 1px solid #3b82f6;
+}
+
+html[data-theme="light"] .leftSidebarToggle:hover {
+  background-color: #e5e7eb;
+}
+
+/* Keep all existing dark theme styles */
 .rightSidebarToggle.active {
   right: 400px;
   /* Width of the sidebar when open */
@@ -66,7 +99,6 @@
   color: #fff;
   /* Change text color when active */
 }
-
 
 .rightSidebarToggle.active svg {
   transform: rotate(180deg);
@@ -114,7 +146,6 @@
 /* Show sidebar when menu is open */
 .mainContent:has(.contentContainer.menuOpen) .sidebarContainer {
   transform: translateX(0);
-  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5);
 }
 
 /* Main content container */
@@ -168,6 +199,10 @@
 }
 
 /* Left sidebar */
+html[data-theme="light"] .leftBarWrapper {
+  background-color: #f8f9fa;
+}
+
 .leftBarWrapper {
   width: 330px;
   /* Fixed width */
@@ -186,6 +221,10 @@
 }
 
 /* Center content */
+html[data-theme="light"] .centerBarWrapper {
+  background-color: #f8f9fa;
+}
+
 .centerBarWrapper {
   flex: 1;
   height: 100%;
@@ -223,6 +262,25 @@
   backdrop-filter: blur(4px);
   z-index: 999;
   /* Just below sidebar but above content */
+}
+
+/* Custom scrollbars for light theme */
+html[data-theme="light"] .leftBarContent::-webkit-scrollbar-track,
+html[data-theme="light"] .centerBarWrapper::-webkit-scrollbar-track,
+html[data-theme="light"] .rightBarWrapper::-webkit-scrollbar-track {
+  background: #e5e7eb;
+}
+
+html[data-theme="light"] .leftBarContent::-webkit-scrollbar-thumb,
+html[data-theme="light"] .centerBarWrapper::-webkit-scrollbar-thumb,
+html[data-theme="light"] .rightBarWrapper::-webkit-scrollbar-thumb {
+  background-color: #9ca3af;
+}
+
+html[data-theme="light"] .leftBarContent,
+html[data-theme="light"] .centerBarWrapper,
+html[data-theme="light"] .rightBarWrapper {
+  scrollbar-color: #9ca3af #e5e7eb;
 }
 
 /* Custom scrollbars */
@@ -371,7 +429,7 @@
   }
 
   .leftSidebarToggle.active {
-    left: 329px;
+    left: 331px;
     /* Width of the sidebar when open */
   }
 

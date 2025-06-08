@@ -1,11 +1,13 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import Link from 'next/link';
 import styles from './DiscussionPageSidebarNavigation.module.css';
 
 export default function SidebarNavigation({ isOpen }) {
   const pathname = usePathname();
+  const { theme } = useTheme(); // Add theme context
   
   // Navigation items with their paths and icons
   const navItems = [
@@ -93,7 +95,7 @@ export default function SidebarNavigation({ isOpen }) {
   ];
 
   return (
-    <nav className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`}>
+    <nav className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`} data-theme={theme}>
       <ul className={styles.navList}>
         {navItems.map((item) => {
           // Check if the current path starts with the nav item path

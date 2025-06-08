@@ -2,13 +2,14 @@
   margin: 0 auto;
   max-width: 1200px;
   width: 100%;
-  color: white;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .tabContentContainer {
   padding: 20px 0;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
 }
@@ -20,9 +21,7 @@
   }
 }
 
-
 @media (max-width: 480px) {
-
   .footerContainer {
     left: -15px;
   }
@@ -30,6 +29,4 @@
   .tabContentContainer > div {
     grid-template-columns: 1fr;
   }
-  
-
 }

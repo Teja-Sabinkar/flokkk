@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname, useSearchParams, useParams } from 'next/navigation';
+import { useTheme } from '@/context/ThemeContext'; // Import theme context
 import Header from '@/components/layout/Header/Header';
 import SidebarNavigation from '@/components/layout/SidebarNavigation/SidebarNavigation';
 import { OtherUserProfileHeader, OtherUserProfileFooter } from '@/components/otheruserprofile';
 import styles from './page.module.css';
 
 export default function OtherUserProfilePage() {
+  const { theme } = useTheme(); // Get current theme
   const params = useParams();
   const searchParams = useSearchParams();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -49,7 +51,7 @@ export default function OtherUserProfilePage() {
 
       // Use profile data from state if available
       const userData = profileData.data;
-      
+
       console.log('Subscription data:', {
         profileData: userData,
         action: subscribe ? 'follow' : 'unfollow'
@@ -64,7 +66,7 @@ export default function OtherUserProfilePage() {
       if (userData.id) {
         payload.userId = userData.id;
       }
-      
+
       // Also include username and name as backup
       if (userData.username) {
         payload.username = userData.username;
@@ -98,14 +100,14 @@ export default function OtherUserProfilePage() {
       } else {
         const errorText = await response.text();
         let errorData;
-        
+
         try {
           errorData = JSON.parse(errorText);
         } catch (e) {
           console.error('Error parsing response:', errorText);
           throw new Error('Failed to process subscription');
         }
-        
+
         console.error('Subscription error:', errorData.message);
       }
     } catch (error) {
@@ -151,29 +153,29 @@ export default function OtherUserProfilePage() {
       try {
         // Get the ID from query params if available and sanitize it
         let id = searchParams.get('id');
-        
+
         // Check if userID is in another format - notification id param might be in a "sender" field
         if (!id) {
           id = searchParams.get('sender');
         }
-        
+
         // Fix the [object Object] issue
         if (id === '[object Object]' || (id && id.includes('object'))) {
           console.log('Invalid ID parameter detected:', id);
           id = null;
         }
-        
+
         const token = localStorage.getItem('token');
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
         // Decode the username to ensure it's properly formatted
         const decodedUsername = decodeURIComponent(username);
         console.log(`Attempting to fetch profile for: ${decodedUsername}${id ? `, ID: ${id}` : ''}`);
-        
+
         // Track if we should try all lookup methods
         let shouldTryAlternativeMethods = true;
         let userData = null;
-        
+
         // -------------------------------------------------------------------------
         // APPROACH 1: Try the standard user endpoint with username
         // -------------------------------------------------------------------------
@@ -182,11 +184,11 @@ export default function OtherUserProfilePage() {
           if (id) {
             apiUrl += `?id=${id}`;
           }
-          
+
           console.log(`Making API request to: ${apiUrl}`);
-          
+
           const response = await fetch(apiUrl, { headers });
-          
+
           if (response.ok) {
             userData = await response.json();
             console.log('Profile data received successfully using username:', userData);
@@ -196,17 +198,17 @@ export default function OtherUserProfilePage() {
             console.error(`Failed URL: ${apiUrl}`);
           }
         }
-        
+
         // -------------------------------------------------------------------------
         // APPROACH 2: If username failed and we have ID, try direct ID lookup
         // -------------------------------------------------------------------------
         if (shouldTryAlternativeMethods && id) {
           let apiUrl = `/api/users/profile?id=${id}`;
           console.log(`Trying alternative ID-only lookup: ${apiUrl}`);
-          
+
           try {
             const response = await fetch(apiUrl, { headers });
-            
+
             if (response.ok) {
               userData = await response.json();
               console.log('Profile data received successfully using ID-only lookup:', userData);
@@ -218,28 +220,28 @@ export default function OtherUserProfilePage() {
             console.error('Error in ID-only lookup:', err);
           }
         }
-        
+
         // -------------------------------------------------------------------------
         // APPROACH 3: Try the search API to find the user
         // -------------------------------------------------------------------------
         if (shouldTryAlternativeMethods) {
           let searchUrl = `/api/search?q=${encodeURIComponent(decodedUsername)}&type=users`;
           console.log(`Trying search API fallback: ${searchUrl}`);
-          
+
           try {
             const response = await fetch(searchUrl, { headers });
-            
+
             if (response.ok) {
               const searchResults = await response.json();
               console.log('Search results:', searchResults);
-              
+
               // Find a matching user in search results
               if (searchResults.users && searchResults.users.length > 0) {
-                const matchingUser = searchResults.users.find(u => 
+                const matchingUser = searchResults.users.find(u =>
                   u.username.toLowerCase() === decodedUsername.toLowerCase() ||
                   (u.name && u.name.toLowerCase() === decodedUsername.toLowerCase())
                 );
-                
+
                 if (matchingUser) {
                   console.log('Found matching user in search results:', matchingUser);
                   userData = matchingUser;
@@ -290,10 +292,10 @@ export default function OtherUserProfilePage() {
         } else {
           // All our lookup methods failed
           let errorMessage = `User "${decodedUsername}" was not found`;
-          
+
           setError(errorMessage);
           setIsLoading(false);
-          
+
           console.error('All profile lookup methods failed for username:', decodedUsername);
         }
       } catch (error) {

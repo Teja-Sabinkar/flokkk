@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from '@/context/ThemeContext';
 import styles from './AccountSettings.module.css';
 import ContactInfoEditModal from './ContactInfoEditModal';
 import DeleteAccountModal from './DeleteAccountModal';
 
 const AccountSettings = () => {
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -196,7 +198,32 @@ const AccountSettings = () => {
             </span>
           </div>
         </div>
-        
+      </div>
+      
+      {/* Theme Section */}
+      <h2 className={styles.sectionTitle}>Theme</h2>
+      <div className={styles.settingsSection}>
+        <div className={styles.settingItem}>
+          <div className={styles.settingInfo}>
+            <h3 className={styles.settingTitle}>Dark / Light Mode</h3>
+            <p className={styles.settingDescription}>
+              Toggle between dark and light themes for the application.
+            </p>
+          </div>
+          <div className={styles.settingAction}>
+            <label className={styles.toggle}>
+              <input
+                type="checkbox"
+                checked={theme === 'light'}
+                onChange={toggleTheme}
+              />
+              <span className={styles.slider}>
+                <span className={`${styles.icon} ${styles.sunIcon}`}>☀️</span>
+                <span className={`${styles.icon} ${styles.moonIcon}`}>🌙</span>
+              </span>
+            </label>
+          </div>
+        </div>
       </div>
       
       {/* Advanced Section */}
@@ -207,7 +234,7 @@ const AccountSettings = () => {
             <h3 className={styles.settingTitle}>Clear History</h3>
             {clearHistoryMessage && (
               <p className={styles.settingDescription} style={{ 
-                color: clearHistoryMessage.startsWith('Error') ? '#ef4444' : '#4ade80'
+                color: clearHistoryMessage.startsWith('Error') ? 'var(--danger-color)' : 'var(--success-color)'
               }}>
                 {clearHistoryMessage}
               </p>

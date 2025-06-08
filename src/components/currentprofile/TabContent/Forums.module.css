@@ -1,6 +1,6 @@
 .forumsTabContainer {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
     width: 100%;
     margin: 0 auto;
@@ -10,12 +10,12 @@
 
 .postCard {
     width: 100%;
-    background-color: #0c0c0c;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
     overflow: hidden;
     padding: 16px;
-    border: 1px solid #2a2a2a;
-    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s ease, border-color 0.3s ease;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     height: 100%;
     display: flex;
@@ -24,7 +24,7 @@
 }
 
 .postCard:hover {
-    border: 1px solid #333;
+    border: 1px solid var(--text-tertiary);
 }
 
 .postHeader {
@@ -37,7 +37,7 @@
 .playlistTitle h3 {
     font-size: 16px;
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0;
     line-height: 1.4;
     display: -webkit-box;
@@ -53,7 +53,7 @@
 .postMenu {
     background: none;
     border: none;
-    color: #888;
+    color: var(--text-tertiary);
     cursor: pointer;
     height: 32px;
     width: 32px;
@@ -64,8 +64,8 @@
 }
 
 .postMenu:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background-color: var(--hover-overlay);
+    color: var(--text-primary);
 }
 
 .postImageContainer {
@@ -81,7 +81,7 @@
     height: 0;
     padding-bottom: 56.25%;
     /* 16:9 aspect ratio */
-    background-color: #222;
+    background-color: var(--bg-tertiary);
     overflow: hidden;
     border-radius: 8px;
 }
@@ -112,7 +112,7 @@
     position: absolute;
     bottom: 8px;
     right: 8px;
-    background-color: rgb(0 0 0 / 79%);
+    background-color: rgba(0, 0, 0, 0.79);
     color: white;
     font-size: 12px;
     padding: 4px 8px;
@@ -124,20 +124,20 @@
 .postEngagement {
     display: flex;
     justify-content: space-between;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--border-color);
     padding: 12px 16px;
     align-items: center;
 }
 
 .playlistUpdate {
     font-size: 13px;
-    color: #aaa;
+    color: var(--text-tertiary);
 }
 
 .forumCategory {
     font-size: 12px;
     background-color: rgba(65, 105, 225, 0.2);
-    color: #6c8eef;
+    color: var(--accent-color);
     padding: 4px 8px;
     border-radius: 12px;
 }
@@ -146,13 +146,13 @@
     position: absolute;
     top: 100%;
     right: 0;
-    background-color: #0c0c0c;
+    background-color: var(--bg-secondary);
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     min-width: 140px;
     overflow: hidden;
     z-index: 100;
-    border: 1px solid #333;
+    border: 1px solid var(--border-color);
     margin-top: 4px;
 }
 
@@ -165,18 +165,18 @@
     font-size: 14px;
     background: none;
     border: none;
-    color: #e0e0e0;
+    color: var(--text-primary);
     cursor: pointer;
     text-align: left;
     transition: background-color 0.2s;
 }
 
 .dropdownItem:hover {
-    background-color: #333;
+    background-color: var(--hover-overlay);
 }
 
 .dropdownItem:active {
-    background-color: #444;
+    background-color: var(--hover-overlay);
 }
 
 .dropdownItem svg {
@@ -195,9 +195,9 @@
 .loadingSpinner {
     width: 40px;
     height: 40px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    border: 3px solid rgba(128, 128, 128, 0.3);
     border-radius: 50%;
-    border-top-color: white;
+    border-top-color: var(--text-primary);
     animation: spin 1s linear infinite;
     margin-bottom: 16px;
 }
@@ -209,11 +209,11 @@
 }
 
 .emptyState {
-    background-color: #171717;
+    background-color: var(--bg-tertiary);
     border-radius: 8px;
     padding: 40px 20px;
     text-align: center;
-    color: #aaa;
+    color: var(--text-tertiary);
     grid-column: 1 / -1;
 }
 
@@ -223,7 +223,7 @@
 
 .errorMessage {
     background-color: rgba(255, 59, 48, 0.1);
-    color: #ff3b30;
+    color: var(--danger-color);
     padding: 16px;
     border-radius: 8px;
     text-align: center;
@@ -233,8 +233,8 @@
 
 .retryButton {
     background-color: transparent;
-    border: 1px solid #ff3b30;
-    color: #ff3b30;
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
@@ -248,8 +248,7 @@
 
 /* Dropdown delete option styling */
 .deleteDropdownItem {
-    color: #ff4b4b !important;
-    /* Red text for delete action */
+    color: var(--danger-color) !important;
 }
 
 .deleteDropdownItem:hover {
@@ -257,7 +256,7 @@
 }
 
 .deleteDropdownItem svg {
-    color: #ff4b4b !important;
+    color: var(--danger-color) !important;
 }
 
 /* Modal styles for delete confirmation */
@@ -275,7 +274,7 @@
 }
 
 .modalContainer {
-    background-color: #1e1e1e;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
     width: 90%;
     max-width: 500px;
@@ -288,19 +287,19 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .modalHeader h2 {
     font-size: 1.2rem;
     margin: 0;
-    color: #fff;
+    color: var(--text-primary);
 }
 
 .closeButton {
     background: none;
     border: none;
-    color: #aaa;
+    color: var(--text-tertiary);
     cursor: pointer;
     padding: 4px;
     border-radius: 4px;
@@ -310,8 +309,8 @@
 }
 
 .closeButton:hover {
-    color: #fff;
-    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    background-color: var(--hover-overlay);
 }
 
 .modalContent {
@@ -321,17 +320,17 @@
 .confirmationText {
     font-size: 1rem;
     margin-bottom: 16px;
-    color: #eee;
+    color: var(--text-secondary);
 }
 
 .forumTitle {
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
 }
 
 .warningText {
     font-size: 0.9rem;
-    color: #ff6b6b;
+    color: var(--danger-color);
     margin-bottom: 0;
 }
 
@@ -339,14 +338,14 @@
     display: flex;
     justify-content: flex-end;
     padding: 16px 20px;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--border-color);
     gap: 12px;
 }
 
 .cancelButton {
     background-color: transparent;
-    border: 1px solid #555;
-    color: #ddd;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
@@ -355,13 +354,13 @@
 }
 
 .cancelButton:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--hover-overlay);
 }
 
 .deleteButton {
-    background-color: #ff4b4b;
+    background-color: var(--danger-color);
     border: none;
-    color: #fff;
+    color: white;
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
@@ -370,12 +369,12 @@
 }
 
 .deleteButton:hover {
-    background-color: #ff3131;
+    opacity: 0.9;
 }
 
 @media (max-width: 1100px) {
     .forumsTabContainer {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         /* 2 columns on medium screens */
     }
 }
@@ -383,7 +382,7 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .forumsTabContainer {
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 14px;
     }
 }
@@ -392,6 +391,7 @@
     .forumsTabContainer {
         grid-template-columns: 1fr;
         gap: 24px;
+        padding: 0px;
     }
 
     .playlistUpdate {

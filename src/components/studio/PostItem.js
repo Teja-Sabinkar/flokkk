@@ -2,12 +2,14 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from '@/context/ThemeContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './PostItem.module.css';
 
 export default function PostItem({ post, onEdit, onDelete }) {
   const router = useRouter();
+  const { theme } = useTheme();
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const actionButtonRef = useRef(null);

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // ADD THIS IMPORT
+import { useRouter } from 'next/navigation';
+import { useTheme } from '@/context/ThemeContext'; // Add ThemeContext import
 import Header from '@/components/layout/Header/Header';
 import SidebarNavigation from '@/components/layout/SidebarNavigation/SidebarNavigation';
 import CategorySection from '@/components/explore/CategorySection';
@@ -11,7 +12,8 @@ import ExploreRightSidebarToggle from '@/components/explore/ExploreRightSidebarT
 import styles from './page.module.css';
 
 export default function ExplorePage() {
-  const router = useRouter(); // ADD THIS LINE
+  const router = useRouter();
+  const { theme, isLoading: themeLoading } = useTheme(); // Add theme context
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [activeCategory, setActiveCategory] = useState('Trending');
@@ -229,7 +231,7 @@ export default function ExplorePage() {
 
       const data = await response.json();
 
-      // NEW: Handle no content response with encouraging messages
+      // Handle no content response with encouraging messages
       if (data.source === 'no_content' && data.message) {
         setExploreItems([]);
         setHasMore(false);
@@ -324,9 +326,19 @@ export default function ExplorePage() {
     notifications: 0
   };
 
+  // Show loading screen while theme is loading
+  if (themeLoading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.pageContainer}>
-      {/* Your existing header */}
+      {/* Header fixed at the top */}
       <div className={styles.headerContainer}>
         <Header
           user={userWithFallback}
@@ -336,14 +348,14 @@ export default function ExplorePage() {
       </div>
 
       <div className={styles.mainContent}>
-        {/* Your existing sidebar */}
+        {/* Left sidebar with navigation */}
         <div className={`${styles.sidebarContainer} ${isSidebarOpen ? styles.open : ''}`}>
           <div className={styles.sidebarScrollable}>
             <SidebarNavigation isOpen={isSidebarOpen} />
           </div>
         </div>
 
-        {/* Mobile overlay */}
+        {/* Mobile overlay for sidebar */}
         {isSidebarOpen && (
           <div
             className={styles.mobileOverlay}
@@ -351,7 +363,7 @@ export default function ExplorePage() {
           />
         )}
 
-        {/* REPLACE your existing content area with this enhanced version */}
+        {/* Content container with Explore content */}
         <div className={`${styles.contentContainer} ${!isRightSidebarVisible ? styles.expanded : ''}`}>
           <div className={styles.contentScrollable}>
             <div className={styles.pageHeader}>
@@ -368,7 +380,7 @@ export default function ExplorePage() {
               onCategoryChange={handleCategoryChange}
             />
 
-            {/* ENHANCED Explore Content with No Content Handling */}
+            {/* Enhanced Explore Content with No Content Handling */}
             {isLoading && exploreItems.length === 0 ? (
               <div className={styles.loadingContainer}>
                 <div className={styles.loadingSpinner}></div>
@@ -391,14 +403,8 @@ export default function ExplorePage() {
                 </button>
               </div>
             ) : noContentMessage ? (
-              // NEW: Enhanced no content message with homepage redirect
               <div className={styles.noContentContainer}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={styles.noContentIcon}>
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-                  <line x1="9" y1="9" x2="9.01" y2="9"></line>
-                  <line x1="15" y1="9" x2="15.01" y2="9"></line>
-                </svg>
+
                 <h3 className={styles.noContentTitle}>{noContentMessage.title}</h3>
                 <p className={styles.noContentDescription}>{noContentMessage.description}</p>
                 <p className={styles.noContentSuggestion}>{noContentMessage.suggestion}</p>
@@ -406,7 +412,6 @@ export default function ExplorePage() {
                   <button 
                     className={styles.createDiscussionButton}
                     onClick={() => {
-                      // Redirect to homepage where users can create discussions
                       router.push('/home');
                     }}
                   >
@@ -425,7 +430,6 @@ export default function ExplorePage() {
                 </div>
               </div>
             ) : exploreItems.length === 0 ? (
-              // Fallback for any other empty state
               <div className={styles.noContentContainer}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={styles.noContentIcon}>
                   <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
@@ -437,7 +441,6 @@ export default function ExplorePage() {
                 <p className={styles.noContentText}>We couldn't find any discussions for this category.</p>
               </div>
             ) : (
-              // Show the actual content
               <>
                 <ExploreSection
                   title={`${activeCategory} Content`}
@@ -468,7 +471,7 @@ export default function ExplorePage() {
           </div>
         </div>
 
-        {/* Your existing right sidebar components */}
+        {/* Right sidebar toggle and sidebar */}
         <ExploreRightSidebarToggle
           isRightSidebarVisible={isRightSidebarVisible}
           handleRightSidebarToggle={handleRightSidebarToggle}

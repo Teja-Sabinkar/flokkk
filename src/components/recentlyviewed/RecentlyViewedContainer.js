@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import RecentlyViewedItem from './RecentlyViewedItem';
 import styles from './RecentlyViewedContainer.module.css';
 
 const RecentlyViewedContainer = ({ items: initialItems, viewMode = 'grid' }) => {
+  const { theme } = useTheme(); // Add theme context
   const [items, setItems] = useState(initialItems || []);
   const [hiddenItemIds, setHiddenItemIds] = useState([]);
   

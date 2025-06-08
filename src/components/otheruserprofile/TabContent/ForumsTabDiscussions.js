@@ -9,6 +9,34 @@ import { useRouter } from 'next/navigation';
 import ShareModal from '@/components/share/ShareModal';
 import PostSaveModal from '@/components/home/PostSaveModal';
 
+// Helper function to format date to "time ago" format
+const formatTimeAgo = (dateString) => {
+  if (!dateString) return 'recently';
+  
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now - date) / 1000);
+  
+  // Time intervals in seconds
+  const intervals = {
+    year: 31536000,
+    month: 2592000,
+    week: 604800,
+    day: 86400,
+    hour: 3600,
+    minute: 60
+  };
+  
+  let counter;
+  for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+    counter = Math.floor(seconds / secondsInUnit);
+    if (counter > 0) {
+      return `${counter} ${unit}${counter !== 1 ? 's' : ''} ago`;
+    }
+  }
+  
+  return 'just now';
+};
 
 // Helper function for generating colors from usernames - moved outside so UserAvatar can use it
 const generateColorFromUsername = (username) => {
@@ -113,7 +141,7 @@ const DiscussionPost = ({ post, onHidePost }) => {
   const [reportSuccess, setReportSuccess] = useState(false);
   const [reportContent, setReportContent] = useState(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false); // New state for save modal
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const menuRef = useRef(null);
 
   // Handle click outside to close dropdown
@@ -181,7 +209,6 @@ const DiscussionPost = ({ post, onHidePost }) => {
     setIsReportModalOpen(true);
   };
 
-  // NEW HANDLER: Save post
   const handleSave = (e) => {
     e.stopPropagation();
     setIsMenuOpen(false);
@@ -217,7 +244,19 @@ const DiscussionPost = ({ post, onHidePost }) => {
     <div className={styles.postCard}>
       <div className={styles.postHeader}>
         <div className={styles.userInfo}>
-          {/* User info content remains the same */}
+          <div className={styles.avatarContainer}>
+            <UserAvatar username={post.username} />
+          </div>
+          <div className={styles.nameDate}>
+            <div className={styles.usernameLine}>
+              <Link href={`/otheruserprofile/${post.username}`} className={styles.username}>
+                {post.username}
+              </Link>
+            </div>
+            <span className={styles.postDate}>
+              {post.timeAgo || formatTimeAgo(post.createdAt) || 'recently'}
+            </span>
+          </div>
         </div>
 
         <div className={styles.menuContainer} ref={menuRef}>
@@ -235,7 +274,6 @@ const DiscussionPost = ({ post, onHidePost }) => {
 
           {isMenuOpen && (
             <div className={styles.dropdown}>
-              {/* Add Save option */}
               <button
                 className={styles.dropdownItem}
                 onClick={handleSave}
@@ -273,7 +311,6 @@ const DiscussionPost = ({ post, onHidePost }) => {
         </div>
       </div>
 
-      {/* Post content remains the same */}
       <h2 className={styles.postTitle}>{post.title}</h2>
       <p className={styles.postDescription}>{post.content || post.description}</p>
 
@@ -295,10 +332,32 @@ const DiscussionPost = ({ post, onHidePost }) => {
       )}
 
       <div className={styles.postEngagement}>
-        {/* Engagement buttons remain the same */}
+        <button
+          className={styles.commentsBtn}
+          onClick={handleDiscussionClick}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+          </svg>
+          <span>
+            {post.commentCount || 0} Comments
+          </span>
+        </button>
+        <button
+          className={styles.shareBtn}
+          onClick={handleShare}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+          <span>Share</span>
+        </button>
       </div>
 
-      {/* Add PostSaveModal */}
       {isSaveModalOpen && (
         <PostSaveModal
           isOpen={isSaveModalOpen}
@@ -306,12 +365,10 @@ const DiscussionPost = ({ post, onHidePost }) => {
           post={post}
           onSave={(result) => {
             setIsSaveModalOpen(false);
-            // Optional: Show a success message or notification
           }}
         />
       )}
 
-      {/* Other modals remain the same */}
       {isShareModalOpen && (
         <ShareModal
           isOpen={isShareModalOpen}
@@ -340,6 +397,23 @@ const DiscussionPost = ({ post, onHidePost }) => {
   );
 };
 
+// Move fetchUserProfile outside component for reuse
+const fetchUserProfile = async (username) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    const response = await fetch(`/api/users/${username}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) {
+    console.error(`Error fetching profile for ${username}:`, error);
+    return null;
+  }
+};
 
 // ForumsTabDiscussions component remains unchanged
 const ForumsTabDiscussions = ({ forum, onBack }) => {
@@ -355,6 +429,40 @@ const ForumsTabDiscussions = ({ forum, onBack }) => {
     setPosts(prevPosts => prevPosts.filter(post =>
       (post.id !== postId && post._id !== postId)
     ));
+  };
+
+  // Fetch user profiles and update posts with profile pictures and timeAgo
+  const fetchUserProfiles = async (postsArray) => {
+    try {
+      // Get unique usernames from posts
+      const usernames = [...new Set(postsArray.map(post => post.username))];
+
+      // Fetch profile data for each unique user
+      const profileData = {};
+
+      await Promise.all(usernames.map(async (username) => {
+        const profile = await fetchUserProfile(username);
+        if (profile) {
+          profileData[username] = profile;
+        }
+      }));
+
+      // Update posts with profile pictures and timeAgo
+      return postsArray.map(post => {
+        const userProfile = profileData[post.username];
+        return {
+          ...post,
+          profilePicture: userProfile?.profilePicture || post.profilePicture || '/profile-placeholder.jpg',
+          timeAgo: formatTimeAgo(post.createdAt)
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching user profiles:', error);
+      return postsArray.map(post => ({
+        ...post,
+        timeAgo: formatTimeAgo(post.createdAt)
+      }));
+    }
   };
 
   // Fetch forum details with posts
@@ -408,15 +516,19 @@ const ForumsTabDiscussions = ({ forum, onBack }) => {
                 return !hiddenIds.includes(postId);
               });
 
-              setPosts(filteredPosts);
+              // Add timeAgo and fetch profile pictures
+              const enhancedPosts = await fetchUserProfiles(filteredPosts);
+              setPosts(enhancedPosts);
             } else {
               // If can't fetch hidden posts, still show all posts
-              setPosts(data.posts);
+              const enhancedPosts = await fetchUserProfiles(data.posts);
+              setPosts(enhancedPosts);
             }
           } catch (hiddenError) {
             console.error('Error fetching hidden posts:', hiddenError);
             // Still show posts if hidden posts can't be fetched
-            setPosts(data.posts);
+            const enhancedPosts = await fetchUserProfiles(data.posts);
+            setPosts(enhancedPosts);
           }
         } else {
           setPosts([]);

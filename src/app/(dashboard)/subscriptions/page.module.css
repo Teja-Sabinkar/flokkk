@@ -6,10 +6,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #0f0f0f;
-  color: #fff;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   overflow: hidden;
   z-index: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Add a background element to cover any gaps */
@@ -20,8 +21,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #0f0f0f;
+  background-color: var(--bg-primary);
   z-index: -1;
+  transition: background-color 0.3s ease;
 }
 
 /* Header container */
@@ -32,7 +34,8 @@
   right: 0;
   z-index: 1000;
   height: 60px;
-  background-color: #0f0f0f;
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
 }
 
 /* Main content area - fixed to use row layout */
@@ -44,20 +47,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #060606;
+  background-color: var(--bg-secondary);
   overflow: hidden;
   z-index: 0;
+  transition: background-color 0.3s ease;
 }
 
 /* Left sidebar container - changed to relative positioning */
 .sidebarContainer {
   width: 330px;
   flex-shrink: 0;
-  background-color: #121212;
+  background-color: var(--bg-secondary);
   position: relative;
   height: 100%;
   overflow: hidden;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, background-color 0.3s ease;
   z-index: 100;
 }
 
@@ -65,8 +69,9 @@
   height: 100%;
   width: 100%;
   overflow-y: auto;
-  background-color: #121212;
+  background-color: var(--bg-secondary);
   padding-bottom: 20px;
+  transition: background-color 0.3s ease;
 }
 
 /* Content container - changed to relative positioning */
@@ -74,11 +79,11 @@
   flex: 1;
   position: relative;
   height: 100%;
-  background-color: #0f0f0f;
+  background-color: var(--bg-primary);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, background-color 0.3s ease;
 }
 
 .contentContainer.expanded {
@@ -90,9 +95,10 @@
   flex: 1;
   overflow-y: auto;
   padding: 30px;
-  background-color: #060606;
+  background-color: var(--bg-secondary);
   padding-bottom: 40px;
   scrollbar-width: none;
+  transition: background-color 0.3s ease;
 }
 
 .contentScrollable::-webkit-scrollbar {
@@ -108,13 +114,15 @@
   font-size: 24px;
   font-weight: 600;
   margin-bottom: 8px;
-  color: #fff;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .pageDescription {
   font-size: 16px;
-  color: #aaa;
+  color: var(--text-tertiary);
   margin-bottom: 20px;
+  transition: color 0.3s ease;
 }
 
 /* Filter bar styles */
@@ -122,13 +130,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #0d0d0d;
-  border: 1px solid #2a2a2a;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 14px 20px;
   margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 15px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .filterBarLeft,
@@ -150,24 +159,25 @@
 
 .filterSelect {
   appearance: none;
-  background-color: #1a1a1a;
-  color: #fff;
-  border: 1px solid #333;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 8px 12px;
   padding-right: 32px;
   font-size: 14px;
   cursor: pointer;
   width: 100%;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 10px center;
   background-size: 16px;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .filterSelect:focus {
   outline: none;
-  border-color: #4169e1;
+  border-color: var(--accent-color);
 }
 
 /* Search container styles */
@@ -181,15 +191,16 @@
   height: 36px;
   padding: 0 36px 0 12px;
   border-radius: 4px;
-  border: 1px solid #333;
-  background-color: #1a1a1a;
-  color: #fff;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
   font-size: 14px;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .searchInput:focus {
   outline: none;
-  border-color: #578fed;
+  border-color: var(--accent-color);
 }
 
 .searchButton {
@@ -199,7 +210,7 @@
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #999;
+  color: var(--text-tertiary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -207,6 +218,7 @@
   width: 24px;
   height: 24px;
   padding: 0;
+  transition: color 0.3s ease;
 }
 
 /* View toggle styles */
@@ -214,23 +226,25 @@
   display: flex;
   border-radius: 4px;
   overflow: hidden;
-  border: 1px solid #333;
+  border: 1px solid var(--border-color);
+  transition: border-color 0.3s ease;
 }
 
 .viewToggleButton {
-  background-color: #1a1a1a;
+  background-color: var(--bg-tertiary);
   border: none;
   padding: 6px 10px;
-  color: #999;
+  color: var(--text-tertiary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .viewToggleButton.active {
-  background-color: #333;
-  color: #fff;
+  background-color: var(--hover-overlay);
+  color: var(--text-primary);
 }
 
 /* Loading and error containers */
@@ -240,7 +254,8 @@
   justify-content: center;
   align-items: center;
   min-height: 200px;
-  color: #999;
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
 }
 
 /* Mobile overlay for sidebar toggle */
@@ -261,10 +276,10 @@
   width: var(--sidebar-width, 330px);
   flex-shrink: 0;
   height: 100%;
-  background-color: #060606;
+  background-color: var(--bg-secondary);
   position: relative;
   overflow: hidden;
-  transition: width 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+  transition: width 0.3s ease, transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease;
   z-index: 49;
   transform-origin: right center;
 }
@@ -296,8 +311,9 @@
   flex: 1;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #444 #1a1a1a;
+  scrollbar-color: var(--text-tertiary) var(--bg-tertiary);
   padding: 14px 14px 0 14px;
+  transition: scrollbar-color 0.3s ease;
 }
 
 .widgetsArea::-webkit-scrollbar {
@@ -305,12 +321,14 @@
 }
 
 .widgetsArea::-webkit-scrollbar-track {
-  background: #1a1a1a;
+  background: var(--bg-tertiary);
+  transition: background-color 0.3s ease;
 }
 
 .widgetsArea::-webkit-scrollbar-thumb {
-  background-color: #444;
+  background-color: var(--text-tertiary);
   border-radius: 6px;
+  transition: background-color 0.3s ease;
 }
 
 /* Resize handle styles */
@@ -332,14 +350,15 @@
 .resizeHandle:hover,
 .resizeHandle.isResizing {
   opacity: 1;
-  background-color: rgba(65, 105, 225, 0.1);
+  background-color: rgba(var(--accent-color-rgb, 65, 105, 225), 0.1);
 }
 
 .resizeBar {
   width: 15px;
   height: 100px;
-  background-color: #4169e1;
+  background-color: var(--accent-color);
   border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
 /* Visibility states */
@@ -363,8 +382,9 @@
 
 /* AI Chat component styling */
 .aiChatWrapper {
-  background-color: #0f0f0f;
+  background-color: var(--bg-tertiary);
   flex-shrink: 0;
+  transition: background-color 0.3s ease;
 }
 
 .headerText {
@@ -378,13 +398,15 @@
 .promptText {
   font-size: 14px;
   font-weight: 600;
-  color: #a1a1a1;
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
 }
 
 .title {
   font-size: 20px;
   font-weight: 600;
-  color: white;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 /* Right sidebar toggle styles */
@@ -393,13 +415,13 @@
   right: var(--toggle-right-position, 0px);
   top: 100px;
   transform: translateY(-50%);
-  border-top: 1px solid #578fed;
-  border-left: 1px solid #578fed;
-  border-bottom: 1px solid #578fed;
+  border-top: 1px solid var(--accent-color);
+  border-left: 1px solid var(--accent-color);
+  border-bottom: 1px solid var(--accent-color);
   border-right: none;
   border-top-left-radius: 4px;
   border-bottom-left-radius: 4px;
-  color: #fff;
+  color: white;
   width: 28px;
   height: 80px;
   align-items: center;
@@ -407,11 +429,11 @@
   z-index: 50;
   cursor: pointer;
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-color) 100%);
   backdrop-filter: blur(1px);
   font-size: 8px;
   display: flex;
-  transition: right 0.3s ease, opacity 0.2s ease;
+  transition: right 0.3s ease, opacity 0.2s ease, background 0.3s ease, border-color 0.3s ease;
   opacity: 1;
 }
 
@@ -469,7 +491,7 @@
     width: 320px !important;
     height: auto;
     box-shadow: -4px 0 16px rgba(0, 0, 0, 0.2);
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease;
     z-index: 49;
     /* Ensure it's below the toggle button */
   }
@@ -494,7 +516,7 @@
   }
 
   .rightSidebarToggle {
-    transition: right 0.3s ease, opacity 0.2s ease;
+    transition: right 0.3s ease, opacity 0.2s ease, background 0.3s ease, border-color 0.3s ease;
     /* Ensure toggle is always above sidebar */
   }
 }

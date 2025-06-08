@@ -16,11 +16,11 @@
     width: 100%;
     max-width: 500px;
     max-height: 90vh;
-    background-color: #171717;
+    background-color: var(--bg-secondary);
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     overflow-y: auto;
-    color: white;
+    color: var(--text-primary);
     animation: modalFadeIn 0.3s ease-out;
   }
   
@@ -40,7 +40,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 24px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border-color);
   }
   
   .modalHeader h2 {
@@ -52,7 +52,7 @@
   .closeButton {
     background: none;
     border: none;
-    color: #999;
+    color: var(--text-tertiary);
     cursor: pointer;
     padding: 4px;
     border-radius: 50%;
@@ -64,8 +64,8 @@
   }
   
   .closeButton:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
+    background-color: var(--hover-overlay);
+    color: var(--text-primary);
   }
   
   .modalContent {
@@ -76,7 +76,7 @@
     font-size: 16px;
     line-height: 1.5;
     margin: 0 0 16px 0;
-    color: #e0e0e0;
+    color: var(--text-secondary);
   }
   
   .playlistTitle {
@@ -87,12 +87,12 @@
     font-size: 14px;
     line-height: 1.5;
     margin: 0;
-    color: #ff6b6b;
+    color: var(--danger-color);
   }
   
   .errorMessage {
     background-color: rgba(255, 59, 48, 0.1);
-    color: #ff3b30;
+    color: var(--danger-color);
     padding: 12px 16px;
     border-radius: 6px;
     margin: 16px 24px 0;
@@ -104,7 +104,7 @@
     justify-content: flex-end;
     gap: 12px;
     padding: 16px 24px;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--border-color);
   }
   
   .cancelButton, 
@@ -119,22 +119,22 @@
   
   .cancelButton {
     background-color: transparent;
-    border: 1px solid #444;
-    color: #e0e0e0;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
   }
   
   .cancelButton:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--hover-overlay);
   }
   
   .deleteButton {
-    background-color: #ff3b30;
+    background-color: var(--danger-color);
     border: none;
     color: white;
   }
   
   .deleteButton:hover {
-    background-color: #ff2419;
+    opacity: 0.9;
   }
   
   .cancelButton:disabled,

@@ -26,28 +26,32 @@
 }
 
 .categoriesScroll::-webkit-scrollbar-track {
-    background: #1a1a1a;
-    /* Dark background for the track */
+    background: var(--bg-tertiary);
+    /* Use theme variable */
     border-radius: 2px;
+    transition: background-color 0.3s ease;
 }
 
 .categoriesScroll::-webkit-scrollbar-thumb {
-    background: #555;
-    /* Gray color for the scrollbar thumb */
+    background: var(--border-color);
+    /* Use theme variable */
     border-radius: 2px;
+    transition: background-color 0.3s ease;
 }
 
 .categoriesScroll::-webkit-scrollbar-thumb:hover {
-    background: #666;
+    background: var(--text-tertiary);
+    /* Use theme variable */
     /* Slightly lighter on hover */
 }
 
 .categoriesScroll {
-    scrollbar-color: #555 #1a1a1a;
+    scrollbar-color: var(--border-color) var(--bg-tertiary);
     /* thumb color, track color */
+    transition: scrollbar-color 0.3s ease;
 }
 
-/* The rest of your CSS remains unchanged */
+/* The rest of your CSS with updated theme variables */
 .categoriesWrapper {
     display: flex;
     gap: 17px;
@@ -61,21 +65,21 @@
     justify-content: center;
     min-width: 100px;
     padding: 16px 20px;
-    background-color: #0c0c0c;
+    background-color: var(--bg-tertiary);
     border-radius: 12px;
-    border: 1px solid #2a2a2a;
+    border: 1px solid var(--border-color);
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out, background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .categoryCard:hover {
-    background-color: #2a2a2a;
+    background-color: var(--hover-overlay);
     transform: translateY(-2px);
-    border-color: #444;
+    border-color: var(--text-tertiary);
 }
 
 .categoryCard.active {
-    border-color: #578fed;
+    border-color: var(--accent-color);
 }
 
 .iconContainer {
@@ -85,27 +89,28 @@
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background-color: #272727;
+    background-color: var(--bg-tertiary);
     margin-bottom: 12px;
-    color: #ddd;
-    transition: all 0.2s ease-in-out;
+    color: var(--text-secondary);
+    transition: all 0.2s ease-in-out, background-color 0.3s ease, color 0.3s ease;
 }
 
 .active .iconContainer {
-    background-color: #4169e1;
+    background-color: var(--accent-color);
     color: white;
 }
 
 .categoryTitle {
     font-size: 14px;
     font-weight: 500;
-    color: #ddd;
+    color: var(--text-secondary);
     text-align: center;
     white-space: nowrap;
+    transition: color 0.3s ease;
 }
 
 .active .categoryTitle {
-    color: white;
+    color: var(--text-primary);
 }
 
 .scrollButton {
@@ -115,21 +120,21 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background-color: rgba(30, 30, 30, 0.9);
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     z-index: 10;
-    color: white;
+    color: var(--text-primary);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s ease;
+    transition: all 0.2s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .scrollButton:hover {
-    background-color: rgba(50, 50, 50, 0.9);
-    border-color: #555;
+    background-color: var(--hover-overlay);
+    border-color: var(--text-tertiary);
 }
 
 .leftButton {

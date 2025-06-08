@@ -16,11 +16,11 @@
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
-  background-color: #171717;
+  background-color: var(--bg-secondary);
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   overflow-y: auto;
-  color: white;
+  color: var(--text-primary);
   animation: modalFadeIn 0.3s ease-out;
 }
 
@@ -41,7 +41,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .modalHeader h2 {
@@ -53,7 +53,7 @@
 .closeButton {
   background: none;
   border: none;
-  color: #999;
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 4px;
   border-radius: 50%;
@@ -65,8 +65,8 @@
 }
 
 .closeButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  background-color: var(--hover-overlay);
+  color: var(--text-primary);
 }
 
 .modalForm {
@@ -82,7 +82,7 @@
   margin-bottom: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #e0e0e0;
+  color: var(--text-secondary);
 }
 
 .input,
@@ -90,9 +90,9 @@
   width: 100%;
   padding: 12px;
   border-radius: 6px;
-  border: 1px solid #333;
-  background-color: #222;
-  color: white;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
   font-size: 14px;
   font-family: inherit;
   transition: border-color 0.2s;
@@ -102,8 +102,7 @@
 .input:focus,
 .textArea:focus {
   outline: none;
-  border-color: #4285f4;
-  /* Google blue */
+  border-color: var(--accent-color);
 }
 
 .textArea {
@@ -112,17 +111,17 @@
 }
 
 .uploadArea {
-  border: 2px dashed #444;
+  border: 2px dashed var(--border-color);
   border-radius: 8px;
   padding: 20px;
   text-align: center;
-  background-color: #222;
+  background-color: var(--bg-tertiary);
   transition: border-color 0.2s, background-color 0.2s;
 }
 
 .uploadArea:hover {
-  border-color: #4285f4;
-  background-color: rgba(66, 133, 244, 0.05);
+  border-color: var(--accent-color);
+  background-color: var(--hover-overlay);
 }
 
 .uploadContent {
@@ -133,19 +132,19 @@
 }
 
 .uploadIcon {
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .uploadText {
   margin: 0;
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 14px;
 }
 
 .browseButton {
   background-color: transparent;
-  border: 1px solid #4285f4;
-  color: #4285f4;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
@@ -155,7 +154,7 @@
 }
 
 .browseButton:hover {
-  background-color: rgba(66, 133, 244, 0.1);
+  background-color: var(--hover-overlay);
 }
 
 .fileInput {
@@ -203,7 +202,7 @@
   justify-content: flex-end;
   gap: 12px;
   margin-top: 24px;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--border-color);
   padding-top: 24px;
 }
 
@@ -219,23 +218,22 @@
 
 .cancelButton {
   background-color: transparent;
-  border: 1px solid #444;
-  color: #e0e0e0;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
 }
 
 .cancelButton:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--hover-overlay);
 }
 
 .saveButton {
-  background-color: #4285f4;
-  /* Google blue */
+  background-color: var(--accent-color);
   border: none;
   color: white;
 }
 
 .saveButton:hover {
-  background-color: #3367d6;
+  opacity: 0.9;
 }
 
 /* Responsive adjustments */

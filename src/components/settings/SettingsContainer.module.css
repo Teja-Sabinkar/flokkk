@@ -5,17 +5,19 @@
 }
 
 .content {
-  background-color: #0c0c0c;
-  border: 1px solid #2a2a2a;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   padding: 1.5rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #f3f4f6;
+  color: var(--text-primary);
   margin-bottom: 1.5rem;
+  transition: color 0.3s ease;
 }
 
 @media (max-width: 768px) {
@@ -29,9 +31,7 @@
 }
 
 @media (max-width: 480px) {
-
   .container {
     padding: 0rem;
   }
-  
 }

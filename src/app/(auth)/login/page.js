@@ -20,6 +20,13 @@ function LoginContent() {
   const [resendMessage, setResendMessage] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
+  // Initialize theme on component mount
+  useEffect(() => {
+    // Set initial theme from localStorage to prevent flicker
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
   // Check URL params for messages
   useEffect(() => {
     // Handle verification success
@@ -115,8 +122,40 @@ function LoginContent() {
 
   return (
     <div className="login-container">
+      {/* Background decorative shapes */}
+      <div className="login-background-shapes">
+        <div className="gradient-shape shape-1"></div>
+        <div className="gradient-shape shape-2"></div>
+        <div className="gradient-shape shape-3"></div>
+      </div>
+
       <div className="login-card">
-        <h1 className="login-title">flokkk</h1>
+        <div className="login-title">
+          <svg width="30" height="30" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="login-title-svg">
+            <defs>
+              <linearGradient id="loginLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{stopColor:"#4f46e5", stopOpacity:1}} />
+                <stop offset="100%" style={{stopColor:"#06b6d4", stopOpacity:1}} />
+              </linearGradient>
+            </defs>
+            
+            {/* Rounded rectangle background */}
+            <rect x="15" y="15" width="170" height="170" rx="35" ry="35" fill="url(#loginLogoGradient)"/>
+            
+            {/* Main vertical line (left) */}
+            <rect x="40" y="40" width="20" height="120" fill="white" rx="10"/>
+            
+            {/* Top horizontal line */}
+            <rect x="40" y="40" width="120" height="20" fill="white" rx="10"/>
+            
+            {/* Middle horizontal line (shorter) */}
+            <rect x="90" y="85" width="70" height="20" fill="white" rx="10"/>
+            
+            {/* Small square/dot bottom right */}
+            <rect x="125" y="125" width="25" height="25" fill="white" rx="6"/>
+          </svg>
+          <span className="login-title-text">flokkk</span>
+        </div>
         
         {success && (
           <div className="success-message">
@@ -139,6 +178,7 @@ function LoginContent() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="login-input"
+              placeholder="Enter your email"
               required
             />
           </div>
@@ -151,6 +191,7 @@ function LoginContent() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="login-input"
+              placeholder="Enter your password"
               required
             />
           </div>
@@ -191,6 +232,7 @@ function LoginContent() {
                 onChange={(e) => setResendEmail(e.target.value)}
                 placeholder="Enter your email"
                 required
+                className="login-input"
               />
               <button
                 type="submit"
@@ -212,9 +254,23 @@ function LoginContent() {
   );
 }
 
+function LoadingFallback() {
+  // Initialize theme for loading state as well
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
+  return (
+    <div className="loading-container">
+      <div>Loading...</div>
+    </div>
+  );
+}
+
 export default function Login() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingFallback />}>
       <LoginContent />
     </Suspense>
   );

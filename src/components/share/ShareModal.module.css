@@ -25,13 +25,15 @@
 }
 
 .modal {
-    background-color: #1e1e24;
+    background-color: var(--bg-secondary);
     border-radius: 12px;
     width: 90%;
     max-width: 500px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     overflow: hidden;
     animation: slideUp 0.3s ease-out;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 @keyframes slideUp {
@@ -51,19 +53,21 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    border-bottom: 1px solid #2d2d39;
+    border-bottom: 1px solid var(--border-color);
+    transition: border-color 0.3s ease;
 }
 
 .modalHeader h3 {
     margin: 0;
     font-size: 18px;
-    color: #ffffff;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .closeButton {
     background: transparent;
     border: none;
-    color: #94949e;
+    color: var(--text-tertiary);
     cursor: pointer;
     display: flex;
     padding: 5px;
@@ -71,7 +75,7 @@
 }
 
 .closeButton:hover {
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .modalContent {
@@ -85,19 +89,21 @@
 .postInfo h4 {
     margin: 0 0 8px 0;
     font-size: 16px;
-    color: #ffffff;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .postUrl {
     font-size: 14px;
-    color: #94949e;
-    background-color: #2d2d39;
+    color: var(--text-tertiary);
+    background-color: var(--bg-tertiary);
     padding: 10px;
     border-radius: 6px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     margin: 0;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .shareOptions {
@@ -142,8 +148,9 @@
 }
 
 .email {
-    background-color: #2d2d39;
-    color: white;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .shareButton:hover {
@@ -163,25 +170,25 @@
     width: 100%;
     padding: 14px;
     border-radius: 8px;
-    background-color: #2d2d39;
-    color: white;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
     border: none;
     cursor: pointer;
     font-size: 15px;
     font-weight: 500;
-    transition: all 0.2s;
+    transition: all 0.2s ease, background-color 0.3s ease, color 0.3s ease;
 }
 
 .copyLinkButton:hover {
-    background-color: #3d3d49;
+    background-color: var(--hover-overlay);
 }
 
 .success {
-    background-color: #10B981;
+    background-color: var(--success-color);
 }
 
 .success:hover {
-    background-color: #10B981;
+    background-color: var(--success-color);
 }
 
 /* Responsive adjustments */
@@ -191,12 +198,8 @@
     }
 }
 
-
 @media (max-width: 480px) {
-
     .modal{
         margin-top: 50px;
     }
-
-
 }

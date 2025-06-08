@@ -13,19 +13,21 @@
   margin-bottom: 32px;
   position: sticky; /* Optional: Make header sticky */
   z-index: 10; /* Optional: Ensure it stays above other content */
-  background-color: #060606; /* Optional: Match page background */
+  background-color: var(--bg-primary); /* Use theme-aware background */
   padding-top: 8px; /* Optional: Add some spacing at top */
+  transition: background-color 0.3s ease;
 }
 
 .studioTitle {
   font-size: 24px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-primary);
   margin: 0;
+  transition: color 0.3s ease;
 }
 
 .createPostButton {
-  background-color: #4169e1;
+  background-color: var(--accent-color);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -33,13 +35,13 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease;
   display: flex;
   align-items: center;
 }
 
 .createPostButton:hover {
-  background-color: #3451b2;
+  opacity: 0.9;
 }
 
 .createPostButton svg {
@@ -53,55 +55,65 @@
 }
 
 .statCard {
-  background-color: #141414;
+  background-color: var(--bg-secondary);
   border-radius: 8px;
   padding: 20px;
   flex: 1;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #2d2d2d;
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Light theme adjustments for stat card shadow */
+html[data-theme="light"] .statCard {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .statCard h3 {
   margin: 0 0 12px 0;
   font-size: 14px;
-  color: #888;
+  color: var(--text-tertiary);
   font-weight: 500;
+  transition: color 0.3s ease;
 }
 
 .statNumber {
   font-size: 28px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-primary);
   margin: 0;
+  transition: color 0.3s ease;
 }
 
 .tabsContainer {
   display: flex;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: 24px;
   position: sticky; /* Optional: Make tabs sticky */
-  background-color: #060606; /* Optional: Match page background */
+  background-color: var(--bg-primary); /* Use theme-aware background */
   z-index: 9; /* Optional: Lower than header z-index */
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .tabButton {
   background: none;
   border: none;
-  color: #888;
+  color: var(--text-tertiary);
   font-size: 14px;
   font-weight: 500;
   padding: 12px 24px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s, color 0.3s ease;
   position: relative;
 }
 
 .tabButton:hover {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .activeTab {
-  color: #4169e1;
+  color: var(--accent-color);
+  transition: color 0.3s ease;
 }
 
 .activeTab::after {
@@ -111,7 +123,76 @@
   left: 0;
   right: 0;
   height: 2px;
-  background-color: #4169e1;
+  background-color: var(--accent-color);
+  transition: background-color 0.3s ease;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
+}
+
+.loadingSpinner {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 16px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--accent-color);
+  animation: spin 1s ease-in-out infinite;
+  transition: border-color 0.3s ease;
+}
+
+/* Light theme adjustments for loading spinner */
+html[data-theme="light"] .loadingSpinner {
+  border-color: rgba(0, 0, 0, 0.1);
+  border-top-color: var(--accent-color);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.errorMessage {
+  color: var(--danger-color);
+  font-size: 16px;
+  margin-bottom: 16px;
+  transition: color 0.3s ease;
+}
+
+.retryButton {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retryButton:hover {
+  opacity: 0.9;
 }
 
 /* Responsive styles */

@@ -12,11 +12,12 @@
 }
 
 .modalContent {
-  background-color: #1a1a1a;
+  background-color: var(--bg-secondary);
   border-radius: 8px;
   width: 100%;
   max-width: 500px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
 }
 
 .modalHeader {
@@ -24,14 +25,16 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  border-bottom: 1px solid #2d2d2d;
+  border-bottom: 1px solid var(--border-color);
+  transition: border-color 0.3s ease;
 }
 
 .modalTitle {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
+  transition: color 0.3s ease;
 }
 
 .closeButton {
@@ -39,11 +42,12 @@
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
 }
 
-.closeButton :hover {
-  color: white;
+.closeButton:hover {
+  color: var(--text-primary);
 }
 
 .modalBody {
@@ -53,9 +57,10 @@
 .warningMessage {
   margin-bottom: 1.5rem;
   padding: 0.75rem;
-  background-color: #ff9f9f;
+  background-color: rgba(220, 38, 38, 0.1);
   border-radius: 4px;
-  color: #b91c1c;
+  color: var(--danger-color);
+  transition: color 0.3s ease;
 }
 
 .warningMessage p {
@@ -65,9 +70,10 @@
 .errorMessage {
   margin-bottom: 1rem;
   padding: 0.5rem;
-  color: #b91c1c;
-  background-color: #fee2e2;
+  color: var(--danger-color);
+  background-color: rgba(220, 38, 38, 0.1);
   border-radius: 4px;
+  transition: color 0.3s ease, background-color 0.3s ease;
 }
 
 .inputGroup {
@@ -77,16 +83,17 @@
 .input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #505050;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 1rem;
-  background-color: #1a1a1a;
-  color: white;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
 }
 
 .input:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--accent-color);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
@@ -95,27 +102,30 @@
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1rem;
-  border-top: 1px solid #2d2d2d;
+  border-top: 1px solid var(--border-color);
+  transition: border-color 0.3s ease;
 }
 
 .cancelButton {
   padding: 0.5rem 1rem;
   background-color: transparent;
-  color: white;
-  border: 1px solid #d1d5db;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 0.875rem;
   cursor: pointer;
+  transition: background-color 0.2s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .deleteButton {
   padding: 0.5rem 1rem;
-  background-color: #b91c1c;
+  background-color: var(--danger-color);
   color: white;
   border: none;
   border-radius: 4px;
   font-size: 0.875rem;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .deleteButton:disabled {
@@ -124,7 +134,7 @@
 }
 
 .cancelButton:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--hover-overlay);
 }
 
 .deleteButton:hover:not(:disabled) {
@@ -133,9 +143,7 @@
 
 
 @media (max-width: 480px) {
-
   .modalContent {
     width: 90%;
   }
-
 }

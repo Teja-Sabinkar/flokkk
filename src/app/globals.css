@@ -6,14 +6,45 @@
 }
 
 :root {
+    /* Font variables */
     --font-family: "Roboto", -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    
+    /* Dark theme colors (default) */
+    --bg-primary: #141414;
+    --bg-secondary: #141414;
+    --bg-tertiary: #202020;
+    --text-primary: #f8f9fa;
+    --text-secondary: #e5e7eb;
+    --text-tertiary: #9ca3af;
+    --border-color: #2d2d2d;
+    --accent-color: #3b82f6;
+    --danger-color: #ef4444;
+    --success-color: #4ade80;
+    --hover-overlay: rgba(255, 255, 255, 0.05);
+}
+
+/* Light theme colors */
+html[data-theme="light"] {
+    --bg-primary: #f8f9fa;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #ededed;
+    --text-primary: #1c1c1c;
+    --text-secondary: #4b5563;
+    --text-tertiary: #6b7280;
+    --text-fourth: #ffffff;
+    --border-color: #d1d5db;
+    --accent-color: #2563eb;
+    --danger-color: #dc2626;
+    --success-color: #10b981;
+    --hover-overlay: rgba(0, 0, 0, 0.05);
 }
 
 body {
     font-family: var(--font-roboto, var(--font-family));
     line-height: 1.5;
-    background-color: #1c1c1c;
-    color: #f8f9fa;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 input,

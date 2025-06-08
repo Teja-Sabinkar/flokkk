@@ -18,21 +18,24 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background-color: #1e1e1e;
-  color: #6b7280;
+  background-color: var(--bg-tertiary);
+  color: var(--text-tertiary);
   margin-bottom: 1rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .emptyStateTitle {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #e5e7eb;
+  color: var(--text-primary);
   margin: 0 0 0.5rem;
+  transition: color 0.3s ease;
 }
 
 .emptyStateText {
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: var(--text-tertiary);
   margin: 0;
   max-width: 300px;
+  transition: color 0.3s ease;
 }

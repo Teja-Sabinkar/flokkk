@@ -1,73 +1,77 @@
 .searchContainer {
-    margin-bottom: 1rem;
-  }
-  
-  .searchWrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background-color: #1a1a1a;
-    border-radius: 0.5rem;
-    border: 1px solid #2d2d2d;
-    transition: border-color 0.2s ease;
-    overflow: hidden;
-  }
-  
-  .searchWrapper:focus-within {
-    border-color: #3b82f6;
-  }
-  
-  .searchIcon {
-    position: absolute;
-    left: 0.875rem;
-    color: #9ca3af;
-  }
-  
+  margin-bottom: 1rem;
+}
+
+.searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-tertiary);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  transition: border-color 0.2s ease, background-color 0.3s ease;
+  overflow: hidden;
+}
+
+.searchWrapper:focus-within {
+  border-color: var(--accent-color);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.875rem;
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
+}
+
+.searchInput {
+  flex: 1;
+  background-color: transparent;
+  border: none;
+  padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  width: 100%;
+  transition: color 0.3s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
+}
+
+.clearButton {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  padding: 0.25rem 0.5rem;
+  margin-right: 0.5rem;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+.clearButton:hover {
+  color: var(--text-primary);
+  background-color: var(--hover-overlay);
+}
+
+@media (max-width: 640px) {
   .searchInput {
-    flex: 1;
-    background-color: transparent;
-    border: none;
-    padding: 0.75rem 0.75rem 0.75rem 2.5rem;
-    color: #f3f4f6;
-    font-size: 0.875rem;
-    width: 100%;
+    font-size: 0.75rem;
+    padding: 0.625rem 0.625rem 0.625rem 2.25rem;
   }
-  
-  .searchInput:focus {
-    outline: none;
+
+  .searchIcon {
+    width: 16px;
+    height: 16px;
+    left: 0.75rem;
   }
-  
-  .searchInput::placeholder {
-    color: #6b7280;
-  }
-  
-  .clearButton {
-    background: transparent;
-    border: none;
-    color: #9ca3af;
-    padding: 0.25rem 0.5rem;
-    margin-right: 0.5rem;
-    cursor: pointer;
-    border-radius: 0.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .clearButton:hover {
-    color: #f3f4f6;
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-  
-  @media (max-width: 640px) {
-    .searchInput {
-      font-size: 0.75rem;
-      padding: 0.625rem 0.625rem 0.625rem 2.25rem;
-    }
-    
-    .searchIcon {
-      width: 16px;
-      height: 16px;
-      left: 0.75rem;
-    }
-  }
+}

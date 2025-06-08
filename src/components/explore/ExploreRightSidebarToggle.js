@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import styles from './ExploreRightSidebarToggle.module.css';
 
 export default function ExploreRightSidebarToggle({
@@ -6,6 +7,7 @@ export default function ExploreRightSidebarToggle({
     handleRightSidebarToggle,
     sidebarWidth = 330
 }) {
+    const { theme } = useTheme(); // Add theme context
     const [screenSize, setScreenSize] = useState('desktop');
     const [isReady, setIsReady] = useState(false);
 

@@ -1,5 +1,6 @@
 // src/components/recentlyviewed/RecentlyViewedRightSidebar.js
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Import theme context
 import RotatingNewsContainer from '@/components/widgets/rotatingNewsContainer';
 import QuickActions from '@/components/widgets/quickActions';
 import AiChat from '@/components/aichat/AiChat';
@@ -13,6 +14,7 @@ export default function RecentlyViewedRightSidebar({
   onClose,
   onWidthChange
 }) {
+  const { theme } = useTheme(); // Add theme context
   const [isResizing, setIsResizing] = useState(false);
   const [rightSidebarWidth, setRightSidebarWidth] = useState(330);
 
@@ -381,6 +383,7 @@ export default function RecentlyViewedRightSidebar({
       className={`${styles.rightSidebarContainer} ${isRightSidebarVisible ? styles.visible : styles.hidden} ${isResizing ? styles.resizing : ''}`}
       ref={containerRef}
       data-width={rightSidebarWidth}
+      data-theme={theme} // Add theme data attribute
     >
       {/* Resize handle */}
       <div

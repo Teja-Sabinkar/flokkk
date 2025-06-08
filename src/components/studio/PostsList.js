@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import styles from './PostsList.module.css';
 import PostItem from './PostItem';
 
@@ -18,6 +19,8 @@ export default function PostsList({
   onSortChange,
   activeTab 
 }) {
+  const { theme } = useTheme();
+  
   // Simple debug logging
   console.log(`PostsList rendering with ${posts.length} posts in ${activeTab} tab`);
   console.log('Post statuses:', posts.map(post => post.status).join(', '));

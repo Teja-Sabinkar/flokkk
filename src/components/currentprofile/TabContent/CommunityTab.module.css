@@ -14,8 +14,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #4285f4;
-  /* Google blue */
+  background-color: var(--accent-color);
   color: white;
   border: none;
   border-radius: 20px;
@@ -23,29 +22,40 @@
   font-weight: 500;
   font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, opacity 0.3s ease;
 }
 
 .createPostButton:hover {
-  background-color: #3367d6;
+  opacity: 0.9;
 }
 
 .postsContainer {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 40px 20px;
+  background-color: none;
+  border-radius: 8px;
+  text-align: center;
+  color: rgb(170, 170, 170);
+  margin-top: 20px;
 }
 
 .postCard {
-  background-color: #0c0c0c;
+  background-color: var(--bg-secondary);
   border-radius: 8px;
   padding: 16px;
-  color: white;
-  border: 1px solid #2a2a2a;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s ease, border-color 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .postCard:hover {
-  border: 1px solid #333;
+  border: 1px solid var(--text-tertiary);
 }
 
 .postHeader {
@@ -65,8 +75,9 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: #333;
+  background-color: var(--bg-tertiary);
   overflow: hidden;
+  transition: background-color 0.3s ease;
 }
 
 .avatar {
@@ -85,6 +96,8 @@
   color: #ffffff;
   font-weight: bold;
   font-size: 14px;
+  background-color: var(--accent-color);
+  transition: background-color 0.3s ease;
 }
 
 .avatarInitial {
@@ -99,17 +112,20 @@
 .username {
   font-weight: 500;
   font-size: 14px;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .timeAgo {
-  color: #aaa;
+  color: var(--text-tertiary);
   font-size: 12px;
+  transition: color 0.3s ease;
 }
 
 .moreButton {
   background: none;
   border: none;
-  color: #888;
+  color: var(--text-tertiary);
   cursor: pointer;
   height: 32px;
   width: 32px;
@@ -117,47 +133,68 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .moreButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  background-color: var(--hover-overlay);
+  color: var(--text-primary);
 }
 
 .postContent {
   margin-bottom: 16px;
+      text-align: left;
 }
 
 .postTitle {
   font-size: 18px;
   font-weight: 600;
   margin: 0 0 8px 0;
-  color: white;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
+  /* Fix for text overflow */
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1.4;
 }
 
 .postText {
   font-size: 14px;
   line-height: 1.5;
   margin: 0 0 16px 0;
-  color: #e0e0e0;
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
+  /* Add word breaking for long text */
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .postTextTruncated {
   font-size: 14px;
   line-height: 1.5;
-  color: #e0e0e0;
+  color: var(--text-secondary);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
   margin: 0 0 8px 0;
+  transition: color 0.3s ease;
+  /* Add word breaking for truncated text */
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .toggleButton {
   background: none;
   border: none;
-  color: #4285f4;
+  color: var(--accent-color);
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
@@ -167,7 +204,7 @@
 }
 
 .toggleButton:hover {
-  color: #3367d6;
+  opacity: 0.9;
   text-decoration: underline;
 }
 
@@ -185,7 +222,8 @@
   height: auto;
   object-fit: contain;
   max-height: 400px;
-  background-color: #111;
+  background-color: var(--bg-tertiary);
+  transition: background-color 0.3s ease;
 }
 
 .postFooter {
@@ -197,29 +235,33 @@
 .voteControls {
   display: flex;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: var(--bg-tertiary);
   border-radius: 16px;
   padding: 4px 8px;
+  transition: background-color 0.3s ease;
 }
 
 .upvoteButton,
 .downvoteButton {
   background: none;
   border: none;
-  color: #aaa;
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 4px;
+  transition: color 0.3s ease;
 }
 
 .upvoteButton:hover,
 .downvoteButton:hover {
-  color: white;
+  color: var(--text-primary);
 }
 
 .voteCount {
   font-size: 13px;
   font-weight: 500;
   margin: 0 8px;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .actionButton {
@@ -228,14 +270,15 @@
   gap: 6px;
   background: none;
   border: none;
-  color: #aaa;
+  color: var(--text-tertiary);
   font-size: 13px;
   cursor: pointer;
   padding: 10px 14px;
+  transition: color 0.3s ease;
 }
 
 .actionButton:hover {
-  color: white;
+  color: var(--text-primary);
 }
 
 .menuContainer {
@@ -245,7 +288,7 @@
 .moreButton {
   background: none;
   border: none;
-  color: #888;
+  color: var(--text-tertiary);
   cursor: pointer;
   height: 32px;
   width: 32px;
@@ -253,25 +296,27 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .moreButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  background-color: var(--hover-overlay);
+  color: var(--text-primary);
 }
 
 .dropdown {
   position: absolute;
   top: 100%;
   right: 0;
-  background-color: #0c0c0c;
+  background-color: var(--bg-secondary);
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   min-width: 140px;
   overflow: hidden;
   z-index: 100;
-  border: 1px solid #333;
+  border: 1px solid var(--border-color);
   margin-top: 4px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .dropdownItem {
@@ -283,18 +328,18 @@
   font-size: 14px;
   background: none;
   border: none;
-  color: #e0e0e0;
+  color: var(--text-secondary);
   cursor: pointer;
   text-align: left;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, color 0.3s ease;
 }
 
 .dropdownItem:hover {
-  background-color: #333;
+  background-color: var(--hover-overlay);
 }
 
 .dropdownItem:active {
-  background-color: #444;
+  background-color: var(--hover-overlay);
 }
 
 .dropdownItem svg {
@@ -304,8 +349,8 @@
 /* Additional styles for the updated CommunityTab component */
 
 .errorMessage {
-  background-color: rgba(255, 59, 48, 0.9);
-  color: white;
+  background-color: rgba(220, 53, 69, 0.1);
+  color: var(--danger-color);
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 20px;
@@ -313,22 +358,24 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .retryButton {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(220, 53, 69, 0.2);
   border: none;
-  color: white;
+  color: var(--danger-color);
   padding: 8px 16px;
   border-radius: 6px;
   margin-top: 10px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .retryButton:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(220, 53, 69, 0.3);
 }
 
 .loadingContainer {
@@ -342,11 +389,12 @@
 .loadingSpinner {
   width: 32px;
   height: 32px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  border: 3px solid rgba(59, 130, 246, 0.3);
   border-radius: 50%;
-  border-top-color: white;
+  border-top-color: var(--accent-color);
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
+  transition: border-color 0.3s ease;
 }
 
 @keyframes spin {
@@ -356,12 +404,13 @@
 }
 
 .emptyState {
-  background-color: #1a1a1a;
+  background-color: var(--bg-tertiary);
   border-radius: 8px;
   padding: 40px 20px;
   text-align: center;
-  color: #aaa;
+  color: var(--text-tertiary);
   margin-top: 20px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .emptyState p {
@@ -375,28 +424,25 @@
 }
 
 .loadMoreButton {
-  background-color: #333;
-  color: white;
-  border: none;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   padding: 10px 20px;
   border-radius: 20px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .loadMoreButton:hover {
-  background-color: #444;
+  background-color: var(--hover-overlay);
 }
 
 .loadMoreButton:disabled {
-  background-color: #333;
   opacity: 0.5;
   cursor: not-allowed;
 }
-
-
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
@@ -455,5 +501,4 @@
     font-size: 12px;
     padding: 3px;
   }
-
 }

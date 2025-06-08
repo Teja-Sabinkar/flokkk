@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import './signup.css';
@@ -19,6 +19,13 @@ function SignupContent() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [emailSent, setEmailSent] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+
+  // Initialize theme on component mount
+  useEffect(() => {
+    // Set initial theme from localStorage to prevent flicker
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -86,6 +93,13 @@ function SignupContent() {
   if (isSubmitted) {
     return (
       <div className="signup-container">
+        {/* Background decorative shapes */}
+        <div className="signup-background-shapes">
+          <div className="gradient-shape shape-1"></div>
+          <div className="gradient-shape shape-2"></div>
+          <div className="gradient-shape shape-3"></div>
+        </div>
+
         <div className="signup-card">
           <div className="success-message">
             <h1>Check Your Email</h1>
@@ -113,8 +127,18 @@ function SignupContent() {
 
   return (
     <div className="signup-container">
+      {/* Background decorative shapes */}
+      <div className="signup-background-shapes">
+        <div className="gradient-shape shape-1"></div>
+        <div className="gradient-shape shape-2"></div>
+        <div className="gradient-shape shape-3"></div>
+      </div>
+
       <div className="signup-card">
-        <h1 className="signup-title">Create Account</h1>
+        <div className="signup-title">
+
+          <span className="signup-title-text">Create Account</span>
+        </div>
         
         {error && (
           <div className="error-message">
@@ -132,6 +156,7 @@ function SignupContent() {
               value={formData.username}
               onChange={handleChange}
               className="signup-input"
+              placeholder="Enter your username"
               required
               pattern="^[a-zA-Z0-9_]+$"
               title="Username can only contain letters, numbers, and underscores"
@@ -151,6 +176,7 @@ function SignupContent() {
               value={formData.email}
               onChange={handleChange}
               className="signup-input"
+              placeholder="Enter your email"
               required
             />
             <div className="input-rules">Must be a valid email address</div>
@@ -165,6 +191,7 @@ function SignupContent() {
               value={formData.password}
               onChange={handleChange}
               className="signup-input"
+              placeholder="Enter your password"
               required
               minLength={8}
             />
@@ -180,6 +207,7 @@ function SignupContent() {
               value={formData.confirmPassword}
               onChange={handleChange}
               className="signup-input"
+              placeholder="Confirm your password"
               required
             />
             <div className="input-rules">Must match the password above</div>
@@ -215,9 +243,23 @@ function SignupContent() {
   );
 }
 
+function LoadingFallback() {
+  // Initialize theme for loading state as well
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
+  return (
+    <div className="loading-container">
+      <div>Loading...</div>
+    </div>
+  );
+}
+
 export default function Signup() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingFallback />}>
       <SignupContent />
     </Suspense>
   );

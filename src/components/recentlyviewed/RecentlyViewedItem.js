@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -9,6 +10,7 @@ import ShareModal from '@/components/share/ShareModal';
 
 const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
   const router = useRouter();
+  const { theme } = useTheme(); // Add theme context
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -18,12 +20,12 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
   const [reportSuccess, setReportSuccess] = useState(false);
   const [currentUsername, setCurrentUsername] = useState(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  
+
   // Video playback states
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [videoId, setVideoId] = useState(null);
   const [videoError, setVideoError] = useState(false);
-  
+
   const menuRef = useRef(null);
 
   const {
@@ -95,7 +97,7 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
   // Extract YouTube video ID from URL
   const extractYouTubeVideoId = useCallback((url) => {
     if (!url || typeof url !== 'string') return null;
-    
+
     try {
       // Comprehensive regex that handles all YouTube URL formats
       const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
@@ -121,11 +123,11 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
   const handlePlayClick = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (videoId) {
       setIsVideoPlaying(true);
       setVideoError(false);
-      
+
       // Track view engagement when play button is clicked
       await trackViewEngagement(itemId);
     }
@@ -324,7 +326,7 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
   };
 
   const generateColorFromUsername = (username) => {
-    if (!username) return '#3b5fe2'; // Default blue color
+    if (!username) return '#3b82f6'; // Default blue color as fallback
 
     // Simple hash function for consistent color generation
     let hash = 0;
@@ -343,7 +345,10 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
   };
 
   return (
-    <div className={`${styles.card} ${viewMode === 'list' ? styles.listCard : ''}`}>
+    <div 
+      className={`${styles.card} ${viewMode === 'list' ? styles.listCard : ''}`} 
+      data-theme={theme} // Add theme data attribute
+    >
       {/* User Info and Post Header */}
       <div className={styles.postHeader}>
         <div className={styles.userInfo}>
@@ -577,42 +582,44 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
         </button>
       </div>
 
-      {/* Report Modal */}
-      {isReportModalOpen && (
-        <ReportModal
-          isOpen={isReportModalOpen}
-          onClose={() => setIsReportModalOpen(false)}
-          onSubmit={handleReportSubmit}
-          contentDetails={{
-            postId: item.id || item._id,
-            userId: item.userId || (item.author?.id || ''),
-            username: item.author?.username || 'unknown',
-            title: item.title || 'Untitled',
-            content: (item.content || item.description || '').toString(),
-            hashtags: item.hashtags || [],
-            image: item.thumbnail || item.image
-          }}
-        />
-      )}
-
-      {/* Save Modal */}
-      <PostSaveModal
-        isOpen={isSaveModalOpen}
-        onClose={() => setIsSaveModalOpen(false)}
-        post={item}
-        onSave={handleSaveToPlaylist}
-      />
-
-      {/* Share Modal */}
-      <ShareModal
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        postData={{
-          id: itemId,
-          title: title || 'Untitled Discussion'
+      {/* Report Modal */ }
+  {
+    isReportModalOpen && (
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={handleReportSubmit}
+        contentDetails={{
+          postId: item.id || item._id,
+          userId: item.userId || (item.author?.id || ''),
+          username: item.author?.username || 'unknown',
+          title: item.title || 'Untitled',
+          content: (item.content || item.description || '').toString(),
+          hashtags: item.hashtags || [],
+          image: item.thumbnail || item.image
         }}
       />
-    </div>
+    )
+  }
+
+  {/* Save Modal */ }
+  <PostSaveModal
+    isOpen={isSaveModalOpen}
+    onClose={() => setIsSaveModalOpen(false)}
+    post={item}
+    onSave={handleSaveToPlaylist}
+  />
+
+  {/* Share Modal */ }
+  <ShareModal
+    isOpen={isShareModalOpen}
+    onClose={() => setIsShareModalOpen(false)}
+    postData={{
+      id: itemId,
+      title: title || 'Untitled Discussion'
+    }}
+  />
+    </div >
   );
 };
 

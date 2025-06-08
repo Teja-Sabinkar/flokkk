@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname, useSearchParams, useParams } from 'next/navigation';
+import { useTheme } from '@/context/ThemeContext';
 import Header from '@/components/layout/Header/Header';
 import SidebarNavigation from '@/components/layout/SidebarNavigation/SidebarNavigation';
 import { CurrentProfileHeader, CurrentProfileFooter } from '@/components/currentprofile';
@@ -9,6 +10,7 @@ import styles from './page.module.css';
 
 export default function CurrentProfilePage() {
   const params = useParams();
+  const { theme } = useTheme();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [isCurrentUser, setIsCurrentUser] = useState(false);

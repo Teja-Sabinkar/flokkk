@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import Post from './Post';
 import CreateDiscussionModal from './CreateDiscussionModal';
 import styles from './HomeFeed.module.css';
 import { createPost, fetchPosts } from '@/lib/posts';
 
 export default function HomeFeed() {
+  const { theme } = useTheme();
   // State for controlling the discussion modal
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -227,39 +229,6 @@ export default function HomeFeed() {
     }
   };
 
-  // Add this temporary test button to any component for debugging
-  const testAppearanceTracking = async () => {
-    const token = localStorage.getItem('token');
-    const testPostId = '682e9c1a76e295f5999d44c3'; // Real post ID from your database
-
-    console.log('🧪 Testing appearance tracking...');
-
-    try {
-      const response = await fetch(`/api/posts/${testPostId}/track-appear`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const data = await response.json();
-      console.log('📊 Test result:', data);
-
-      // Now test fetching the post to see if metrics are returned
-      const postResponse = await fetch(`/api/posts/${testPostId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      const postData = await postResponse.json();
-      console.log('📈 Post data with metrics:', postData.metrics);
-    } catch (error) {
-      console.error('❌ Test failed:', error);
-    }
-  };
-
-
-
   return (
     <div className={styles.homeFeed}>
       {/* Create Discussion Button */}
@@ -272,7 +241,6 @@ export default function HomeFeed() {
         </svg>
         Create Discussion
       </button>
-
 
       {/* Loading and error states */}
       {loading && posts.length === 0 && (
@@ -296,8 +264,6 @@ export default function HomeFeed() {
 
       {/* Posts List */}
       <div className={styles.postsList}>
-
-
         {posts.length > 0 ? (
           posts
             .filter(post => post && (post._id || post.id)) // Only show posts with valid IDs

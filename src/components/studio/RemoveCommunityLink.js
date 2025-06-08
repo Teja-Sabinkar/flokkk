@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import styles from './RemoveCommunityLink.module.css';
 
 export default function RemoveCommunityLink({
@@ -9,6 +10,7 @@ export default function RemoveCommunityLink({
     onConfirm,
     linkData
 }) {
+    const { theme } = useTheme();
     const modalRef = useRef(null);
     const [isConfirming, setIsConfirming] = useState(false);
 

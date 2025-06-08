@@ -11,6 +11,7 @@
     font-size: 13px;
     font-weight: 500;
     margin-bottom: 12px;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .youtubeNotice svg {
@@ -59,13 +60,17 @@
     grid-template-columns: 1fr 1fr;
     gap: 24px;
     margin-top: 12px;
+    width: 100%;
+    overflow: hidden;
 }
 
 .linksSectionContainer {
-    border: 1px solid #333;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 16px;
     min-height: 300px;
+    overflow: hidden;
+    transition: border-color 0.3s ease;
 }
 
 .linksSectionContainer:nth-child(2) .linkItem {
@@ -76,8 +81,9 @@
     margin: 0 0 16px 0;
     font-size: 16px;
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
     padding-bottom: 8px;
+    transition: color 0.3s ease;
 }
 
 /* Link Search Container */
@@ -90,20 +96,21 @@
     width: 100%;
     padding: 12px 50px 12px 16px;
     font-size: 14px;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
-    color: #fff;
-    transition: border-color 0.2s;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    transition: border-color 0.2s, background-color 0.3s ease, color 0.3s ease;
     border-radius: 4px;
 }
 
 .linkSearchInput:focus {
     outline: none;
-    border-color: #4169e1;
+    border-color: var(--accent-color);
 }
 
 .linkSearchInput::placeholder {
-    color: #666;
+    color: var(--text-tertiary);
+    transition: color 0.3s ease;
 }
 
 .linkSearchClearButton {
@@ -113,19 +120,19 @@
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: #888;
+    color: var(--text-tertiary);
     cursor: pointer;
     padding: 4px;
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s;
+    transition: color 0.2s, background-color 0.3s ease;
 }
 
 .linkSearchClearButton:hover {
-    color: #fff;
-    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    background-color: var(--hover-overlay);
 }
 
 .linkSearchIcon {
@@ -133,24 +140,26 @@
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #888;
+    color: var(--text-tertiary);
     pointer-events: none;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: color 0.3s ease;
 }
 
 /* No Results Message */
 .noResultsMessage {
-    color: #888;
+    color: var(--text-tertiary);
     font-size: 14px;
     text-align: center;
     padding: 20px 16px;
-    background-color: rgba(255, 255, 255, 0.02);
-    border: 1px dashed #333;
+    background-color: var(--hover-overlay);
+    border: 1px dashed var(--border-color);
     border-radius: 6px;
     margin: 12px 0;
     font-style: italic;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Community Links Note */
@@ -163,58 +172,67 @@
     font-size: 13px;
     color: #8bb4f7;
     text-align: center;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 /* Link Item Readonly (for community links) */
 .linkItemReadonly {
-    background-color: #252525;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 12px;
     margin-bottom: 12px;
-    border-left: 3px solid #888;
+    border-left: 3px solid var(--text-tertiary);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Link Description */
 .linkDescription {
     font-size: 13px;
-    color: #bbb;
+    color: var(--text-secondary);
     margin: 4px 0;
     line-height: 1.4;
+    transition: color 0.3s ease;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
 }
 
 /* Link Contributor */
 .linkContributor {
-    background-color: #333;
+    background-color: var(--bg-tertiary);
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 11px;
-    color: #ccc;
+    color: var(--text-secondary);
     margin-right: 8px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Link Textarea for descriptions */
 .linkTextarea {
     width: 100%;
     min-height: 60px;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 8px 12px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 13px;
     font-family: inherit;
     resize: vertical;
     line-height: 1.4;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .linkTextarea:focus {
     outline: none;
-    border-color: #4169e1;
+    border-color: var(--accent-color);
 }
 
 .linkTextarea::placeholder {
-    color: #666;
+    color: var(--text-tertiary);
+    transition: color 0.3s ease;
 }
 
 .thumbnailSection {
@@ -229,8 +247,9 @@
     /* 16:9 aspect ratio */
     border-radius: 6px;
     overflow: hidden;
-    background-color: #252525;
-    border: 1px solid #3a3a3a;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .thumbnailImage {
@@ -247,8 +266,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #666;
+    color: var(--text-tertiary);
     gap: 8px;
+    transition: color 0.3s ease;
 }
 
 .thumbnailPlaceholder span {
@@ -275,19 +295,21 @@
 }
 
 .thumbnailUploadButton {
-    background-color: #4169e1;
+    background-color: var(--accent-color);
     color: white;
     border: none;
+    transition: background-color 0.3s ease;
 }
 
 .thumbnailUploadButton:hover {
-    background-color: #3451b2;
+    opacity: 0.9;
 }
 
 .thumbnailRemoveButton {
     background-color: transparent;
-    color: #ff6b6b;
-    border: 1px solid #3a3a3a;
+    color: var(--danger-color);
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .thumbnailRemoveButton:hover {
@@ -296,14 +318,16 @@
 
 .thumbnailInfo {
     font-size: 12px;
-    color: #888;
+    color: var(--text-tertiary);
     margin-top: 8px;
+    transition: color 0.3s ease;
 }
 
 .editPostPage {
     min-height: 100vh;
-    background-color: #060606;
-    color: #ffffff;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .mainContent {
@@ -330,14 +354,13 @@
     /* Hide sidebar by default */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     box-shadow: none;
-    background-color: #121212;
+    background-color: var(--bg-secondary);
     /* Ensure it has a background to cover content */
 }
 
 /* Show sidebar when menu is open */
 .mainContent:has(.contentContainer.menuOpen) .sidebarContainer {
     transform: translateX(0);
-    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5);
 }
 
 /* Main content container */
@@ -351,7 +374,7 @@
     overflow-y: auto;
     /* Added to make content vertically scrollable */
     scrollbar-width: thin;
-    scrollbar-color: #444 #1a1a1a;
+    scrollbar-color: var(--text-tertiary) var(--bg-tertiary);
 }
 
 /* Styling when menu is open - applies to all screen sizes */
@@ -380,18 +403,20 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: #060606;
-    color: #fff;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .loadingSpinner {
     width: 40px;
     height: 40px;
     margin-bottom: 16px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
+    border: 3px solid rgba(65, 105, 225, 0.3);
     border-radius: 50%;
-    border-top-color: #4169e1;
+    border-top-color: var(--accent-color);
     animation: spin 1s ease-in-out infinite;
+    transition: border-color 0.3s ease;
 }
 
 @keyframes spin {
@@ -410,24 +435,26 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: #060606;
-    color: #fff;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     padding: 0 24px;
     text-align: center;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .errorMessage {
     padding: 12px;
     margin-bottom: 16px;
     border-radius: 4px;
-    background-color: rgba(255, 77, 77, 0.1);
-    border: 1px solid rgba(255, 77, 77, 0.2);
-    color: #ff4d4d;
+    background-color: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.2);
+    color: var(--danger-color);
     font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .retryButton {
-    background-color: #4169e1;
+    background-color: var(--accent-color);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -438,7 +465,7 @@
 }
 
 .retryButton:hover {
-    background-color: #3451b2;
+    opacity: 0.9;
 }
 
 .editPostContent {
@@ -457,6 +484,8 @@
     font-size: 24px;
     font-weight: 600;
     margin: 0;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .headerActions {
@@ -466,18 +495,18 @@
 
 .cancelButton {
     background-color: transparent;
-    border: 1px solid #3a3a3a;
-    color: #ddd;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     padding: 10px 20px;
     font-size: 14px;
     font-weight: 500;
     border-radius: 4px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .cancelButton:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--hover-overlay);
 }
 
 .cancelButton:disabled {
@@ -486,7 +515,7 @@
 }
 
 .saveButton {
-    background-color: #4169e1;
+    background-color: var(--accent-color);
     border: none;
     color: white;
     padding: 10px 20px;
@@ -494,7 +523,7 @@
     font-weight: 500;
     border-radius: 4px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s, background-color 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -502,11 +531,10 @@
 }
 
 .saveButton:hover {
-    background-color: #3451b2;
+    opacity: 0.9;
 }
 
 .saveButton:disabled {
-    background-color: #3451b2;
     opacity: 0.7;
     cursor: not-allowed;
 }
@@ -526,11 +554,12 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    border: 1px solid #2d2d2d;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     margin-bottom: 24px;
     font-size: 13px;
-    color: #aaa;
+    color: var(--text-tertiary);
+    transition: border-color 0.3s ease, color 0.3s ease;
 }
 
 .postDates {
@@ -548,23 +577,28 @@
 
 .publishedStatus {
     background-color: rgba(39, 174, 96, 0.15);
-    color: #27ae60;
+    color: var(--success-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .draftStatus {
     background-color: rgba(255, 184, 0, 0.15);
     color: #ffb800;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* UPDATED: Single column layout - no grid */
 .editFormContainer {
-    background-color: #060606;
+    background-color: var(--bg-primary);
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid #2d2d2d;
+    border: 1px solid var(--border-color);
     width: 100%;
     /* UPDATED: Full width */
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 .formGroup {
@@ -576,7 +610,8 @@
     margin-bottom: 8px;
     font-size: 14px;
     font-weight: 500;
-    color: #ddd;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
 }
 
 .formInput,
@@ -585,20 +620,20 @@
     width: 100%;
     padding: 12px;
     font-size: 14px;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
-    color: #fff;
-    transition: border-color 0.2s;
+    color: var(--text-primary);
+    transition: border-color 0.2s, background-color 0.3s ease, color 0.3s ease;
     scrollbar-width: thin;
-    scrollbar-color: #444 #1a1a1a;
+    scrollbar-color: var(--text-tertiary) var(--bg-tertiary);
 }
 
 .formInput:focus,
 .formTextarea:focus,
 .formSelect:focus {
     outline: none;
-    border-color: #4169e1;
+    border-color: var(--accent-color);
 }
 
 .formTextarea {
@@ -625,8 +660,8 @@
 }
 
 .tagItem {
-    background-color: #252525;
-    color: #4169e1;
+    background-color: var(--bg-tertiary);
+    color: var(--accent-color);
     padding: 4px 10px;
     border-radius: 16px;
     font-size: 12px;
@@ -634,6 +669,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .linksSection {
@@ -642,10 +678,11 @@
 }
 
 .noLinks {
-    color: #888;
+    color: var(--text-tertiary);
     font-style: italic;
     text-align: center;
     margin: 16px 0;
+    transition: color 0.3s ease;
 }
 
 .linksList {
@@ -656,37 +693,47 @@
 }
 
 .linkItem {
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 12px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    border-left: 3px solid #4169e1;
+    border-left: 3px solid var(--accent-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    gap: 12px;
 }
 
 .linkInfo {
     flex: 1;
     min-width: 0;
+    overflow: hidden;
 }
 
 .linkTitle {
-    margin: 0 30px 4px 0;
+    margin: 0 0 4px 0;
     font-size: 15px;
     font-weight: 500;
-    color: #fff;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .linkUrl {
     display: block;
     font-size: 13px;
-    color: #4169e1;
+    color: var(--accent-color);
     margin-bottom: 8px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     text-decoration: none;
+    transition: color 0.3s ease;
+    max-width: 100%;
 }
 
 .linkUrl:hover {
@@ -701,37 +748,39 @@
 }
 
 .linkType {
-    background-color: #252525;
+    background-color: var(--bg-tertiary);
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 11px;
-    color: #aaa;
+    color: var(--text-tertiary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .linkVotes {
     display: flex;
     align-items: center;
     gap: 4px;
-    color: #aaa;
+    color: var(--text-tertiary);
     font-size: 12px;
+    transition: color 0.3s ease;
 }
 
 .removeLink {
     background: none;
     border: none;
     padding: 4px;
-    color: #666;
+    color: var(--text-tertiary);
     border-radius: 4px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s, color 0.3s ease, background-color 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .removeLink:hover {
-    background-color: #333;
-    color: #ff6b6b;
+    background-color: var(--hover-overlay);
+    color: var(--danger-color);
 }
 
 .addLinkForm {
@@ -744,7 +793,8 @@
     margin: 0 0 12px 0;
     font-size: 15px;
     font-weight: 500;
-    color: #ddd;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
 }
 
 .linkFormGroup {
@@ -755,19 +805,20 @@
     width: 100%;
     padding: 10px;
     font-size: 13px;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
-    color: #fff;
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .linkInput:focus {
     outline: none;
-    border-color: #4169e1;
+    border-color: var(--accent-color);
 }
 
 .addLinkButton {
-    background-color: #4169e1;
+    background-color: var(--accent-color);
     color: white;
     border: none;
     padding: 10px 16px;
@@ -780,13 +831,13 @@
 }
 
 .addLinkButton:hover {
-    background-color: #3451b2;
+    opacity: 0.9;
 }
 
 /* Responsive styles */
 @media (max-width: 1024px) {
     .linksContainer {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 16px;
     }
 }
@@ -858,5 +909,4 @@
         flex-direction: column;
         padding-bottom: 50px;
     }
-
 }

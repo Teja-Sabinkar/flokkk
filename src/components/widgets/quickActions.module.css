@@ -1,16 +1,18 @@
 /* src/components/widgets/quickActions.module.css */
 .quickActions {
-    background-color: #0d0d0d;
+    background-color: var(--bg-tertiary);
     border-radius: 8px;
     padding: 16px;
-    border: 1px solid #2a2a2a;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .actionTitle {
     font-size: 14px;
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0 0 12px 0;
+    transition: color 0.3s ease;
 }
 
 .actionButtons {
@@ -25,19 +27,19 @@
     align-items: center;
     gap: 6px;
     padding: 12px 8px;
-    background-color: #0d0d0d;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
-    color: #d1d1d1;
+    color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     font-size: 11px;
     font-weight: 500;
 }
 
 .actionButton:hover {
-    border-color: #578fed;
-    color: #fff;
+    border-color: var(--accent-color);
+    color: var(--text-primary);
     transform: translateY(-1px);
 }
 
@@ -48,6 +50,12 @@
 .actionButton svg {
     width: 18px;
     height: 18px;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
+}
+
+.actionButton:hover svg {
+    color: var(--text-primary);
 }
 
 /* Responsive Design */

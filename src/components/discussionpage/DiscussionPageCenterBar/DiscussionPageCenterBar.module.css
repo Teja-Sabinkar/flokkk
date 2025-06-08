@@ -1,3 +1,8 @@
+html[data-theme="light"] .centerBarContainer {
+  background-color: transparent;
+}
+
+/* Keep original dark theme styles */
 .centerBarContainer {
   width: 100%;
   margin: 0 auto;

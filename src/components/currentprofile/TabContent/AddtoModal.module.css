@@ -16,12 +16,14 @@
     width: 100%;
     max-width: 500px;
     max-height: 90vh;
-    background-color: #171717;
+    background-color: var(--bg-secondary);
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     overflow-y: auto;
-    color: white;
+    color: var(--text-primary);
     animation: modalFadeIn 0.3s ease-out;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 @keyframes modalFadeIn {
@@ -41,19 +43,22 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 24px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border-color);
+    transition: border-color 0.3s ease;
 }
 
 .modalHeader h2 {
     font-size: 20px;
     font-weight: 600;
     margin: 0;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .closeButton {
     background: none;
     border: none;
-    color: #999;
+    color: var(--text-tertiary);
     cursor: pointer;
     padding: 4px;
     border-radius: 50%;
@@ -62,11 +67,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .closeButton:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
+    background-color: var(--hover-overlay);
+    color: var(--text-primary);
 }
 
 .modalBody {
@@ -75,8 +81,9 @@
 
 .promptText {
     margin: 0 0 16px 0;
-    color: #e0e0e0;
+    color: var(--text-secondary);
     font-size: 14px;
+    transition: color 0.3s ease;
 }
 
 .forumsList {
@@ -95,18 +102,18 @@
     align-items: center;
     padding: 12px;
     border-radius: 8px;
-    background-color: #222;
+    background-color: var(--bg-tertiary);
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.3s ease;
 }
 
 .forumItem:hover {
-    background-color: #2a2a2a;
+    background-color: var(--hover-overlay);
 }
 
 .forumItem.selected {
-    background-color: rgba(65, 105, 225, 0.2);
-    border: 1px solid #4169e1;
+    background-color: rgba(59, 130, 246, 0.1);
+    border: 1px solid var(--accent-color);
 }
 
 .forumImageContainer {
@@ -132,24 +139,29 @@
     margin: 0 0 4px 0;
     font-size: 16px;
     font-weight: 500;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .forumInfo p {
     margin: 0;
     font-size: 12px;
-    color: #aaa;
+    color: var(--text-tertiary);
+    transition: color 0.3s ease;
 }
 
 .selectedIndicator {
-    color: #4169e1;
+    color: var(--accent-color);
     margin-left: 12px;
+    transition: color 0.3s ease;
 }
 
 .noForumsMessage {
-    color: #aaa;
+    color: var(--text-tertiary);
     font-size: 14px;
     text-align: center;
     padding: 20px 0;
+    transition: color 0.3s ease;
 }
 
 .divider {
@@ -165,17 +177,19 @@
     left: 0;
     right: 0;
     height: 1px;
-    background-color: #333;
+    background-color: var(--border-color);
     z-index: 0;
+    transition: background-color 0.3s ease;
 }
 
 .divider span {
     display: inline-block;
     padding: 0 12px;
-    background-color: #171717;
+    background-color: var(--bg-secondary);
     position: relative;
-    color: #888;
+    color: var(--text-tertiary);
     font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .createNewButton {
@@ -186,22 +200,23 @@
     width: 100%;
     padding: 12px;
     border-radius: 8px;
-    background-color: #222;
-    border: 1px dashed #444;
-    color: #4169e1;
+    background-color: var(--bg-tertiary);
+    border: 1px dashed var(--border-color);
+    color: var(--accent-color);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .createNewButton:hover {
-    background-color: #2a2a2a;
-    border-color: #4169e1;
+    background-color: var(--hover-overlay);
+    border-color: var(--accent-color);
 }
 
 .createNewButton svg {
-    color: #4169e1;
+    color: var(--accent-color);
+    transition: color 0.3s ease;
 }
 
 .newForumForm {
@@ -216,7 +231,8 @@
     display: block;
     margin-bottom: 8px;
     font-size: 14px;
-    color: #e0e0e0;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
 }
 
 .input,
@@ -224,12 +240,12 @@
     width: 100%;
     padding: 12px;
     border-radius: 6px;
-    border: 1px solid #333;
-    background-color: #222;
-    color: white;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
     font-size: 14px;
     font-family: inherit;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .textarea {
@@ -240,7 +256,7 @@
 .input:focus,
 .textarea:focus {
     outline: none;
-    border-color: #4169e1;
+    border-color: var(--accent-color);
 }
 
 .modalFooter {
@@ -248,7 +264,8 @@
     justify-content: flex-end;
     gap: 12px;
     padding: 16px 24px;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--border-color);
+    transition: border-color 0.3s ease;
 }
 
 .cancelButton,
@@ -263,26 +280,27 @@
 
 .cancelButton {
     background-color: transparent;
-    border: 1px solid #444;
-    color: #e0e0e0;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .cancelButton:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--hover-overlay);
 }
 
 .addButton {
-    background-color: #4169e1;
+    background-color: var(--accent-color);
     border: none;
     color: white;
+    transition: background-color 0.3s ease;
 }
 
 .addButton:hover {
-    background-color: #3a5ecc;
+    opacity: 0.9;
 }
 
 .addButton:disabled {
-    background-color: #2a3d80;
     opacity: 0.7;
     cursor: not-allowed;
 }
@@ -298,11 +316,12 @@
 .loadingSpinner {
     width: 32px;
     height: 32px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    border: 3px solid rgba(59, 130, 246, 0.3);
     border-radius: 50%;
-    border-top-color: white;
+    border-top-color: var(--accent-color);
     animation: spin 1s linear infinite;
     margin-bottom: 12px;
+    transition: border-color 0.3s ease;
 }
 
 @keyframes spin {
@@ -313,11 +332,12 @@
 
 .errorMessage {
     background-color: rgba(220, 53, 69, 0.1);
-    color: #dc3545;
+    color: var(--danger-color);
     padding: 12px 16px;
     border-radius: 6px;
     margin: 12px 24px 0;
     font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Responsive adjustments */

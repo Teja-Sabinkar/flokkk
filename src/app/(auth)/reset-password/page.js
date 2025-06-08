@@ -17,6 +17,13 @@ function ResetPasswordContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [isTokenValid, setIsTokenValid] = useState(true);
 
+  // Initialize theme on component mount
+  useEffect(() => {
+    // Set initial theme from localStorage to prevent flicker
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
   useEffect(() => {
     // Get token from URL
     const tokenFromUrl = searchParams.get('token');
@@ -100,8 +107,40 @@ function ResetPasswordContent() {
   if (!isTokenValid) {
     return (
       <div className="reset-password-container">
+        {/* Background decorative shapes */}
+        <div className="reset-password-background-shapes">
+          <div className="gradient-shape shape-1"></div>
+          <div className="gradient-shape shape-2"></div>
+          <div className="gradient-shape shape-3"></div>
+        </div>
+
         <div className="reset-password-card">
-          <h1 className="reset-password-title">Reset Password</h1>
+          <div className="reset-password-title">
+            <svg width="30" height="30" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="reset-password-title-svg">
+              <defs>
+                <linearGradient id="resetPasswordInvalidLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style={{stopColor:"#4f46e5", stopOpacity:1}} />
+                  <stop offset="100%" style={{stopColor:"#06b6d4", stopOpacity:1}} />
+                </linearGradient>
+              </defs>
+              
+              {/* Rounded rectangle background */}
+              <rect x="15" y="15" width="170" height="170" rx="35" ry="35" fill="url(#resetPasswordInvalidLogoGradient)"/>
+              
+              {/* Main vertical line (left) */}
+              <rect x="40" y="40" width="20" height="120" fill="white" rx="10"/>
+              
+              {/* Top horizontal line */}
+              <rect x="40" y="40" width="120" height="20" fill="white" rx="10"/>
+              
+              {/* Middle horizontal line (shorter) */}
+              <rect x="90" y="85" width="70" height="20" fill="white" rx="10"/>
+              
+              {/* Small square/dot bottom right */}
+              <rect x="125" y="125" width="25" height="25" fill="white" rx="6"/>
+            </svg>
+            <span className="reset-password-title-text">Reset Password</span>
+          </div>
           
           <div className="error-message">
             {error}
@@ -121,8 +160,18 @@ function ResetPasswordContent() {
 
   return (
     <div className="reset-password-container">
+      {/* Background decorative shapes */}
+      <div className="reset-password-background-shapes">
+        <div className="gradient-shape shape-1"></div>
+        <div className="gradient-shape shape-2"></div>
+        <div className="gradient-shape shape-3"></div>
+      </div>
+
       <div className="reset-password-card">
-        <h1 className="reset-password-title">Reset Password</h1>
+        <div className="reset-password-title">
+          
+          <span className="reset-password-title-text">Reset Password</span>
+        </div>
         
         {error && (
           <div className="error-message">
@@ -137,7 +186,7 @@ function ResetPasswordContent() {
         )}
         
         <form onSubmit={handleSubmit} className="reset-password-form">
-          <div>
+          <div className="form-group">
             <label htmlFor="password">New Password</label>
             <input
               id="password"
@@ -145,6 +194,7 @@ function ResetPasswordContent() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="reset-password-input"
+              placeholder="Enter your new password"
               minLength={8}
               required
             />
@@ -153,7 +203,7 @@ function ResetPasswordContent() {
             </p>
           </div>
           
-          <div>
+          <div className="form-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
             <input
               id="confirmPassword"
@@ -161,6 +211,7 @@ function ResetPasswordContent() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="reset-password-input"
+              placeholder="Confirm your new password"
               required
             />
           </div>
@@ -182,9 +233,23 @@ function ResetPasswordContent() {
   );
 }
 
+function LoadingFallback() {
+  // Initialize theme for loading state as well
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
+  return (
+    <div className="loading-container">
+      <div>Loading...</div>
+    </div>
+  );
+}
+
 export default function ResetPassword() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingFallback />}>
       <ResetPasswordContent />
     </Suspense>
   );

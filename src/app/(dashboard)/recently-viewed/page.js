@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import Header from '@/components/layout/Header/Header';
 import SidebarNavigation from '@/components/layout/SidebarNavigation/SidebarNavigation';
 import RecentlyViewedContainer from '@/components/recentlyviewed/RecentlyViewedContainer';
@@ -10,6 +11,7 @@ import RecentlyViewedRightSidebarToggle from '@/components/recentlyviewed/Recent
 import styles from './page.module.css';
 
 export default function RecentlyViewedPage() {
+  const { theme, isLoading: themeLoading } = useTheme(); // Add theme context
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [recentlyViewedItems, setRecentlyViewedItems] = useState([]);
@@ -275,6 +277,16 @@ export default function RecentlyViewedPage() {
   // Use API data if available, fallback data if API fails or empty
   const displayItems = recentlyViewedItems.length > 0 ? filteredItems : (isLoading ? [] : fallbackItems);
 
+  // Show loading screen while theme is loading
+  if (themeLoading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+  
   return (
     <div className={styles.pageContainer}>
       {/* Header fixed at the top */}

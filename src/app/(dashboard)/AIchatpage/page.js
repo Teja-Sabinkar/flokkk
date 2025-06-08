@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import DiscussionPageHeader from '@/components/layout/DiscussionPageHeader/DiscussionPageHeader';
 import DiscussionPageSidebarNavigation from '@/components/layout/DiscussionPageSidebarNavigation/DiscussionPageSidebarNavigation';
 import AiChat from '@/components/aichat/AiChat'; // Import AiChat component
@@ -12,6 +13,7 @@ export default function AIchatPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [selectedAI, setSelectedAI] = useState('Claude');
     const messagesEndRef = useRef(null);
+    const { theme } = useTheme(); // Add theme context
 
     // Check if there are any user messages to determine header visibility
     const hasUserMessages = messages.some(message => message.type === 'user');
@@ -256,7 +258,7 @@ export default function AIchatPage() {
     }, [messages, isLoading]);
 
     return (
-        <div className={styles.container}>
+        <div className={styles.container} data-theme={theme}>
             <DiscussionPageHeader
                 onMenuToggle={toggleSidebar}
                 isMobileMenuOpen={isSidebarOpen}

@@ -6,13 +6,13 @@
     top: 0;
     right: 0;
     bottom: 0;
-    background-color: #0f0f0f;
+    background-color: var(--bg-primary);
     overflow: hidden;
     z-index: 100;
     height: 100%;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
 .rightSidebarScrollable {
@@ -22,13 +22,14 @@
     width: 100%;
     height: 100%;
     overflow-y: auto;
-    background-color: #060606;
+    background-color: var(--bg-secondary);
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
     padding: 20px 0 0 16px;
     /* Added justify-content to push elements to top and bottom */
     justify-content: space-between;
+    transition: background-color 0.3s ease;
 }
 
 /* Style for the content at the top of the sidebar */
@@ -52,7 +53,7 @@
     overflow-x: hidden;
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: #444 #1a1a1a;
+    scrollbar-color: var(--text-tertiary) var(--bg-tertiary);
 }
 
 /* Messages container */
@@ -92,44 +93,48 @@
 
 /* System message style */
 .system {
-    color: #a1a1a1;
+    color: var(--text-tertiary);
     padding: 10px 14px;
     background-color: transparent;
     font-size: 13px;
     text-align: center;
     max-width: 80%;
     margin: 0px auto;
+    transition: color 0.3s ease;
 }
 
 /* User message style */
 .user {
-    background-color: #2962FF;
+    background-color: var(--accent-color);
     align-self: flex-end;
     max-width: 85%;
     padding: 12px 16px;
     color: white;
+    transition: background-color 0.3s ease;
 }
 
 /* AI message style */
 .ai {
-    background-color: #181818;
+    background-color: var(--bg-tertiary);
     align-self: flex-start;
-    color: #fff;
-    border: 1px solid #333;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     padding: 12px 16px;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Error message style */
 .error {
     background-color: rgba(220, 53, 69, 0.2);
-    color: #ff6b6b;
+    color: var(--danger-color);
     border: 1px solid rgba(220, 53, 69, 0.3);
     padding: 12px 16px;
     border-radius: 12px;
     max-width: 85%;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Typing indicator animation */
@@ -144,10 +149,11 @@
 .typingIndicator span {
     width: 6px;
     height: 6px;
-    background-color: #6e6e6e;
+    background-color: var(--text-tertiary);
     border-radius: 50%;
     display: inline-block;
     animation: typing 1.4s infinite ease-in-out both;
+    transition: background-color 0.3s ease;
 }
 
 .typingIndicator span:nth-child(1) {
@@ -163,7 +169,6 @@
 }
 
 @keyframes typing {
-
     0%,
     100% {
         transform: translateY(0);
@@ -213,8 +218,9 @@
 .resizeBar {
     width: 15px;
     height: 100px;
-    background-color: #578fed;
+    background-color: var(--accent-color);
     border-radius: 4px;
+    transition: background-color 0.3s ease;
 }
 
 /* Right sidebar toggle button */
@@ -223,13 +229,13 @@
     right: 0px;
     top: 100px;
     transform: translateY(-50%);
-    border-top: 1px solid #578fed;
-    border-left: 1px solid #578fed;
-    border-bottom: 1px solid #578fed;
+    border-top: 1px solid var(--accent-color);
+    border-left: 1px solid var(--accent-color);
+    border-bottom: 1px solid var(--accent-color);
     border-right: none;
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
-    color: #fff;
+    color: var( --text-fourth);
     width: 28px;
     height: 80px;
     align-items: center;
@@ -237,15 +243,11 @@
     z-index: 999;
     cursor: pointer;
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
-    transition: right 0.3s ease;
-    background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+    transition: right 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-color) 100%);
     backdrop-filter: blur(1px);
     font-size: 8px;
 }
-
-
-
-
 
 /* Adjusted position for active state */
 .rightSidebarToggle.active {
@@ -276,7 +278,6 @@
 
 /* Responsive adjustments */
 @media (max-width: 1300px) {
-
     /* Hide right sidebar */
     .rightSidebarContainer {
         position: fixed;
@@ -291,7 +292,7 @@
         /* Hide by default */
         border-radius: 0;
         overflow: hidden;
-        transition: transform 0.3s ease;
+        transition: transform 0.3s ease, background-color 0.3s ease;
         /* Ensure smooth animation */
         width: 400px !important;
         /* Use fixed width in mobile view */

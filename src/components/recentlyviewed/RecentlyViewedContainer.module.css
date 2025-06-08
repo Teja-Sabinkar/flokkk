@@ -22,22 +22,24 @@
 }
 
 .noItems {
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 0.9rem;
   grid-column: 1 / -1;
   text-align: center;
   padding: 30px;
+  transition: color 0.3s ease;
 }
 
 .successMessage {
   background-color: rgba(46, 213, 115, 0.1);
-  color: #2ed573;
+  color: var(--success-color);
   padding: 10px;
   border-radius: 6px;
   margin: 10px 0;
   font-size: 14px;
   text-align: center;
   animation: fadeIn 0.3s ease-out;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 @keyframes fadeIn {

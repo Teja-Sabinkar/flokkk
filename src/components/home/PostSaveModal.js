@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import styles from './PostSaveModal.module.css';
 import { getPlaylists, createPlaylist, addPostToPlaylist } from '@/lib/playlists';
 
 export default function PostSaveModal({ isOpen, onClose, post, onSave }) {
+  const { theme } = useTheme();
+  
   // State for storing playlists
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);

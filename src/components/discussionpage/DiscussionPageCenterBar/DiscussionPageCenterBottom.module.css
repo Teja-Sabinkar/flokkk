@@ -1,3 +1,198 @@
+html[data-theme="light"] .discussionContainer {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .avatarPlaceholder {
+  background-color: #e5e7eb;
+}
+
+html[data-theme="light"] .username {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .userIsMod {
+  background-color: #fbbf24;
+}
+
+html[data-theme="light"] .userIsAdmin {
+  background-color: #10b981;
+}
+
+html[data-theme="light"] .timestamp {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .edited {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .commentContent {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .highlighted {
+  background-color: rgba(37, 99, 235, 0.1);
+  border-left: 3px solid #2563eb;
+}
+
+html[data-theme="light"] .currentHighlight {
+  background-color: rgba(37, 99, 235, 0.1);
+  border-left: 3px solid #2563eb;
+}
+
+html[data-theme="light"] .currentHighlight::before {
+  border-left: 5px solid #2563eb;
+}
+
+html[data-theme="light"] .searchMatch {
+  background-color: rgba(245, 158, 11, 0.3);
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .filteredViewIndicator {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .filteredViewIndicator svg {
+  color: #10b981;
+}
+
+html[data-theme="light"] .collapseButton {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .collapseButton:hover {
+  color: #1d4ed8;
+}
+
+html[data-theme="light"] .disabledCollapseButton {
+  color: #9ca3af !important;
+}
+
+html[data-theme="light"] .actionButton {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .actionButton:hover {
+  color: #1c1c1c;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="light"] .actionVoteButtons {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="light"] .actionVoteCount {
+  color: #4b5563;
+}
+
+html[data-theme="light"] .upvoted {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .downvoted {
+  color: #dc2626;
+}
+
+html[data-theme="light"] .actionUpvoted {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .actionDownvoted {
+  color: #dc2626;
+}
+
+html[data-theme="light"] .nestedComments {
+  border-left: 2px solid #e5e7eb;
+}
+
+html[data-theme="light"] .continueThread {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .replyingTo {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .replyingToLink {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .continuationIndicator {
+  color: #6b7280;
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+html[data-theme="light"] .continuationIndicatorLink {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .collapsedThreadInfo {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .collapsedIndicator {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .collapsedThreadInfo:hover .collapsedIndicator {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .collapsedUsername {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .emptyComments {
+  background-color: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+}
+
+html[data-theme="light"] .emptyComments svg {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .loadingComments {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .loadingSpinner {
+  border: 3px solid rgba(37, 99, 235, 0.2);
+  border-top-color: #2563eb;
+}
+
+html[data-theme="light"] .errorMessage {
+  color: #dc2626;
+  background-color: rgba(220, 38, 38, 0.1);
+}
+
+html[data-theme="light"] .retryButton {
+  background-color: #2563eb;
+}
+
+html[data-theme="light"] .retryButton:hover {
+  background-color: #1d4ed8;
+}
+
+html[data-theme="light"] .clickableUsername {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .continuationThreadItem:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+html[data-theme="light"] .deletedComment {
+  color: #9ca3af !important;
+}
+
+html[data-theme="light"] .commentContent.deletedComment {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Keep original dark theme styles */
 .discussionContainer {
   width: 100%;
   color: #fff;

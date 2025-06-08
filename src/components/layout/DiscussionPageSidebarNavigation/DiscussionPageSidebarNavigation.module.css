@@ -1,8 +1,8 @@
 .sidebar {
   width: 330px;
   height: 100vh;
-  background-color: #060606;
-  color: #fff;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   position: fixed;
   top: 0;
   left: 0;
@@ -10,6 +10,7 @@
   z-index: 100;
   /* Space for the header if used together */
   scrollbar-width: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .navList {
@@ -26,33 +27,34 @@
   display: flex;
   align-items: center;
   padding: 12px 24px;
-  color: #e0e0e0;
+  color: var(--text-secondary);
   text-decoration: none;
-  transition: background-color 0.2s ease;
-  border-radius: 10PX;
+  transition: background-color 0.2s ease, color 0.3s ease;
+  border-radius: 10px;
   margin-bottom: 15px;
   overflow: hidden;
 }
 
 .navLink:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--hover-overlay);
 }
 
 .active {
-  background-color: #578fed;
+  background-color: var(--accent-color);
   /* Blue color for active state */
   color: white;
 }
 
 /* Special class for flokkk A.I. navigation link */
 .flokkkAI {
-  border: 1px solid #578fed;
+  border: 1px solid var(--accent-color);
   position: relative;
+  transition: border-color 0.3s ease;
 }
 
 .flokkkAI:hover {
-  background-color: #252525;
-  border-color: #4169e1;
+  background-color: var(--hover-overlay);
+  border-color: var(--accent-color);
   transform: translateY(-1px);
 }
 
@@ -65,7 +67,7 @@
   height: 100%;
   background: linear-gradient(90deg,
       transparent,
-      rgba(65, 105, 225, 0.1),
+      rgba(var(--accent-color-rgb, 65, 105, 225), 0.1),
       transparent);
   transition: left 0.5s ease;
 }
@@ -125,7 +127,7 @@
   .sidebar {
     /* For mobile, you might want to add an overlay and toggle menu */
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, background-color 0.3s ease;
   }
 
   .sidebarOpen {

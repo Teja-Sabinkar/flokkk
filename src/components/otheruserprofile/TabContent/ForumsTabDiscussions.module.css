@@ -15,12 +15,13 @@
     align-items: center;
     background: none;
     border: none;
-    color: #4169e1;
+    color: var(--accent-color);
     font-size: 14px;
     padding: 8px 0;
     cursor: pointer;
     width: fit-content;
     margin-bottom: 16px;
+    transition: color 0.3s ease;
 }
 
 .backButton svg {
@@ -34,25 +35,33 @@
 .forumTitle {
     font-size: 24px;
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0 0 8px 0;
+    transition: color 0.3s ease;
+}
+
+.forumPostCount {
+    font-size: 14px;
+    color: var(--text-tertiary);
+    margin: 0 0 16px 0;
+    transition: color 0.3s ease;
 }
 
 .discussionsContainer {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     /* Force 3 columns */
     gap: 20px;
 }
 
 .postCard {
     width: 100%;
-    background-color: #0c0c0c;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
     overflow: hidden;
     padding: 16px;
-    border: 1px solid #2a2a2a;
-    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s ease, border-color 0.3s ease;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     height: 100%;
     display: flex;
@@ -60,7 +69,7 @@
 }
 
 .postCard:hover {
-    border: 1px solid #333;
+  border: 1px solid var(--text-tertiary);
 }
 
 .postHeader {
@@ -79,7 +88,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background-color: #333;
+    background-color: var(--bg-tertiary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -88,13 +97,14 @@
     overflow: hidden;
     margin-right: 12px;
     flex-shrink: 0;
+    transition: background-color 0.3s ease;
 }
 
 .avatarPlaceholder {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background-color: #4169e1;
+    background-color: var(--accent-color);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -127,8 +137,9 @@
 .username {
     font-size: 14px;
     font-weight: 500;
-    color: #e0e0e0;
+    color: var(--text-primary);
     text-decoration: none;
+    transition: color 0.3s ease;
 }
 
 .username:hover {
@@ -137,7 +148,8 @@
 
 .postDate {
     font-size: 12px;
-    color: #888;
+    color: var(--text-tertiary);
+    transition: color 0.3s ease;
 }
 
 .menuContainer {
@@ -147,7 +159,7 @@
 .postMenu {
     background: none;
     border: none;
-    color: #888;
+    color: var(--text-tertiary);
     cursor: pointer;
     height: 32px;
     width: 32px;
@@ -155,53 +167,58 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .postMenu:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background-color: var(--hover-overlay);
+    color: var(--text-primary);
 }
 
 .timeAgo {
-    color: #aaa;
+    color: var(--text-tertiary);
     font-size: 12px;
+    transition: color 0.3s ease;
 }
 
 .moreButton {
     background: none;
     border: none;
-    color: #aaa;
+    color: var(--text-tertiary);
     cursor: pointer;
     padding: 4px;
     border-radius: 50%;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .moreButton:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
+    background-color: var(--hover-overlay);
+    color: var(--text-primary);
 }
 
 .postTitle {
     font-size: 16px;
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
     margin-bottom: 10px;
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    transition: color 0.3s ease;
 }
 
 .postDescription {
     font-size: 14px;
-    color: #ddd;
+    color: var(--text-secondary);
     margin: 0 0 16px 0;
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    transition: color 0.3s ease;
 }
 
 .postImageContainer {
@@ -217,7 +234,8 @@
     height: 0;
     padding-bottom: 50%;
     /* Aspect ratio 2:1 */
-    background-color: #222;
+    background-color: var(--bg-tertiary);
+    transition: background-color 0.3s ease;
 }
 
 .postImage {
@@ -232,10 +250,11 @@
 .postEngagement {
     display: flex;
     justify-content: space-between;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--border-color);
     padding: 12px 16px;
     align-items: center;
     margin: 0 -16px -16px -16px;
+    transition: border-color 0.3s ease;
 }
 
 .commentsBtn,
@@ -245,18 +264,18 @@
     gap: 6px;
     background: none;
     border: none;
-    color: #aaa;
+    color: var(--text-tertiary);
     font-size: 13px;
     cursor: pointer;
     padding: 8px;
     border-radius: 4px;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.3s ease;
 }
 
 .commentsBtn:hover,
 .shareBtn:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: #fff;
+    background-color: var(--hover-overlay);
+    color: var(--text-primary);
 }
 
 .commentsBtn svg,
@@ -268,14 +287,15 @@
     position: absolute;
     top: 100%;
     right: 0;
-    background-color: #0c0c0c;
+    background-color: var(--bg-secondary);
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     min-width: 140px;
     overflow: hidden;
     z-index: 100;
-    border: 1px solid #333;
+    border: 1px solid var(--border-color);
     margin-top: 4px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .dropdownItem {
@@ -287,22 +307,37 @@
     font-size: 14px;
     background: none;
     border: none;
-    color: #e0e0e0;
+    color: var(--text-primary);
     cursor: pointer;
     text-align: left;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s ease, color 0.3s ease;
 }
 
 .dropdownItem:hover {
-    background-color: #333;
+    background-color: var(--hover-overlay);
 }
 
 .dropdownItem:active {
-    background-color: #444;
+    background-color: var(--hover-overlay);
 }
 
 .dropdownItem svg {
     flex-shrink: 0;
+    color: var(--text-tertiary);
+    transition: color 0.3s ease;
+}
+
+/* Style for Remove dropdown item */
+.removeDropdownItem {
+    color: var(--danger-color) !important;
+}
+
+.removeDropdownItem svg {
+    stroke: var(--danger-color) !important;
+}
+
+.removeDropdownItem:hover {
+    background-color: rgba(255, 59, 48, 0.1) !important;
 }
 
 .loadingContainer {
@@ -317,26 +352,22 @@
 .loadingSpinner {
     width: 32px;
     height: 32px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    border: 3px solid rgba(128, 128, 128, 0.3);
     border-radius: 50%;
-    border-top-color: white;
+    border-top-color: var(--text-primary);
     animation: spin 1s linear infinite;
     margin-bottom: 12px;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    transition: border-color 0.3s ease;
 }
 
 .emptyState {
-    background-color: #171717;
+    background-color: var(--bg-tertiary);
     border-radius: 8px;
     padding: 40px 20px;
     text-align: center;
-    color: #aaa;
+    color: var(--text-tertiary);
     grid-column: 1 / -1;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .emptyState p {
@@ -345,20 +376,42 @@
 
 .successMessage {
     background-color: rgba(46, 213, 115, 0.1);
-    color: #2ed573;
+    color: var(--success-color);
     padding: 10px;
     border-radius: 6px;
     margin: 10px 0;
     font-size: 14px;
     text-align: center;
     animation: fadeIn 0.3s ease-out;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+}
+
+.errorMessage {
+    background-color: rgba(255, 59, 48, 0.1);
+    color: var(--danger-color);
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 20px;
+    grid-column: 1 / -1;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes fadeIn {
     from {
         opacity: 0;
     }
-
     to {
         opacity: 1;
     }
@@ -366,7 +419,7 @@
 
 @media (max-width: 1100px) {
     .discussionsContainer {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         /* 2 columns on medium screens */
     }
 }
@@ -374,7 +427,7 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .discussionsContainer {
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 14px;
     }
 
@@ -387,14 +440,15 @@
     }
 }
 
-
 @media (max-width: 480px) {
-
     .discussionsContainer {
         grid-template-columns: 1fr;
         gap: 24px;
     }
 
+    .forumPostCount {
+        font-size: 12px;
+    }
 
     .forumTitle {
         font-size: 16px;
@@ -406,15 +460,20 @@
     }
 
     .postMenu {
+        height: 18px;
         width: 18px;
-        height: 18px
+    }
+
+    .dropdownItem {
+        font-size: 12px;
     }
 
     .postDescription {
         font-size: 12px;
     }
 
-    .commentsBtn {
+    .commentsBtn,
+    .shareBtn {
         font-size: 12px;
     }
 }

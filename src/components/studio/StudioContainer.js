@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from '@/context/ThemeContext';
 import styles from './StudioContainer.module.css';
 import PostsList from './PostsList';
 import CreateStudioDiscussionModal from './CreateStudioDiscussionModal';
 
 export default function StudioContainer({ user }) {
   const router = useRouter();
+  const { theme } = useTheme();
   const [allPosts, setAllPosts] = useState([]); // Store ALL posts here
   const [displayPosts, setDisplayPosts] = useState([]); // Posts filtered for display
   const [isLoading, setIsLoading] = useState(true);

@@ -2,12 +2,13 @@
   width: var(--sidebar-width, 330px);
   flex-shrink: 0;
   height: 100%;
-  background-color: #0f0f0f;
+  background-color: var(--bg-secondary);
   position: relative;
   overflow: hidden;
-  transition: width 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+  transition: width 0.3s ease, transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease;
   z-index: 50;
   transform-origin: right center;
+  border-left: 1px solid var(--border-color);
 }
 
 /* Resizing state - disable transitions during resize for smooth experience */
@@ -37,8 +38,9 @@
   flex: 1;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #444 #1a1a1a;
+  scrollbar-color: var(--text-tertiary) var(--bg-tertiary);
   padding: 14px 14px 0 14px;
+  transition: scrollbar-color 0.3s ease;
 }
 
 .widgetsArea::-webkit-scrollbar {
@@ -46,12 +48,14 @@
 }
 
 .widgetsArea::-webkit-scrollbar-track {
-  background: #1a1a1a;
+  background: var(--bg-tertiary);
+  transition: background-color 0.3s ease;
 }
 
 .widgetsArea::-webkit-scrollbar-thumb {
-  background-color: #444;
+  background-color: var(--text-tertiary);
   border-radius: 6px;
+  transition: background-color 0.3s ease;
 }
 
 /* Resize handle styles */
@@ -73,14 +77,15 @@
 .resizeHandle:hover,
 .resizeHandle.isResizing {
   opacity: 1;
-  background-color: rgba(65, 105, 225, 0.1);
+  background-color: rgba(var(--accent-color-rgb, 65, 105, 225), 0.1);
 }
 
 .resizeBar {
   width: 15px;
   height: 100px;
-  background-color: #4169e1;
+  background-color: var(--accent-color);
   border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
 /* Visibility states */
@@ -104,8 +109,9 @@
 
 /* AI Chat component styling */
 .aiChatWrapper {
-  background-color: #0f0f0f;
+  background-color: var(--bg-tertiary);
   flex-shrink: 0;
+  transition: background-color 0.3s ease;
 }
 
 .headerText {
@@ -119,13 +125,15 @@
 .promptText {
   font-size: 14px;
   font-weight: 600;
-  color: #a1a1a1;
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
 }
 
 .title {
   font-size: 20px;
   font-weight: 600;
-  color: #4169e1;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 /* Responsive adjustments */
@@ -138,7 +146,7 @@
     width: 320px;
     height: auto;
     box-shadow: -4px 0 16px rgba(0, 0, 0, 0.2);
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease;
   }
 
   /* Hide resize handle on mobile */

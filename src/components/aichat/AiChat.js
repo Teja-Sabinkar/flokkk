@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import styles from './AiChat.module.css';
 
 export default function AiChat({ onSubmit }) {
+    const { theme } = useTheme();
     const [inputValue, setInputValue] = useState('');
     const [isInputFocused, setIsInputFocused] = useState(false);
     const [requestsRemaining, setRequestsRemaining] = useState(0);

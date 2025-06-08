@@ -1,6 +1,6 @@
 .tabsContainer {
   display: flex;
-  background-color: #1a1a1a;
+  background-color: var(--bg-tertiary);
   padding: 0.5rem;
   border-radius: 0.25rem;
   margin-bottom: 1rem;
@@ -8,6 +8,7 @@
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  transition: background-color 0.3s ease;
 }
 
 .tabsContainer::-webkit-scrollbar {
@@ -18,11 +19,11 @@
   display: flex;
   align-items: center;
   padding: 0.625rem 1rem;
-  color: #9ca3af;
+  color: var(--text-tertiary);
   background: transparent;
   border: none;
   border-radius: 0.25rem;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease, color 0.3s ease, background-color 0.3s ease;
   margin-right: 0.5rem;
   cursor: pointer;
   white-space: nowrap;
@@ -31,12 +32,12 @@
 }
 
 .tab:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #f3f4f6;
+  background-color: var(--hover-overlay);
+  color: var(--text-primary);
 }
 
 .active {
-  background-color: #3b82f6;
+  background-color: var(--accent-color);
   color: white;
 }
 
@@ -77,20 +78,20 @@
 
 .markAllReadBtn {
   background-color: transparent;
-  color: #9ca3af;
-  border: 1px solid #374151;
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 0.25rem;
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease, color 0.3s ease, border-color 0.3s ease;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .markAllReadBtn:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #f3f4f6;
+  background-color: var(--hover-overlay);
+  color: var(--text-primary);
 }
 
 @media (max-width: 768px) {
@@ -110,18 +111,14 @@
   }
 }
 
-
 @media (max-width: 480px) {
-
   .tabName {
     font-size: 12px;
   }
 
   .tabsContainer{
-    border-left: 3px solid #4169e1;
-    border-right: 3px solid #4169e1;
+    border-left: 3px solid var(--accent-color);
+    border-right: 3px solid var(--accent-color);
+    transition: border-color 0.3s ease;
   }
-
-
-
 }

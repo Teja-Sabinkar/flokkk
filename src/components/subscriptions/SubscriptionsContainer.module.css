@@ -1,22 +1,26 @@
 .container {
   padding: 0;
-  color: white;
+  color: var(--text-primary);
   width: 100%;
   /* ADDED: Ensure container doesn't exceed available space */
   max-width: 100%;
   box-sizing: border-box;
+  transition: color 0.3s ease;
 }
 
 .heading {
   font-size: 24px;
   font-weight: 600;
   margin: 0 0 8px 0;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .subtitle {
-  color: #aaa;
+  color: var(--text-tertiary);
   font-size: 14px;
   margin: 0 0 32px 0;
+  transition: color 0.3s ease;
 }
 
 /* Grid and List view styles - FIXED */
@@ -48,7 +52,7 @@
 
 /* Empty states */
 .emptyState {
-  background-color: #1a1a1a;
+  background-color: var(--bg-tertiary);
   border-radius: 8px;
   padding: 40px 24px;
   text-align: center;
@@ -56,29 +60,33 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: background-color 0.3s ease;
 }
 
 .emptyStateIcon {
-  color: #666;
+  color: var(--text-tertiary);
   margin-bottom: 16px;
+  transition: color 0.3s ease;
 }
 
 .emptyStateTitle {
   font-size: 20px;
   font-weight: 600;
   margin-bottom: 12px;
-  color: #eee;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .emptyStateText {
-  color: #aaa;
+  color: var(--text-tertiary);
   max-width: 400px;
   margin: 0 auto 20px;
   line-height: 1.5;
+  transition: color 0.3s ease;
 }
 
 .exploreButton {
-  background-color: #4169E1;
+  background-color: var(--accent-color);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -90,16 +98,18 @@
 }
 
 .exploreButton:hover {
-  background-color: #3555c2;
+  background-color: var(--accent-color);
+  opacity: 0.9;
 }
 
 .emptyFeed {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--hover-overlay);
   border-radius: 8px;
   padding: 24px;
   text-align: center;
   margin: 24px 0;
-  color: #aaa;
+  color: var(--text-tertiary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Loading states */
@@ -109,18 +119,20 @@
   align-items: center;
   justify-content: center;
   padding: 40px;
-  color: #999;
+  color: var(--text-tertiary);
   text-align: center;
+  transition: color 0.3s ease;
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
+  border: 3px solid var(--hover-overlay);
   border-radius: 50%;
-  border-top-color: #4169E1;
+  border-top-color: var(--accent-color);
   animation: spin 1s ease-in-out infinite;
   margin-bottom: 16px;
+  transition: border-color 0.3s ease;
 }
 
 .loadingMore {
@@ -128,26 +140,29 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  color: #aaa;
+  color: var(--text-tertiary);
   gap: 12px;
+  transition: color 0.3s ease;
 }
 
 .smallSpinner {
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid var(--hover-overlay);
   border-radius: 50%;
-  border-top-color: #4169E1;
+  border-top-color: var(--accent-color);
   animation: spin 1s ease-in-out infinite;
+  transition: border-color 0.3s ease;
 }
 
 .endOfFeed {
   text-align: center;
   padding: 24px;
-  color: #777;
+  color: var(--text-tertiary);
   font-size: 14px;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--border-color);
   margin-top: 16px;
+  transition: color 0.3s ease, border-color 0.3s ease;
 }
 
 @keyframes spin {

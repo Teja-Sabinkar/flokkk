@@ -9,12 +9,13 @@
 }
 
 .groupHeading {
-  color: #e0e0e0;
+  color: var(--text-primary);
   font-size: 1.25rem;
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--border-color);
   font-weight: 500;
+  transition: color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Horizontal scrolling profiles container */
@@ -24,7 +25,8 @@
   overflow-x: auto;
   padding: 4px 0 16px 0;
   scrollbar-width: thin;
-  scrollbar-color: #333 #1a1a1a;
+  scrollbar-color: var(--border-color) var(--bg-tertiary);
+  transition: scrollbar-color 0.3s ease;
 }
 
 .horizontalScroll::-webkit-scrollbar {
@@ -32,13 +34,15 @@
 }
 
 .horizontalScroll::-webkit-scrollbar-track {
-  background: #1a1a1a;
+  background: var(--bg-tertiary);
   border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
 .horizontalScroll::-webkit-scrollbar-thumb {
-  background-color: #333;
+  background-color: var(--border-color);
   border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
 .profilesContainer {
@@ -57,7 +61,7 @@
 /* Grid layout for discussions/posts */
 .itemsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
@@ -72,17 +76,19 @@
   align-items: center;
   justify-content: center;
   padding: 60px 0;
-  color: #888;
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
 }
 
 .loadingSpinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #333;
+  border: 3px solid var(--border-color);
   border-radius: 50%;
-  border-top-color: #4169e1;
+  border-top-color: var(--accent-color);
   animation: spin 1s ease-in-out infinite;
   margin-bottom: 16px;
+  transition: border-color 0.3s ease;
 }
 
 @keyframes spin {
@@ -99,12 +105,14 @@
   justify-content: center;
   padding: 60px 0;
   text-align: center;
-  color: #e0e0e0;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .errorContainer svg {
-  color: #ff4040;
+  color: var(--danger-color);
   margin-bottom: 16px;
+  transition: color 0.3s ease;
 }
 
 .errorContainer h3 {
@@ -114,23 +122,24 @@
 
 .errorContainer p {
   margin: 0 0 20px 0;
-  color: #888;
+  color: var(--text-tertiary);
   max-width: 400px;
+  transition: color 0.3s ease;
 }
 
 .retryButton {
-  background-color: #2a2a2a;
-  color: #e0e0e0;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
   border: none;
   padding: 10px 20px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease, color 0.3s ease;
 }
 
 .retryButton:hover {
-  background-color: #3a3a3a;
+  background-color: var(--hover-overlay);
 }
 
 /* Empty State */
@@ -141,15 +150,17 @@
   justify-content: center;
   padding: 80px 0;
   text-align: center;
-  color: #e0e0e0;
-  background-color: #171717;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
   border-radius: 8px;
   margin-top: 20px;
+  transition: color 0.3s ease, background-color 0.3s ease;
 }
 
 .emptyContainer svg {
-  color: #666;
+  color: var(--text-tertiary);
   margin-bottom: 20px;
+  transition: color 0.3s ease;
 }
 
 .emptyContainer h3 {
@@ -159,11 +170,12 @@
 
 .emptyContainer p {
   margin: 0 0 24px 0;
-  color: #888;
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
 }
 
 .exploreButton {
-  background-color: #4169e1;
+  background-color: var(--accent-color);
   color: white;
   border: none;
   padding: 10px 24px;
@@ -171,11 +183,11 @@
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease;
 }
 
 .exploreButton:hover {
-  background-color: #3555c2;
+  opacity: 0.9;
 }
 
 /* Responsive Adjustments */

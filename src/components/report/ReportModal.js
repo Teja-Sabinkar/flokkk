@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import styles from './ReportModal.module.css';
 
 const reportReasons = [
@@ -14,6 +15,7 @@ const reportReasons = [
 ];
 
 const ReportModal = ({ isOpen, onClose, onSubmit, contentDetails }) => {
+  const { theme } = useTheme();
   const [selectedReason, setSelectedReason] = useState('');
   const [otherReason, setOtherReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

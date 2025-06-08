@@ -1,15 +1,87 @@
+html[data-theme="light"] .modalOverlay {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme="light"] .modalContent {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="light"] .closeButton {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .closeButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .modalTitle {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .label {
+  color: #4b5563;
+}
+
+html[data-theme="light"] .input,
+html[data-theme="light"] .textarea {
+  background-color: #f1f5f9;
+  border: 1px solid #e5e7eb;
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .input:focus,
+html[data-theme="light"] .textarea:focus {
+  border-color: #2563eb;
+  background-color: #ffffff;
+}
+
+html[data-theme="light"] .inputError {
+  border-color: #dc2626;
+}
+
+html[data-theme="light"] .errorText {
+  color: #dc2626;
+}
+
+html[data-theme="light"] .errorMessage {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+html[data-theme="light"] .cancelButton {
+  background-color: transparent;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+}
+
+html[data-theme="light"] .cancelButton:hover {
+  background-color: #f1f5f9;
+}
+
+html[data-theme="light"] .submitButton {
+  background-color: #2563eb;
+}
+
+html[data-theme="light"] .submitButton:hover {
+  background-color: #1d4ed8;
+}
+
+/* Keep original dark theme styles */
 .modalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.75);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    backdrop-filter: blur(3px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
 }
 
 .modalContent {

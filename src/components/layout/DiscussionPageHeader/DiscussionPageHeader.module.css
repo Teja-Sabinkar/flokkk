@@ -1,12 +1,13 @@
 .header {
   width: 100%;
   height: 60px;
-  background-color: #060606;
-  border-bottom: 1px solid #222;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
   position: fixed;
   top: 0;
   left: 0;
   z-index: 1000;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .headerContent {
@@ -31,10 +32,11 @@
   justify-content: center;
   background: none;
   border: none;
-  color: #fff;
+  color: var(--text-primary);
   cursor: pointer;
   padding: 8px;
   margin-right: 8px;
+  transition: color 0.3s ease;
 }
 
 /* Logo styling */
@@ -61,8 +63,9 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 23px;
   font-weight: 600;
-  color: rgb(220, 220, 220);
+  color: var(--text-primary);
   letter-spacing: -0.5px;
+  transition: color 0.3s ease;
 }
 
 /* Search bar styling */
@@ -80,18 +83,19 @@
 .searchInput {
   width: 100%;
   height: 36px;
-  background-color: #1e1e1e;
-  border: 1px solid #333;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 18px;
   padding: 0 0 0 16px;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 14px;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .searchInput:focus {
   outline: none;
-  border-color: #578fed;
-  background-color: #252525;
+  border-color: var(--accent-color);
+  background-color: var(--bg-tertiary);
 }
 
 .searchButton {
@@ -101,27 +105,29 @@
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #888;
+  color: var(--text-tertiary);
   cursor: pointer;
   height: 36px;
   width: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: color 0.3s ease;
 }
 
 .searchButton:hover {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .searchLoader {
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid var(--hover-overlay);
   border-radius: 50%;
-  border-top-color: #4169e1;
+  border-top-color: var(--accent-color);
   animation: search-spin 0.8s linear infinite;
+  transition: border-color 0.3s ease;
 }
 
 @keyframes search-spin {
@@ -137,28 +143,31 @@
 .searchDropdown {
   position: absolute;
   top: 55px;
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   overflow: hidden;
   z-index: 1001;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   width: 100%;
   max-width: 600px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .searchLoading {
   padding: 16px;
   text-align: center;
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 14px;
+  transition: color 0.3s ease;
 }
 
 .searchNoResults {
   padding: 16px;
   text-align: center;
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 14px;
+  transition: color 0.3s ease;
 }
 
 .searchResultsList {
@@ -168,13 +177,13 @@
 
 .searchResultItem {
   padding: 12px 16px;
-  border-bottom: 1px solid #222;
+  border-bottom: 1px solid var(--border-color);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease, border-color 0.3s ease;
 }
 
 .searchResultItem:hover {
-  background-color: #222;
+  background-color: var(--hover-overlay);
 }
 
 .searchResultProfile,
@@ -199,10 +208,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(64, 96, 237, 0.2);
-  color: #4060ed;
+  background-color: rgba(var(--accent-color-rgb, 65, 105, 225), 0.2);
+  color: var(--accent-color);
   margin-right: 12px;
   flex-shrink: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .searchResultInfo {
@@ -213,29 +223,32 @@
 .searchResultTitle {
   font-size: 14px;
   font-weight: 500;
-  color: #fff;
+  color: var(--text-primary);
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 0.3s ease;
 }
 
 .searchResultSubtitle {
   font-size: 12px;
-  color: #999;
+  color: var(--text-tertiary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 0.3s ease;
 }
 
 .searchResultType {
   font-size: 12px;
-  color: #666;
+  color: var(--text-tertiary);
   padding: 4px 8px;
-  background-color: #2a2a2a;
+  background-color: var(--bg-tertiary);
   border-radius: 4px;
   margin-left: 8px;
   white-space: nowrap;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .searchViewAll {
@@ -243,16 +256,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background-color: #222;
-  color: #4169e1;
+  background-color: var(--bg-tertiary);
+  color: var(--accent-color);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease, color 0.3s ease;
 }
 
 .searchViewAll:hover {
-  background-color: #2a2a2a;
+  background-color: var(--hover-overlay);
 }
 
 .searchResultPost .searchResultSubtitle {
@@ -285,17 +298,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--text-primary);
   height: 40px;
   width: 40px;
   border-radius: 50%;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease, color 0.3s ease;
 }
 
 .createButton:hover,
 .notificationButton:hover,
 .profileButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--hover-overlay);
 }
 
 /* Create dropdown menu styling */
@@ -303,13 +316,14 @@
   position: absolute;
   top: 50px;
   right: 15px;
-  background-color: #0c0c0c;
-  border: 1px solid #333;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   width: 180px;
   overflow: hidden;
   z-index: 1001;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .dropdownItem {
@@ -318,25 +332,26 @@
   text-align: left;
   background: none;
   border: none;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease, color 0.3s ease;
   display: flex;
   align-items: center;
 }
 
 .dropdownItem:hover {
-  background-color: #2a2a2a;
+  background-color: var(--hover-overlay);
 }
 
 .dropdownItem:not(:last-child) {
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .dropdownItemIcon {
   margin-right: 10px;
-  color: #999;
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
 }
 
 .notificationContainer {
@@ -347,7 +362,7 @@
   position: absolute;
   top: 4px;
   right: 4px;
-  background-color: #ff4040;
+  background-color: var(--danger-color);
   color: white;
   font-size: 10px;
   font-weight: bold;
@@ -358,6 +373,7 @@
   align-items: center;
   justify-content: center;
   padding: 0 4px;
+  transition: background-color 0.3s ease;
 }
 
 /* Notification dropdown styling */
@@ -366,8 +382,8 @@
   top: 50px;
   right: 10px;
   width: 320px;
-  background-color: #060606;
-  border: 1px solid #3a3a3a;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   overflow: hidden;
   z-index: 1001;
@@ -376,6 +392,7 @@
   max-height: 85vh;
   overflow-y: auto;
   scrollbar-width: none;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 @keyframes notificationFadeIn {
@@ -396,12 +413,14 @@
 }
 
 .notificationDropdown::-webkit-scrollbar-track {
-  background-color: #222;
+  background-color: var(--bg-tertiary);
+  transition: background-color 0.3s ease;
 }
 
 .notificationDropdown::-webkit-scrollbar-thumb {
-  background-color: #444;
+  background-color: var(--border-color);
   border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
 .notificationHeader {
@@ -409,20 +428,23 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  border-bottom: 1px solid #252525;
+  border-bottom: 1px solid var(--border-color);
+  transition: border-color 0.3s ease;
 }
 
 .notificationHeader h3 {
   font-size: 18px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
   margin: 0;
+  transition: color 0.3s ease;
 }
 
 .seeAllLink {
-  color: #4169e1;
+  color: var(--accent-color);
   font-size: 14px;
   text-decoration: none;
+  transition: color 0.3s ease;
 }
 
 .seeAllLink:hover {
@@ -440,18 +462,19 @@
   display: flex;
   align-items: flex-start;
   padding: 12px 16px;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease;
   cursor: pointer;
   margin-bottom: 8px;
 }
 
 .notificationItem:hover {
-  background-color: #222;
+  background-color: var(--hover-overlay);
 }
 
 .unreadNotification {
-  background-color: rgba(65, 105, 225, 0.05);
-  border-left: 3px solid #4169e1;
+  background-color: rgba(var(--accent-color-rgb, 65, 105, 225), 0.05);
+  border-left: 3px solid var(--accent-color);
+  transition: background-color 0.3s ease, border-left-color 0.3s ease;
 }
 
 .notificationIcon {
@@ -463,32 +486,38 @@
   border-radius: 50%;
   margin-right: 12px;
   flex-shrink: 0;
-  background-color: #4169e1;
+  background-color: var(--accent-color);
+  transition: background-color 0.3s ease;
 }
 
 .likeIcon {
-  background-color: rgba(64, 96, 237, 0.2);
-  color: #4060ed;
+  background-color: rgba(var(--accent-color-rgb, 65, 105, 225), 0.2);
+  color: var(--accent-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .commentIcon {
-  background-color: rgba(64, 96, 237, 0.2);
-  color: #4060ed;
+  background-color: rgba(var(--accent-color-rgb, 65, 105, 225), 0.2);
+  color: var(--accent-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .followIcon {
-  background-color: rgba(100, 100, 255, 0.2);
-  color: #6464ff;
+  background-color: rgba(var(--accent-color-rgb, 65, 105, 225), 0.2);
+  color: var(--accent-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .followIcon svg {
-  stroke: #6464ff;
+  stroke: var(--accent-color);
   fill: none;
+  transition: stroke 0.3s ease;
 }
 
 .shareIcon {
-  background-color: rgba(64, 96, 237, 0.2);
-  color: #4060ed;
+  background-color: rgba(var(--accent-color-rgb, 65, 105, 225), 0.2);
+  color: var(--accent-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .notificationContent {
@@ -498,13 +527,15 @@
 .notificationContent p {
   margin: 0 0 4px 0;
   font-size: 14px;
-  color: #fff;
+  color: var(--text-primary);
   line-height: 1.4;
+  transition: color 0.3s ease;
 }
 
 .notificationTime {
   font-size: 12px;
-  color: #999;
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
 }
 
 .avatarContainer {
@@ -512,28 +543,31 @@
   height: 32px;
   border-radius: 50%;
   overflow: hidden;
-  background-color: #333;
+  background-color: var(--bg-tertiary);
+  transition: background-color 0.3s ease;
 }
 
 .avatar {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border: 1px solid #6b6b6b;
+  border: 1px solid var(--border-color);
   border-radius: 50%;
+  transition: border-color 0.3s ease;
 }
 
 .avatarFallback {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: #4169e1;
+  background-color: var(--accent-color);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: bold;
   font-size: 14px;
+  transition: background-color 0.3s ease;
 }
 
 /* Profile dropdown styling */
@@ -546,13 +580,14 @@
   top: 50px;
   right: 5px;
   width: 240px;
-  background-color: #0c0c0c;
-  border: 1px solid #3a3a3a;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   overflow: hidden;
   z-index: 1001;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   animation: profileFadeIn 0.3s ease-out;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 @keyframes profileFadeIn {
@@ -578,32 +613,34 @@
   width: 100%;
   padding: 12px 16px;
   font-size: 14px;
-  color: #fff;
+  color: var(--text-primary);
   background: none;
   border: none;
   text-align: left;
   cursor: pointer;
   text-decoration: none;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease, color 0.3s ease;
 }
 
 .profileDropdownItem:hover {
-  background-color: #222;
+  background-color: var(--hover-overlay);
 }
 
 .profileDropdownItem:active {
-  background-color: #2a2a2a;
+  background-color: var(--bg-tertiary);
 }
 
 .profileDropdownItem svg {
   margin-right: 12px;
-  color: #888;
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
 }
 
 .profileDropdownDivider {
   margin: 8px 0;
   border: 0;
-  border-top: 1px solid #252525;
+  border-top: 1px solid var(--border-color);
+  transition: border-color 0.3s ease;
 }
 
 /* Remove the media query that was conditionally showing the hamburger menu */

@@ -9,7 +9,7 @@ const NotificationTabs = ({ activeTab, setActiveTab, counts }) => {
 
   // Direct tab count mapping
   const getUnreadCount = (tabId) => {
-    switch(tabId) {
+    switch (tabId) {
       case 'posts': return counts.postsUnread || 0;
       case 'comments': return counts.commentsUnread || 0;
       case 'likes': return counts.likesUnread || 0;
@@ -19,9 +19,9 @@ const NotificationTabs = ({ activeTab, setActiveTab, counts }) => {
   };
 
   const tabs = [
-    { 
-      id: 'posts', 
-      label: 'Posts', 
+    {
+      id: 'posts',
+      label: 'Posts',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -32,18 +32,18 @@ const NotificationTabs = ({ activeTab, setActiveTab, counts }) => {
         </svg>
       )
     },
-    { 
-      id: 'comments', 
-      label: 'Comments', 
+    {
+      id: 'comments',
+      label: 'Comments',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
       )
     },
-    { 
-      id: 'likes', 
-      label: 'Votings', 
+    {
+      id: 'likes',
+      label: 'Votings',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" strokeWidth="0">
           <path d="M7,14c0.3,0.3,0.6,0.4,1,0.4s0.7-0.1,1-0.4l3-3V20c0,0.8,0.7,1.5,1.5,1.5S15,20.8,15,20v-9l3,3c0.3,0.3,0.6,0.4,1,0.4
@@ -53,9 +53,9 @@ const NotificationTabs = ({ activeTab, setActiveTab, counts }) => {
         </svg>
       )
     },
-    { 
-      id: 'contributions', 
-      label: 'Contributions', 
+    {
+      id: 'contributions',
+      label: 'Contributions',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
@@ -69,7 +69,7 @@ const NotificationTabs = ({ activeTab, setActiveTab, counts }) => {
     <div className={styles.tabsContainer}>
       {tabs.map((tab) => {
         const count = getUnreadCount(tab.id);
-        
+
         return (
           <button
             key={tab.id}
@@ -78,9 +78,9 @@ const NotificationTabs = ({ activeTab, setActiveTab, counts }) => {
           >
             <span className={styles.tabIcon}>{tab.icon}</span>
             <span className={styles.tabName}>{tab.label}</span>
-            
+
             {count > 0 && (
-              <span 
+              <span
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -89,11 +89,11 @@ const NotificationTabs = ({ activeTab, setActiveTab, counts }) => {
                   height: '1.25rem',
                   padding: '0 0.375rem',
                   marginLeft: '0.5rem',
-                  backgroundColor: activeTab === tab.id ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                  backgroundColor: activeTab === tab.id ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.2)',
                   borderRadius: '9999px',
                   fontSize: '0.75rem',
                   fontWeight: '500',
-                  color: 'white'
+                  color: 'var(--text-primary)'
                 }}
               >
                 {count}

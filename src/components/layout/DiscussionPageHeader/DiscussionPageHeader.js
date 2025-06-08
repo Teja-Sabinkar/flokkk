@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -8,6 +9,7 @@ import styles from './DiscussionPageHeader.module.css';
 
 export default function DiscussionPageHeader({ user, onMenuToggle, isMobileMenuOpen }) {
   const router = useRouter();
+  const { theme } = useTheme(); // Add theme context
 
   // Unified user state for consistent navigation
   const [userState, setUserState] = useState({
@@ -682,7 +684,7 @@ export default function DiscussionPageHeader({ user, onMenuToggle, isMobileMenuO
 
 
   return (
-    <header className={styles.header}>
+    <header className={styles.header} data-theme={theme}>
       <div className={styles.headerContent}>
         {/* Left section containing mobile menu button and logo */}
         <div className={styles.headerleftsection}>

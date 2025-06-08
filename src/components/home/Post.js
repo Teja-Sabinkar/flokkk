@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -12,6 +13,7 @@ import { useAppearanceTracker } from '@/hooks/useAppearanceTracker';
 
 export default function Post({ post, onHidePost }) {
   const router = useRouter();
+  const { theme } = useTheme();
   const [showFullContent, setShowFullContent] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAllHashtags, setShowAllHashtags] = useState(false);
@@ -376,13 +378,8 @@ export default function Post({ post, onHidePost }) {
     return color;
   };
 
-
-
-
   return (
     <div className={styles.postCard} ref={postRef} data-post-id={post.id || post._id}>
-      {/* DEBUG: Show appearance status in development */}
-
       {/* User Info and Post Header */}
       <div className={styles.postHeader}>
         <div className={styles.userInfo}>

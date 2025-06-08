@@ -2,9 +2,10 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
-    background-color: #1a1a1a;
-    color: #ffffff;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
     overflow: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .mainContent {
@@ -62,6 +63,7 @@
     z-index: 998;
     opacity: 0;
     animation: fadeIn 0.3s ease forwards;
+    backdrop-filter: blur(4px);
 }
 
 @keyframes fadeIn {
@@ -79,8 +81,9 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: #060606;
+    background-color: var(--bg-primary);
     overflow: hidden;
+    transition: background-color 0.3s ease;
 }
 
 /* Welcome Section */
@@ -139,7 +142,7 @@
 
     25% {
         opacity: 1.2;
-        transform: scale(1.02);
+        transform: scale(1.10);
         filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
     }
 
@@ -157,18 +160,19 @@
 }
 
 .aiDropdown {
-    background-color: #2a2a2a;
-    color: #ffffff;
-    border: 1px solid #3a3a3a;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
     padding: 8px 16px;
     border-radius: 8px;
     font-size: 14px;
     cursor: pointer;
     outline: none;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .aiDropdown:hover {
-    background-color: #3a3a3a;
+    background-color: var(--hover-overlay);
 }
 
 /* Chat mode header for AI selector */
@@ -180,28 +184,29 @@
 }
 
 .aiDropdownSmall {
-    background-color: #2a2a2a;
-    color: #ffffff;
-    border: 1px solid #3a3a3a;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
     padding: 6px 12px;
     border-radius: 6px;
     font-size: 13px;
     cursor: pointer;
     outline: none;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .aiDropdownSmall:hover {
-    background-color: #3a3a3a;
+    background-color: var(--hover-overlay);
 }
 
 .welcomeTitle {
-
     margin-bottom: 40px;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 23px;
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     letter-spacing: -0.5px;
+    transition: color 0.3s ease;
 }
 
 .suggestions {
@@ -218,17 +223,17 @@
     gap: 8px;
     padding: 10px 20px;
     background-color: transparent;
-    border: 1px solid #3a3a3a;
+    border: 1px solid var(--border-color);
     border-radius: 20px;
-    color: #ffffff;
+    color: var(--text-primary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease, color 0.3s ease, border-color 0.3s ease;
     font-size: 14px;
 }
 
 .suggestionButton:hover {
-    background-color: #2a2a2a;
-    border-color: #4a4a4a;
+    background-color: var(--hover-overlay);
+    border-color: var(--accent-color);
     transform: translateY(-2px);
 }
 
@@ -247,9 +252,10 @@
 
 .promptsTitle {
     font-size: 14px;
-    color: #888;
+    color: var(--text-tertiary);
     margin-bottom: 16px;
     text-align: center;
+    transition: color 0.3s ease;
 }
 
 .promptButton {
@@ -258,19 +264,19 @@
     gap: 12px;
     width: 100%;
     padding: 14px 20px;
-    background-color: #2a2a2a;
-    border: 1px solid #3a3a3a;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
-    color: #ffffff;
+    color: var(--text-primary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     margin-bottom: 12px;
     text-align: left;
     font-size: 14px;
 }
 
 .promptButton:hover {
-    background-color: #3a3a3a;
+    background-color: var(--hover-overlay);
     transform: translateX(4px);
 }
 
@@ -299,7 +305,23 @@
     max-width: 1000px;
     margin: 0 auto;
     scrollbar-width: thin;
-    scrollbar-color: #444 #1a1a1a;
+    scrollbar-color: var(--text-tertiary) var(--bg-tertiary);
+    transition: scrollbar-color 0.3s ease;
+}
+
+.messagesContainer::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messagesContainer::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    transition: background-color 0.3s ease;
+}
+
+.messagesContainer::-webkit-scrollbar-thumb {
+    background-color: var(--text-tertiary);
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
 }
 
 /* Input Section - New container for AiChat */

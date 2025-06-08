@@ -1,3 +1,83 @@
+html[data-theme="light"] .recommendationsContainer {
+  background-color: #f8f9fa;
+}
+
+html[data-theme="light"] .recommendationsHeader h3 {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .recommendationItem {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+html[data-theme="light"] .recommendationItem:hover {
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+}
+
+html[data-theme="light"] .title {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .username {
+  color: #4b5563;
+}
+
+html[data-theme="light"] .timeAgo {
+  color: #9ca3af;
+}
+
+html[data-theme="light"] .discussionCount {
+  color: #4b5563;
+}
+
+html[data-theme="light"] .viewMoreButton {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .viewMoreButton:hover {
+  color: #1d4ed8;
+}
+
+html[data-theme="light"] .viewMoreButton:active {
+  color: #1e40af;
+}
+
+html[data-theme="light"] .loadingIndicator {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .errorMessage {
+  color: #dc2626;
+}
+
+html[data-theme="light"] .recommendationError {
+  color: #4b5563;
+  background-color: #f1f5f9;
+}
+
+html[data-theme="light"] .retryButton {
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+}
+
+html[data-theme="light"] .retryButton:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+html[data-theme="light"] .menuButton {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .menuButton:hover {
+  background-color: #f1f5f9;
+  color: #4b5563;
+}
+
+/* Keep the existing dark theme styles */
 .recommendationsContainer {
     display: flex;
     flex-direction: column;

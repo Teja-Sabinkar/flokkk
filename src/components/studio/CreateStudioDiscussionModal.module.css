@@ -1,4 +1,3 @@
-/* YouTube restriction notice */
 .youtubeNotice {
     display: flex;
     align-items: center;
@@ -11,6 +10,7 @@
     font-size: 13px;
     font-weight: 500;
     margin-bottom: 12px;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .youtubeNotice svg {
@@ -56,17 +56,18 @@
 }
 
 .modalContent {
-    background-color: #171717;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
     width: 100%;
     max-width: 600px;
     max-height: 90vh;
     overflow-y: auto;
-    color: #fff;
+    color: var(--text-primary);
     scrollbar-width: none;
-    border: 1px solid #3a3a3a;
+    border: 1px solid var(--border-color);
     margin-top: 50px;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .modalHeader {
@@ -74,19 +75,22 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    border-bottom: 1px solid #222;
+    border-bottom: 1px solid var(--border-color);
+    transition: border-color 0.3s ease;
 }
 
 .modalTitle {
     font-size: 18px;
     font-weight: 600;
     margin: 0;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .closeButton {
     background: none;
     border: none;
-    color: #888;
+    color: var(--text-tertiary);
     cursor: pointer;
     height: 32px;
     width: 32px;
@@ -94,11 +98,12 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .closeButton:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background-color: var(--hover-overlay);
+    color: var(--text-primary);
 }
 
 .form {
@@ -113,7 +118,8 @@
     display: block;
     font-size: 14px;
     margin-bottom: 8px;
-    color: #ccc;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
 }
 
 .videoLinkContainer {
@@ -124,35 +130,37 @@
 .videoInput {
     width: 100%;
     height: 40px;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 0 12px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .videoInput:focus {
     outline: none;
-    border-color: #4169e1;
-    background-color: #252525;
+    border-color: var(--accent-color);
+    background-color: var(--bg-tertiary);
 }
 
 .fetchButton {
     height: 40px;
     padding: 0 16px;
-    background-color: #171717;
-    border: 1px solid #4169e1;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--accent-color);
     border-radius: 4px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .fetchButton:hover:not(:disabled) {
-    background-color: #4169e1;
+    background-color: var(--accent-color);
+    color: white;
 }
 
 .fetchButton:disabled {
@@ -163,8 +171,9 @@
 .divider {
     text-align: center;
     margin: 20px 0;
-    color: #888;
+    color: var(--text-tertiary);
     position: relative;
+    transition: color 0.3s ease;
 }
 
 .divider::before,
@@ -174,7 +183,8 @@
     top: 50%;
     width: 40%;
     height: 1px;
-    background-color: #333;
+    background-color: var(--border-color);
+    transition: background-color 0.3s ease;
 }
 
 .divider::before {
@@ -188,58 +198,60 @@
 .input {
     width: 100%;
     height: 40px;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 0 12px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .input:focus {
     outline: none;
-    border-color: #4169e1;
-    background-color: #252525;
+    border-color: var(--accent-color);
+    background-color: var(--bg-tertiary);
 }
 
 .textarea {
     width: 100%;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 12px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 14px;
     resize: vertical;
     min-height: 100px;
     font-family: inherit;
     scrollbar-width: none;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .textarea:focus {
     outline: none;
-    border-color: #4169e1;
-    background-color: #252525;
+    border-color: var(--accent-color);
+    background-color: var(--bg-tertiary);
 }
 
 .fileButton {
     height: 40px;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 14px;
     cursor: pointer;
     padding: 0 16px;
     display: block;
     width: 100%;
     text-align: left;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .fileButton:hover {
-    background-color: #252525;
-    border-color: #444;
+    background-color: var(--hover-overlay);
+    border-color: var(--border-color);
 }
 
 .fileInput {
@@ -252,11 +264,12 @@
     height: 0;
     padding-bottom: 50%;
     /* 2:1 aspect ratio */
-    background-color: #0f0f0f;
-    border: 1px dashed #333;
+    background-color: var(--bg-tertiary);
+    border: 1px dashed var(--border-color);
     border-radius: 4px;
     position: relative;
     overflow: hidden;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .previewImage {
@@ -277,8 +290,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #888;
+    color: var(--text-tertiary);
     font-size: 14px;
+    transition: color 0.3s ease;
 }
 
 .hashtagsContainer {
@@ -291,18 +305,19 @@
 .hashtag {
     display: inline-flex;
     align-items: center;
-    background-color: #4169e1;
-    color: #fff;
+    background-color: var(--accent-color);
+    color: white;
     padding: 4px 10px;
     border-radius: 16px;
     font-size: 12px;
     font-weight: 500;
+    transition: background-color 0.3s ease;
 }
 
 .removeHashtag {
     background: none;
     border: none;
-    color: #fff;
+    color: white;
     cursor: pointer;
     margin-left: 6px;
     font-size: 16px;
@@ -312,6 +327,7 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
+    transition: background-color 0.3s ease;
 }
 
 .removeHashtag:hover {
@@ -331,18 +347,18 @@
     flex-direction: column;
     padding: 14px;
     border-radius: 8px;
-    border: 1px solid #333;
-    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .optionItem:hover {
-    border: 1px solid #333;
-    background-color: #2325385e;
+    border: 1px solid var(--border-color);
+    background-color: var(--hover-overlay);
 }
 
 /* Style for the selected option */
 .optionItem:has(.radioInput:checked) {
-    border-color: #3b5fe2;
+    border-color: var(--accent-color);
     background-color: rgba(59, 95, 226, 0.1);
 }
 
@@ -352,17 +368,18 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    border: 2px solid #6c6f85;
+    border: 2px solid var(--text-tertiary);
     margin: 0;
     margin-right: 10px;
     /* Space between radio and label */
     cursor: pointer;
     position: relative;
     flex-shrink: 0;
+    transition: border-color 0.3s ease;
 }
 
 .radioInput:checked {
-    border-color: #3b5fe2;
+    border-color: var(--accent-color);
 }
 
 .radioInput:checked::after {
@@ -373,29 +390,30 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: #3b5fe2;
+    background-color: var(--accent-color);
+    transition: background-color 0.3s ease;
 }
 
 /* Label text for the radio input */
 .radioLabel {
     font-weight: 600;
     font-size: 14px;
-    color: #ffffff;
-    /* White text to match your image */
+    color: var(--text-primary);
     cursor: pointer;
     display: flex;
     align-items: center;
+    transition: color 0.3s ease;
 }
 
 /* Description text below the option item */
 .optionDescription {
     font-size: 13px;
-    color: #9a9cb0;
-    /* Light gray text to match your image */
+    color: var(--text-tertiary);
     margin-top: 6px;
     margin-left: 28px;
     /* Aligns with the label text */
     line-height: 1.4;
+    transition: color 0.3s ease;
 }
 
 .buttonGroup {
@@ -407,10 +425,10 @@
 .submitButton {
     width: 100%;
     height: 48px;
-    background-color: #4169e1;
+    background-color: var(--accent-color);
     border: none;
     border-radius: 4px;
-    color: #fff;
+    color: white;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -419,7 +437,7 @@
 }
 
 .submitButton:hover {
-    background-color: #3050c8;
+    opacity: 0.9;
 }
 
 .draftButton {
@@ -428,44 +446,47 @@
     background-color: transparent;
     border: none;
     border-radius: 4px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.3s ease, border-color 0.3s ease;
     margin-top: 20px;
-    border: 1px solid #333;
+    border: 1px solid var(--border-color);
 }
 
 .draftButton:hover {
-    background-color: #4f4f4f6e;
+    background-color: var(--hover-overlay);
 }
 
 .errorMessage {
     background-color: rgba(220, 53, 69, 0.1);
-    color: #dc3545;
+    color: var(--danger-color);
     padding: 12px;
     margin: 0 20px;
     border-radius: 4px;
     font-size: 14px;
     margin-bottom: 16px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Creator Links styles */
 .creatorLinksHelp {
     font-size: 12px;
-    color: #888;
+    color: var(--text-tertiary);
     margin-bottom: 10px;
     font-style: italic;
+    transition: color 0.3s ease;
 }
 
 .linkErrorMessage {
     background-color: rgba(220, 53, 69, 0.1);
-    color: #dc3545;
+    color: var(--danger-color);
     padding: 8px;
     border-radius: 4px;
     font-size: 13px;
     margin-bottom: 12px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .linkInputsContainer {
@@ -481,39 +502,41 @@
 .linkInput {
     width: 100%;
     height: 40px;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 0 12px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .linkInput:focus {
     outline: none;
-    border-color: #4169e1;
-    background-color: #252525;
+    border-color: var(--accent-color);
+    background-color: var(--bg-tertiary);
 }
 
 /* Link Description Input */
 .linkDescriptionInput {
     width: 100%;
     min-height: 60px;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 8px 12px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 14px;
     font-family: inherit;
     resize: vertical;
     scrollbar-width: none;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .linkDescriptionInput:focus {
     outline: none;
-    border-color: #4169e1;
-    background-color: #252525;
+    border-color: var(--accent-color);
+    background-color: var(--bg-tertiary);
 }
 
 .linkDescriptionContainer {
@@ -526,21 +549,22 @@
 .addLinkButton {
     height: 40px;
     padding: 0 16px;
-    background-color: #1e1e1e;
-    border: 1px solid #4169e1;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--accent-color);
     border-radius: 4px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.3s ease, border-color 0.3s ease;
     align-self: flex-end;
     width: auto;
     margin-top: 8px;
 }
 
 .addLinkButton:hover {
-    background-color: #4169e1;
+    background-color: var(--accent-color);
+    color: white;
 }
 
 .creatorLinksContainer {
@@ -551,8 +575,9 @@
     overflow-y: auto;
     margin-top: 12px;
     padding: 8px;
-    background-color: #0f0f0f;
+    background-color: var(--bg-tertiary);
     border-radius: 4px;
+    transition: background-color 0.3s ease;
 }
 
 .creatorLinkItem {
@@ -560,9 +585,10 @@
     justify-content: space-between;
     align-items: center;
     padding: 10px;
-    background-color: #1e1e1e;
+    background-color: var(--bg-secondary);
     border-radius: 4px;
-    border-left: 3px solid #4169e1;
+    border-left: 3px solid var(--accent-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .creatorLinkInfo {
@@ -573,25 +599,27 @@
 .creatorLinkTitle {
     font-size: 14px;
     font-weight: 500;
-    color: #fff;
+    color: var(--text-primary);
     margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: color 0.3s ease;
 }
 
 .creatorLinkUrl {
     font-size: 12px;
-    color: #888;
+    color: var(--text-tertiary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     margin-bottom: 4px;
+    transition: color 0.3s ease;
 }
 
 .creatorLinkDescription {
     font-size: 12px;
-    color: #aaa;
+    color: var(--text-secondary);
     margin-top: 4px;
     font-style: italic;
     line-height: 1.3;
@@ -599,12 +627,13 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    transition: color 0.3s ease;
 }
 
 .removeLinkButton {
     background: none;
     border: none;
-    color: #888;
+    color: var(--text-tertiary);
     cursor: pointer;
     margin-left: 8px;
     font-size: 18px;
@@ -614,23 +643,26 @@
     width: 24px;
     height: 24px;
     border-radius: 50%;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .removeLinkButton:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #dc3545;
+    background-color: var(--hover-overlay);
+    color: var(--danger-color);
 }
 
 .requiredField {
-    color: #ff4d4f;
+    color: var(--danger-color);
     margin-left: 4px;
+    transition: color 0.3s ease;
 }
 
 .requiredFieldText {
     font-size: 0.85rem;
-    color: #ff4d4f;
+    color: var(--danger-color);
     margin-left: 8px;
     font-weight: normal;
+    transition: color 0.3s ease;
 }
 
 .submitButtonDisabled {
@@ -642,13 +674,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #1e1e1e;
-    color: #fefefe;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
     border-radius: 8px;
     padding: 20px;
     min-height: 150px;
-    border: 2px dashed #4169e1;
+    border: 2px dashed var(--accent-color);
     font-weight: bold;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .hashtagInputContainer {
@@ -660,36 +693,38 @@
 .hashtagInput {
     width: 100%;
     height: 40px;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 0 12px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .hashtagInput:focus {
     outline: none;
-    border-color: #4169e1;
-    background-color: #252525;
+    border-color: var(--accent-color);
+    background-color: var(--bg-tertiary);
 }
 
 .addHashtagButton {
     height: 40px;
     padding: 0 16px;
-    background-color: #171717;
-    border: 1px solid #4169e1;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--accent-color);
     border-radius: 4px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.3s ease, border-color 0.3s ease;
     white-space: nowrap;
 }
 
 .addHashtagButton:hover:not(:disabled) {
-    background-color: #4169e1;
+    background-color: var(--accent-color);
+    color: white;
 }
 
 .addHashtagButton:disabled {
@@ -708,7 +743,7 @@
     align-items: center;
     justify-content: center;
     z-index: 10;
-    color: #fff;
+    color: white;
     font-size: 14px;
 }
 

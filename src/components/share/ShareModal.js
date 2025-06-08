@@ -1,10 +1,12 @@
 // src/components/share/ShareModal.js
 import React, { useState, useRef, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import styles from './ShareModal.module.css';
 
 const ShareModal = ({ isOpen, onClose, postData }) => {
   const [copySuccess, setCopySuccess] = useState(false);
   const modalRef = useRef(null);
+  const { theme } = useTheme();
   
   // Create the post URL to be shared
   const postUrl = typeof window !== 'undefined' 

@@ -1,10 +1,12 @@
 // src/components/widgets/quickActions.js
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import styles from './quickActions.module.css';
 
 export default function QuickActions({ onActionSelect }) {
     const router = useRouter();
+    const { theme } = useTheme(); // Add theme context
     
     // Direct handler for studio (matching Header.js pattern)
     const handleStudioClick = () => {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import Header from '@/components/layout/Header/Header';
 import SidebarNavigation from '@/components/layout/SidebarNavigation/SidebarNavigation';
 import HomeFeed from '@/components/home/HomeFeed';
@@ -8,6 +9,7 @@ import HomeRightSidebar from '@/components/home/HomeRightSidebar';
 import styles from './page.module.css';
 
 export default function HomePage() {
+  const { theme, isLoading: themeLoading } = useTheme();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(() => {
@@ -77,12 +79,12 @@ export default function HomePage() {
   }, []);
 
   // If no user data from API, provide a fallback
-const userWithFallback = user || {
+  const userWithFallback = user || {
     name: 'Guest',
     username: 'Guest',  // ADDED: Include username in fallback
     avatar: null,
     notifications: 0
-};
+  };
 
   // Handle sidebar toggle
   const toggleSidebar = () => {
@@ -98,6 +100,16 @@ const userWithFallback = user || {
   const handleRightSidebarToggle = () => {
     setIsRightSidebarVisible(!isRightSidebarVisible);
   };
+
+  // Show loading screen while theme is loading
+  if (themeLoading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.pageContainer}>

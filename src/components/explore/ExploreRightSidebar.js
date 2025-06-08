@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import RotatingNewsContainer from '@/components/widgets/rotatingNewsContainer';
 import QuickActions from '@/components/widgets/quickActions';
 import AiChat from '@/components/aichat/AiChat';
@@ -12,6 +13,7 @@ export default function ExploreRightSidebar({
   onClose,
   onWidthChange
 }) {
+  const { theme } = useTheme(); // Add theme context
   const [isResizing, setIsResizing] = useState(false);
   const [rightSidebarWidth, setRightSidebarWidth] = useState(330);
 

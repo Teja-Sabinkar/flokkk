@@ -15,15 +15,21 @@
 
 /* Modal Content */
 .modalContent {
-    background-color: #1a1a1a;
+    background-color: var(--bg-secondary);
     border-radius: 12px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
     max-width: 500px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
-    border: 1px solid #333;
+    border: 1px solid var(--border-color);
     animation: modalAppear 0.2s ease-out;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Light theme adjustments for modal shadow */
+html[data-theme="light"] .modalContent {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
 @keyframes modalAppear {
@@ -44,33 +50,35 @@
     justify-content: space-between;
     align-items: center;
     padding: 24px 24px 0 24px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border-color);
     margin-bottom: 24px;
+    transition: border-color 0.3s ease;
 }
 
 .modalTitle {
     margin: 0;
     font-size: 20px;
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .closeButton {
     background: none;
     border: none;
-    color: #888;
+    color: var(--text-tertiary);
     cursor: pointer;
     padding: 8px;
     border-radius: 6px;
-    transition: all 0.2s;
+    transition: all 0.2s, background-color 0.3s ease, color 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .closeButton:hover {
-    background-color: #333;
-    color: #fff;
+    background-color: var(--hover-overlay);
+    color: var(--text-primary);
 }
 
 .closeButton:disabled {
@@ -89,36 +97,50 @@
     color: #ffa726;
 }
 
+/* Light theme adjustments for warning icon */
+html[data-theme="light"] .warningIcon {
+    color: #f57c00;
+}
+
 .confirmationText {
     margin-bottom: 24px;
 }
 
 .mainText {
     font-size: 16px;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0 0 20px 0;
     font-weight: 500;
+    transition: color 0.3s ease;
 }
 
 .noteText {
     font-size: 14px;
-    color: #aaa;
+    color: var(--text-secondary);
     margin: 16px 0 0 0;
     padding: 12px;
     background-color: rgba(255, 193, 7, 0.1);
     border: 1px solid rgba(255, 193, 7, 0.2);
     border-radius: 6px;
     text-align: left;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Light theme adjustments for note text */
+html[data-theme="light"] .noteText {
+    background-color: rgba(255, 193, 7, 0.15);
+    border-color: rgba(255, 193, 7, 0.3);
 }
 
 /* Link Preview */
 .linkPreview {
-    background-color: #2a2a2a;
-    border: 1px solid #333;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 16px;
     margin: 16px 0;
     text-align: left;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .linkInfo {
@@ -131,24 +153,28 @@
     margin: 0;
     font-size: 15px;
     font-weight: 500;
-    color: #fff;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .linkUrl {
     margin: 0;
     font-size: 13px;
-    color: #4169e1;
+    color: var(--accent-color);
     word-break: break-all;
+    transition: color 0.3s ease;
 }
 
 .linkContributor {
     margin: 0;
     font-size: 12px;
-    color: #888;
+    color: var(--text-tertiary);
+    transition: color 0.3s ease;
 }
 
 .linkContributor strong {
-    color: #fff;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 /* Modal Actions */
@@ -156,8 +182,9 @@
     display: flex;
     gap: 12px;
     padding: 24px;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--border-color);
     margin-top: 24px;
+    transition: border-color 0.3s ease;
 }
 
 .cancelButton,
@@ -177,21 +204,24 @@
 }
 
 .cancelButton {
-    background-color: #333;
-    color: #fff;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    transition: background-color 0.2s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .cancelButton:hover {
-    background-color: #444;
+    background-color: var(--hover-overlay);
 }
 
 .confirmButton {
-    background-color: #dc3545;
-    color: #fff;
+    background-color: var(--danger-color);
+    color: white;
+    transition: background-color 0.2s ease;
 }
 
 .confirmButton:hover {
-    background-color: #c82333;
+    opacity: 0.9;
 }
 
 .cancelButton:disabled,

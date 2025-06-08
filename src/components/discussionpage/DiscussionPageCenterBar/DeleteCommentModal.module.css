@@ -1,4 +1,84 @@
 /* src/components/discussionpage/DiscussionPageCenterBar/DeleteCommentModal.module.css */
+html[data-theme="light"] .modalOverlay {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme="light"] .modalContent {
+  background-color: #ffffff;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+html[data-theme="light"] .modalHeader {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+html[data-theme="light"] .modalTitle {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .closeButton {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .closeButton:hover {
+  color: #1c1c1c;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="light"] .confirmationText {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .commentPreview {
+  background-color: #f1f5f9;
+  border-left: 3px solid #2563eb;
+}
+
+html[data-theme="light"] .previewLabel {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .previewText {
+  color: #4b5563;
+}
+
+html[data-theme="light"] .warningText {
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #d97706;
+}
+
+html[data-theme="light"] .modalFooter {
+  border-top: 1px solid #e5e7eb;
+}
+
+html[data-theme="light"] .cancelButton {
+  background-color: transparent;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+}
+
+html[data-theme="light"] .cancelButton:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  border-color: #9ca3af;
+}
+
+html[data-theme="light"] .deleteButton {
+  background-color: #dc2626;
+  border: 1px solid #dc2626;
+}
+
+html[data-theme="light"] .deleteButton:hover:not(:disabled) {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+}
+
+html[data-theme="light"] .spinner {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Keep original dark theme styles */
 .modalOverlay {
     position: fixed;
     top: 0;

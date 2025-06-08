@@ -90,7 +90,6 @@ const FeedbackSettings = () => {
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>Feedback</h2>
       
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.formGroup}>

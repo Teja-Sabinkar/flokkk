@@ -1,3 +1,214 @@
+html[data-theme="light"] .chatbotContainer {
+  background-color: #f8f9fa;
+  color: #4b5563;
+}
+
+html[data-theme="light"] .resizeHandle.isResizing {
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+html[data-theme="light"] .resizeBar {
+  background-color: #2563eb;
+}
+
+html[data-theme="light"] .resizeDebug {
+  background-color: rgba(37, 99, 235, 0.8);
+}
+
+html[data-theme="light"] .chatMessages {
+  background-color: #f8f9fa;
+}
+
+/* Message styling for light theme */
+html[data-theme="light"] .messageContent h3 {
+  color: #1c1c1c !important;
+  border-bottom: 1px solid #d1d5db !important;
+}
+
+html[data-theme="light"] .messageContent h4 {
+  color: #4b5563 !important;
+}
+
+html[data-theme="light"] .messageContent ul {
+  color: #1c1c1c !important;
+}
+
+html[data-theme="light"] .messageContent li {
+  color: #1c1c1c !important;
+}
+
+html[data-theme="light"] .messageContent p {
+  color: #1c1c1c !important;
+}
+
+html[data-theme="light"] .messageContent strong {
+  color: #2563eb !important;
+}
+
+html[data-theme="light"] .system {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .user {
+  background-color: #2563eb;
+}
+
+html[data-theme="light"] .ai {
+  background-color: #ffffff;
+  color: #1c1c1c;
+  border: 1px solid #e5e7eb;
+}
+
+html[data-theme="light"] .error {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+html[data-theme="light"] .sectionHeader {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .sectionSubheader {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .discussionItem {
+  background-color: #ffffff;
+}
+
+html[data-theme="light"] .discussionTitle {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .username {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .commentCount {
+  background-color: #f1f5f9;
+  color: #4b5563;
+}
+
+html[data-theme="light"] .linkContainer {
+  border: 1px solid #2563eb;
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+html[data-theme="light"] .linkTitle {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .voteCount {
+  background-color: #f1f5f9;
+  color: #4b5563;
+}
+
+html[data-theme="light"] .takeMe {
+  background-color: #f1f5f9;
+  color: #4b5563;
+}
+
+html[data-theme="light"] .takeMe:hover {
+  background-color: #e5e7eb;
+}
+
+html[data-theme="light"] .showMore {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .additionalInfo {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .typingIndicator span {
+  background-color: #9ca3af;
+}
+
+/* Chat input styling for light theme */
+html[data-theme="light"] .chatInputWrapper {
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
+}
+
+html[data-theme="light"] .chatInputWrapperFocused {
+  border-color: #2563eb;
+}
+
+html[data-theme="light"] .chatInput {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .chatInput::placeholder {
+  color: #9ca3af;
+}
+
+html[data-theme="light"] .chatControls {
+  background-color: #ffffff;
+}
+
+html[data-theme="light"] .sendButton {
+  background-color: #2563eb;
+}
+
+html[data-theme="light"] .sendButton:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+html[data-theme="light"] .sendButton:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+}
+
+html[data-theme="light"] .dbIndicator {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+html[data-theme="light"] .dbIndicator svg {
+  color: #10b981;
+}
+
+html[data-theme="light"] .chatMessages::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+html[data-theme="light"] .chatMessages::-webkit-scrollbar-thumb {
+  background-color: #9ca3af;
+}
+
+html[data-theme="light"] .chatMessages {
+  scrollbar-color: #9ca3af #f1f5f9;
+}
+
+html[data-theme="light"] .suggestionsContainer {
+  background-color: #f8f9fa;
+}
+
+html[data-theme="light"] .suggestionsTitle {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .suggestionButton {
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+}
+
+html[data-theme="light"] .suggestionButton:hover {
+  color: #ffffff;
+  background-color: #2563eb;
+}
+
+html[data-theme="light"] .dbCommandButton {
+  background-color: #f1f5f9;
+  border: 1px solid #d1d5db;
+}
+
+html[data-theme="light"] .dbCommandButton:hover {
+  background-color: #e5e7eb;
+}
+
+/* Keep the existing dark theme styles */
 .chatbotContainer {
   display: flex;
   flex-direction: column;

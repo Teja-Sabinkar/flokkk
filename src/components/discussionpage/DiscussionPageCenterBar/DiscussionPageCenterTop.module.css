@@ -1,3 +1,155 @@
+html[data-theme="light"] .discussionContainer {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .creatorInfo {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .postedBy {
+  color: #4b5563;
+}
+
+html[data-theme="light"] .authorLink {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .timePosted {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .postTitle {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .tag {
+  color: #2563eb;
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+html[data-theme="light"] .postContent {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .showMoreButton {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .showMoreButton:hover {
+  color: #1d4ed8;
+}
+
+html[data-theme="light"] .showLessButton {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .showLessButton:hover {
+  color: #1d4ed8;
+}
+
+html[data-theme="light"] .saveSuccessMessage {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+html[data-theme="light"] .actionButton {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .actionButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .commentBox {
+  background-color: #f8f9fa;
+  border: 1px solid #d1d5db;
+}
+
+html[data-theme="light"] .commentBoxFocused {
+  border-color: #2563eb;
+}
+
+html[data-theme="light"] .formatButton {
+  background-color: #e5e7eb;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+}
+
+html[data-theme="light"] .formatButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .activeFormat {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+html[data-theme="light"] .activeFormat:hover {
+  background-color: #1d4ed8;
+}
+
+html[data-theme="light"] .commentInput {
+  background-color: #f8f9fa;
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .commentInput:focus {
+  border-color: #2563eb;
+}
+
+html[data-theme="light"] .commentInput:empty:before {
+  color: #9ca3af;
+}
+
+html[data-theme="light"] .commentButtonContainer {
+  background-color: #f8f9fa;
+}
+
+html[data-theme="light"] .commentButton {
+  background-color: #2563eb;
+}
+
+html[data-theme="light"] .commentButton:hover {
+  background-color: #1d4ed8;
+}
+
+html[data-theme="light"] .commentButton:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+}
+
+html[data-theme="light"] .searchResultsContainer {
+  background-color: #2563eb;
+}
+
+html[data-theme="light"] .searchResultsContainer:hover {
+  background-color: #1d4ed8;
+}
+
+html[data-theme="light"] .activeFilter {
+  background-color: #10b981;
+}
+
+html[data-theme="light"] .activeFilter:hover {
+  background-color: #059669;
+}
+
+html[data-theme="light"] .activeFilter::after {
+  border-top: 5px solid #10b981;
+}
+
+html[data-theme="light"] .searchNavButton {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .searchNavButton:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+/* Keep original dark theme styles */
 .discussionContainer {
   width: 100%;
   margin: 0 auto;

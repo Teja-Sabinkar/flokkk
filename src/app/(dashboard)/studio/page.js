@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from '@/context/ThemeContext';
 import DiscussionPageHeader from '@/components/layout/DiscussionPageHeader/DiscussionPageHeader';
 import DiscussionPageSidebarNavigation from '@/components/layout/DiscussionPageSidebarNavigation/DiscussionPageSidebarNavigation';
 import StudioContainer from '@/components/studio/StudioContainer';
@@ -22,6 +23,7 @@ const MOCK_USER = {
 
 export default function StudioPage() {
   const router = useRouter();
+  const { theme, isLoading: themeLoading } = useTheme();
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -108,7 +110,8 @@ export default function StudioPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, [isMobileMenuOpen]);
 
-  if (isLoading) {
+  // Show loading screen while theme is loading
+  if (themeLoading || isLoading) {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.loadingSpinner}></div>

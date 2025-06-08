@@ -1,3 +1,128 @@
+html[data-theme="light"] .modalOverlay {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme="light"] .modalContent {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="light"] .closeButton {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .closeButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .linkItemExpanded {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .linkTitle {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .linkTitle a {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .voteButton {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .voteButton:hover {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .upvoteButton:hover {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .downvoteButton:hover {
+  color: #dc2626;
+}
+
+html[data-theme="light"] .upvoteButton.active {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .downvoteButton.active {
+  color: #dc2626;
+}
+
+html[data-theme="light"] .voteCount {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .linkDescription {
+  color: #4b5563;
+}
+
+html[data-theme="light"] .linkMeta {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+html[data-theme="light"] .linkTag {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .actionButton {
+  background-color: #f1f5f9;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+html[data-theme="light"] .actionButton:hover {
+  background-color: #e5e7eb;
+}
+
+html[data-theme="light"] .linkActions .voteContainer {
+  background-color: #f1f5f9;
+  border: 1px solid #e5e7eb;
+}
+
+html[data-theme="light"] .urlLink {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .urlLink:hover {
+  color: #1d4ed8;
+}
+
+html[data-theme="light"] .contributorInfo {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .contributorName {
+  color: #2563eb;
+}
+
+html[data-theme="light"] .backButton {
+  color: #6b7280;
+}
+
+html[data-theme="light"] .backButton:hover {
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .linkUrl {
+  color: #6b7280;
+  background-color: #f1f5f9;
+}
+
+html[data-theme="light"] .copyLinkButton {
+  background-color: #f1f5f9;
+  color: #1c1c1c;
+}
+
+html[data-theme="light"] .copyLinkButton:hover {
+  background-color: #e5e7eb;
+}
+
+/* Keep original dark theme styles */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -65,6 +190,8 @@
   color: #fff;
   width: 92%;
   word-break: break-all;
+  overflow-y: auto;
+      height: 250px;
 }
 
 .linkTitle a {
@@ -127,7 +254,8 @@
   margin-bottom: 24px;
   color: #ccc;
   height: 150px;
-  overflow-x: auto;
+  overflow-y: auto;
+  word-break: break-all;
 }
 
 .linkMeta {

@@ -1,7 +1,8 @@
 .analyticsPage {
     min-height: 100vh;
-    background-color: #060606;
-    color: #ffffff;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .mainContent {
@@ -28,7 +29,7 @@
     /* Hide sidebar by default */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     box-shadow: none;
-    background-color: #121212;
+    background-color: var(--bg-secondary);
     /* Ensure it has a background to cover content */
 }
 
@@ -48,6 +49,8 @@
     padding: 24px 32px;
     overflow-y: auto;
     /* Added to make content vertically scrollable */
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-tertiary) var(--bg-tertiary);
 }
 
 /* Styling when menu is open - applies to all screen sizes */
@@ -76,18 +79,20 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: #060606;
-    color: #fff;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .loadingSpinner {
     width: 40px;
     height: 40px;
     margin-bottom: 16px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
+    border: 3px solid rgba(65, 105, 225, 0.3);
     border-radius: 50%;
-    border-top-color: #4169e1;
+    border-top-color: var(--accent-color);
     animation: spin 1s ease-in-out infinite;
+    transition: border-color 0.3s ease;
 }
 
 @keyframes spin {
@@ -106,24 +111,26 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: #060606;
-    color: #fff;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     padding: 0 24px;
     text-align: center;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .errorMessage {
     padding: 12px;
     margin-bottom: 16px;
     border-radius: 4px;
-    background-color: rgba(255, 77, 77, 0.1);
-    border: 1px solid rgba(255, 77, 77, 0.2);
-    color: #ff4d4d;
+    background-color: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.2);
+    color: var(--danger-color);
     font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .retryButton {
-    background-color: #4169e1;
+    background-color: var(--accent-color);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -134,7 +141,7 @@
 }
 
 .retryButton:hover {
-    background-color: #3451b2;
+    opacity: 0.9;
 }
 
 .analyticsContent {
@@ -155,34 +162,36 @@
     align-items: center;
     gap: 8px;
     background-color: transparent;
-    border: 1px solid #3a3a3a;
-    color: #ddd;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     padding: 10px 16px;
     font-size: 14px;
     font-weight: 500;
     border-radius: 4px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .backButton:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    border-color: #555;
+    background-color: var(--hover-overlay);
+    border-color: var(--border-color);
 }
 
 .analyticsTitle {
     font-size: 24px;
     font-weight: 600;
     margin: 0;
-    color: #fff;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .postInfo {
-    background-color: #141414;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
     padding: 20px 24px;
     margin-bottom: 24px;
-        border: 1px solid #2d2d2d;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .postHeader {
@@ -195,8 +204,9 @@
     margin: 0;
     font-size: 20px;
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
     line-height: 1.3;
+    transition: color 0.3s ease;
 }
 
 .postMeta {
@@ -216,17 +226,20 @@
 
 .publishedStatus {
     background-color: rgba(39, 174, 96, 0.15);
-    color: #27ae60;
+    color: var(--success-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .draftStatus {
     background-color: rgba(255, 184, 0, 0.15);
     color: #ffb800;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .postDate {
     font-size: 13px;
-    color: #aaa;
+    color: var(--text-tertiary);
+    transition: color 0.3s ease;
 }
 
 .analyticsContainer {
@@ -245,18 +258,20 @@
 }
 
 .thumbnailSection {
-    background-color: #141414;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        border: 1px solid #2d2d2d;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .sectionTitle {
     font-size: 16px;
     font-weight: 500;
     margin: 0 0 16px 0;
-    color: #ddd;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
 }
 
 .thumbnailPreview {
@@ -264,8 +279,9 @@
     aspect-ratio: 16/9;
     border-radius: 6px;
     overflow: hidden;
-    background-color: #1e1e1e;
-    border: 1px solid #3a3a3a;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .thumbnailImage {
@@ -282,8 +298,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #666;
+    color: var(--text-tertiary);
     gap: 8px;
+    transition: color 0.3s ease;
 }
 
 .thumbnailPlaceholder span {
@@ -291,21 +308,23 @@
 }
 
 .analyticsCard {
-    background-color: #141414;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        border: 1px solid #2d2d2d;
+    border: 1px solid var(--border-color);
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .cardTitle {
     font-size: 18px;
     font-weight: 500;
     margin: 0 0 20px 0;
-    color: #ddd;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
 }
 
 .metricItem {
@@ -314,30 +333,34 @@
 
 .metricItem h3 {
     font-size: 14px;
-    color: #888;
+    color: var(--text-tertiary);
     font-weight: 500;
     margin: 0 0 8px 0;
+    transition: color 0.3s ease;
 }
 
 .metricValue {
     font-size: 28px;
     font-weight: 600;
-    color: #ffffff;
+    color: var(--text-primary);
     margin: 0 0 4px 0;
+    transition: color 0.3s ease;
 }
 
 .metricSubtext {
     font-size: 12px;
-    color: #888;
+    color: var(--text-tertiary);
     margin: 0;
+    transition: color 0.3s ease;
 }
 
 .engagementCard {
-    background-color: #141414;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        border: 1px solid #2d2d2d;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .engagementStats {
@@ -358,9 +381,10 @@
     justify-content: center;
     width: 48px;
     height: 48px;
-    background-color: #1e1e1e;
+    background-color: var(--bg-tertiary);
     border-radius: 50%;
-    color: #4169e1;
+    color: var(--accent-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .engagementInfo {
@@ -371,20 +395,23 @@
 .engagementValue {
     font-size: 20px;
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .engagementLabel {
     font-size: 13px;
-    color: #888;
+    color: var(--text-tertiary);
+    transition: color 0.3s ease;
 }
 
 .analyticsChartSection {
-    background-color: #141414;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        border: 1px solid #2d2d2d;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .viewHistoryChart {
@@ -407,10 +434,10 @@
 
 .chartBarFill {
     width: 100%;
-    background-color: #4169e1;
+    background-color: var(--accent-color);
     border-radius: 4px 4px 0 0;
     position: relative;
-    transition: height 0.3s;
+    transition: height 0.3s, background-color 0.3s ease;
     min-height: 2px;
 }
 
@@ -424,17 +451,17 @@
     top: -35px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #1e1e1e;
-    color: #fff;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
     padding: 6px 10px;
     border-radius: 4px;
     font-size: 11px;
     white-space: nowrap;
     opacity: 0;
-    transition: opacity 0.2s, transform 0.2s;
+    transition: opacity 0.2s, transform 0.2s, background-color 0.3s ease, color 0.3s ease;
     pointer-events: none;
     z-index: 10;
-    border: 1px solid #3a3a3a;
+    border: 1px solid var(--border-color);
 }
 
 .chartTooltip:after {
@@ -445,21 +472,24 @@
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: #1e1e1e transparent transparent transparent;
+    border-color: var(--bg-tertiary) transparent transparent transparent;
+    transition: border-color 0.3s ease;
 }
 
 .chartLabel {
     margin-top: 12px;
     font-size: 11px;
-    color: #888;
+    color: var(--text-tertiary);
+    transition: color 0.3s ease;
 }
 
 .recommendationsSection {
-    background-color: #141414;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        border: 1px solid #2d2d2d;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .recommendationsList {
@@ -473,9 +503,10 @@
     align-items: center;
     gap: 12px;
     padding: 12px 0;
-    border-bottom: 1px solid #1e1e1e;
+    border-bottom: 1px solid var(--border-color);
     font-size: 14px;
-    color: #ddd;
+    color: var(--text-secondary);
+    transition: color 0.3s ease, border-color 0.3s ease;
 }
 
 .recommendationItem:last-child {
@@ -483,8 +514,9 @@
 }
 
 .recommendationItem svg {
-    color: #4169e1;
+    color: var(--accent-color);
     flex-shrink: 0;
+    transition: color 0.3s ease;
 }
 
 .emptyChartMessage {
@@ -493,10 +525,11 @@
     align-items: center;
     justify-content: center;
     height: 200px;
-    color: #666;
-    background-color: #1e1e1e;
+    color: var(--text-tertiary);
+    background-color: var(--bg-tertiary);
     border-radius: 4px;
     padding: 24px;
+    transition: color 0.3s ease, background-color 0.3s ease;
 }
 
 .emptyChartMessage svg {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import './forgotPassword.css';
 import '../messages.css';
@@ -10,6 +10,13 @@ function ForgotPasswordContent() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Initialize theme on component mount
+  useEffect(() => {
+    // Set initial theme from localStorage to prevent flicker
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,8 +47,18 @@ function ForgotPasswordContent() {
 
   return (
     <div className="forgot-password-container">
+      {/* Background decorative shapes */}
+      <div className="forgot-password-background-shapes">
+        <div className="gradient-shape shape-1"></div>
+        <div className="gradient-shape shape-2"></div>
+        <div className="gradient-shape shape-3"></div>
+      </div>
+
       <div className="forgot-password-card">
-        <h1 className="forgot-password-title">Reset Password</h1>
+        <div className="forgot-password-title">
+
+          <span className="forgot-password-title-text">Reset Password</span>
+        </div>
         
         {!isSubmitted ? (
           <>
@@ -64,6 +81,7 @@ function ForgotPasswordContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="forgot-password-input"
+                  placeholder="Enter your email"
                   required
                 />
               </div>
@@ -96,9 +114,23 @@ function ForgotPasswordContent() {
   );
 }
 
+function LoadingFallback() {
+  // Initialize theme for loading state as well
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
+  return (
+    <div className="loading-container">
+      <div>Loading...</div>
+    </div>
+  );
+}
+
 export default function ForgotPassword() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingFallback />}>
       <ForgotPasswordContent />
     </Suspense>
   );

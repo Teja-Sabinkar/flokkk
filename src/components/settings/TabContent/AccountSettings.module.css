@@ -1,20 +1,20 @@
 .container {
-  color: #f3f4f6;
+  color: var(--text-primary);
 }
 
 .sectionTitle {
   font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  color: #f3f4f6;
+  color: var(--text-primary);
 }
 
 .settingsSection {
-  background-color: #141414;
+  background-color: var(--bg-secondary);
   border-radius: 0.375rem;
   margin-bottom: 2rem;
   overflow: hidden;
-  border: 1px solid #2d2d2d;
+  border: 1px solid var(--border-color);
 }
 
 .settingItem {
@@ -22,7 +22,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  border-bottom: 1px solid #2d2d2d;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-tertiary);
 }
 
 .settingItem:last-child {
@@ -36,13 +37,13 @@
 .settingTitle {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #e5e7eb;
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .settingDescription {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--text-tertiary);
   margin-top: 0.25rem;
 }
 
@@ -51,7 +52,7 @@
 }
 
 .settingValue {
-  color: #f3f4f6;
+  color: var(--text-primary);
   font-size: 0.875rem;
 }
 
@@ -66,8 +67,8 @@
 
 .actionButton {
   background-color: transparent;
-  color: #9ca3af;
-  border: 1px solid #374151;
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 0.25rem;
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
@@ -78,24 +79,24 @@
 }
 
 .actionButton:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #f3f4f6;
+  background-color: var(--hover-overlay);
+  color: var(--text-primary);
 }
 
 .dangerButton {
-  color: #ef4444;
-  border-color: #ef4444;
+  color: var(--danger-color);
+  border-color: var(--danger-color);
 }
 
 .dangerButton:hover {
   background-color: rgba(239, 68, 68, 0.1);
-  color: #f87171;
+  color: var(--danger-color);
 }
 
 .premiumButton {
   background-color: transparent;
-  color: #f3f4f6;
-  border: 1px solid #374151;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   border-radius: 0.25rem;
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
@@ -106,7 +107,7 @@
 }
 
 .premiumButton:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--hover-overlay);
 }
 
 .arrowIcon {
@@ -114,9 +115,9 @@
 }
 
 .selectInput {
-  background-color: #1a1a1a;
-  color: #f3f4f6;
-  border: 1px solid #374151;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   border-radius: 0.25rem;
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
@@ -128,13 +129,13 @@
   justify-content: center;
   align-items: center;
   height: 200px;
-  color: #9ca3af;
+  color: var(--text-tertiary);
   font-size: 0.875rem;
 }
 
 .error {
   background-color: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  color: var(--danger-color);
   padding: 1rem;
   border-radius: 0.375rem;
   margin-bottom: 1.5rem;
@@ -142,18 +143,18 @@
 }
 
 .debugInfo {
-  background-color: #1e1e1e;
+  background-color: var(--bg-tertiary);
   padding: 8px;
   border-radius: 4px;
   margin-bottom: 16px;
   font-size: 12px;
   white-space: pre-wrap;
-  border: 1px solid #333;
+  border: 1px solid var(--border-color);
 }
 
 .testButton {
-  background-color: #2d3748;
-  color: white;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
   border: none;
   border-radius: 4px;
   padding: 4px 8px;
@@ -163,7 +164,115 @@
 }
 
 .testButton:hover {
-  background-color: #4a5568;
+  background-color: var(--hover-overlay);
+}
+
+/* Toggle switch styles added for theme selector */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 32px;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0; /* Fixed: was -12px, causing misalignment */
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-tertiary);
+  transition: .4s;
+  border-radius: 16px; /* Fixed: should be half of height (32px/2) */
+  border: 1px solid var(--border-color);
+  width: 60px; /* Added explicit width */
+  height: 32px; /* Added explicit height */
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px; /* Fixed: adjusted to fit better inside the slider */
+  width: 26px; /* Fixed: made it square */
+  top: 2px; /* Fixed: better centering */
+  left: 3px; /* Fixed: proper initial position */
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Added shadow for better visibility */
+}
+
+input:checked + .slider {
+  background-color: var(--accent-color);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--accent-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(28px); /* Fixed: adjusted to move to the right position */
+}
+
+/* Sun and moon icons for the theme toggle - FIXED */
+.slider .icon {
+  position: absolute;
+  top: 50%; /* Fixed: center vertically */
+  transform: translateY(-50%); /* Fixed: proper vertical centering */
+  color: var(--text-tertiary); /* Fixed: use CSS variable instead of white */
+  font-size: 14px;
+  transition: opacity 0.3s ease; /* Added smooth transition */
+  pointer-events: none; /* Prevent icon from interfering with clicks */
+}
+
+.slider .sunIcon {
+  right: 8px; /* Fixed: better positioning */
+  opacity: 1;
+}
+
+.slider .moonIcon {
+  left: 8px; /* Fixed: better positioning */
+  opacity: 0.5;
+}
+
+/* Show/hide icons based on toggle state */
+input:checked + .slider .sunIcon {
+  opacity: 1;
+}
+
+input:checked + .slider .moonIcon {
+  opacity: 0.3;
+}
+
+input:not(:checked) + .slider .sunIcon {
+  opacity: 0.3;
+}
+
+input:not(:checked) + .slider .moonIcon {
+  opacity: 1;
+}
+
+/* Sun and moon icons for the theme toggle */
+.slider .icon {
+  position: absolute;
+  top: 14px;
+  color: white;
+  font-size: 14px;
+}
+
+.slider .sunIcon {
+  right: 6px;
+}
+
+.slider .moonIcon {
+  left: 10px;
 }
 
 @media (max-width: 640px) {
@@ -188,8 +297,7 @@
 
 
 @media (max-width: 480px) {
-
   .settingValue {
-    color: #8e8e8e;
+    color: var(--text-tertiary);
   }
 }

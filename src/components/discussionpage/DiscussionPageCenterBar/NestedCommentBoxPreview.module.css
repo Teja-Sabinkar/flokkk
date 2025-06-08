@@ -1,3 +1,63 @@
+html[data-theme="light"] .container {
+  color: #1c1c1c;
+  border: 1px solid #d1d5db;
+}
+
+html[data-theme="light"] .container:focus-within {
+  border-color: #2563eb;
+}
+
+html[data-theme="light"] .toolbar {
+  background-color: #f1f5f9;
+}
+
+html[data-theme="light"] .button {
+  background-color: #e5e7eb;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+}
+
+html[data-theme="light"] .button:hover {
+  background-color: #d1d5db;
+}
+
+html[data-theme="light"] .activeButton {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+html[data-theme="light"] .activeButton:hover {
+  background-color: #1d4ed8;
+}
+
+html[data-theme="light"] .editor {
+  color: #1c1c1c;
+  background-color: #f8f9fa;
+}
+
+html[data-theme="light"] .editor:empty:before {
+  color: #9ca3af;
+}
+
+html[data-theme="light"] .buttonContainer {
+  background-color: #f1f5f9;
+}
+
+html[data-theme="light"] .submitButton {
+  background-color: #2563eb;
+}
+
+html[data-theme="light"] .submitButton:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+html[data-theme="light"] .submitButton:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+}
+
+/* Keep original dark theme styles */
 .container {
   width: 100%;
   max-width: -webkit-fill-available;

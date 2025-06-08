@@ -1,8 +1,10 @@
 // src/components/widgets/rotatingNewsContainer.js
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import styles from './rotatingNewsContainer.module.css';
 
 export default function RotatingNewsContainer() {
+    const { theme } = useTheme(); // Add theme context
     // State for rotating news
     const [newsItems, setNewsItems] = useState([]);
     const [currentNewsIndex, setCurrentNewsIndex] = useState(0);

@@ -12,7 +12,7 @@
 }
 
 .modalContainer {
-    background-color: #1e1e1e;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
     width: 90%;
     max-width: 500px;
@@ -25,19 +25,19 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .modalHeader h2 {
     font-size: 1.2rem;
     margin: 0;
-    color: #fff;
+    color: var(--text-primary);
 }
 
 .closeButton {
     background: none;
     border: none;
-    color: #aaa;
+    color: var(--text-tertiary);
     cursor: pointer;
     padding: 4px;
     border-radius: 4px;
@@ -47,8 +47,8 @@
 }
 
 .closeButton:hover {
-    color: #fff;
-    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    background-color: var(--hover-overlay);
 }
 
 .closeButton:disabled {
@@ -60,9 +60,9 @@
     margin: 0;
     padding: 12px 20px;
     background-color: rgba(255, 75, 75, 0.1);
-    color: #ff6b6b;
+    color: var(--danger-color);
     font-size: 0.9rem;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .modalForm {
@@ -76,24 +76,24 @@
 .formGroup label {
     display: block;
     margin-bottom: 8px;
-    color: #ddd;
+    color: var(--text-secondary);
     font-size: 0.9rem;
 }
 
 .input {
     width: 100%;
     padding: 10px 12px;
-    background-color: #2a2a2a;
-    border: 1px solid #444;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 1rem;
     outline: none;
     transition: border-color 0.2s ease;
 }
 
 .input:focus {
-    border-color: #3b5fe2;
+    border-color: var(--accent-color);
 }
 
 .input:disabled {
@@ -103,7 +103,7 @@
 
 .charCount {
     text-align: right;
-    color: #aaa;
+    color: var(--text-tertiary);
     font-size: 0.8rem;
     margin-top: 4px;
 }
@@ -117,8 +117,8 @@
 
 .cancelButton {
     background-color: transparent;
-    border: 1px solid #555;
-    color: #ddd;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
@@ -127,7 +127,7 @@
 }
 
 .cancelButton:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--hover-overlay);
 }
 
 .cancelButton:disabled {
@@ -136,9 +136,9 @@
 }
 
 .saveButton {
-    background-color: #3b5fe2;
+    background-color: var(--accent-color);
     border: none;
-    color: #fff;
+    color: white;
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
@@ -147,7 +147,7 @@
 }
 
 .saveButton:hover {
-    background-color: #2d4ccc;
+    opacity: 0.9;
 }
 
 .saveButton:disabled {

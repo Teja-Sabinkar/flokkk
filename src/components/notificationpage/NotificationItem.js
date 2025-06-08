@@ -115,7 +115,7 @@ const NotificationItem = ({ notification, activeTab, onUpdate, currentUser }) =>
   const getBorderColor = () => {
     // If the notification is read, return transparent
     if (isRead) {
-      return 'transparent';
+      return null; // Return null instead of 'transparent'
     }
 
     // If a specific tab is active, use its color
@@ -140,10 +140,7 @@ const NotificationItem = ({ notification, activeTab, onUpdate, currentUser }) =>
   };
 
   const borderColor = getBorderColor();
-
-  const borderStyle = {
-    borderLeft: `5px solid ${borderColor}`
-  };
+  const borderStyle = borderColor ? { borderLeft: `5px solid ${borderColor}` } : {};
 
   // Get appropriate action link based on notification type
   const getActionLink = () => {

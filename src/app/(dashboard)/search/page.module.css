@@ -7,10 +7,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #0f0f0f;
-  color: #fff;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   overflow: hidden;
   z-index: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Add a background element to cover any gaps */
@@ -21,8 +22,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #0f0f0f;
+  background-color: var(--bg-primary);
   z-index: -1;
+  transition: background-color 0.3s ease;
 }
 
 /* Header container */
@@ -33,7 +35,8 @@
   right: 0;
   z-index: 1000;
   height: 60px; /* Should match the header height */
-  background-color: #0f0f0f;
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
 }
 
 /* Main content area */
@@ -44,9 +47,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #0f0f0f;
+  background-color: var(--bg-primary);
   overflow: hidden;
   z-index: 0;
+  transition: background-color 0.3s ease;
 }
 
 /* Left sidebar container */
@@ -57,9 +61,9 @@
   top: 0;
   left: 0;
   bottom: 0;
-  background-color: #121212;
+  background-color: var(--bg-secondary);
   overflow: hidden;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, background-color 0.3s ease;
   z-index: 100; /* Ensure sidebar is above overlay */
 }
 
@@ -70,9 +74,10 @@
   width: 100%;
   height: 100%; 
   overflow-y: auto; /* Enable independent scrolling */
-  background-color: #121212;
+  background-color: var(--bg-secondary);
   /* Ensure bottom is covered */
   padding-bottom: 20px;
+  transition: background-color 0.3s ease;
 }
 
 /* Content container */
@@ -83,9 +88,9 @@
   left: 330px; /* Match sidebar width */
   right: 0;
   bottom: 0;
-  background-color: #0f0f0f;
+  background-color: var(--bg-primary);
   overflow: hidden;
-  transition: left 0.3s ease;
+  transition: left 0.3s ease, background-color 0.3s ease;
 }
 
 .contentScrollable {
@@ -96,10 +101,11 @@
   bottom: 0;
   overflow-y: auto; /* Enable independent scrolling */
   padding: 30px;
-  background-color: #0f0f0f;
+  background-color: var(--bg-primary);
   /* Ensure bottom is covered */
   padding-bottom: 40px;
   scrollbar-width: none;
+  transition: background-color 0.3s ease;
 }
 
 /* Page header styling */
@@ -111,18 +117,21 @@
   font-size: 24px;
   font-weight: 600;
   margin-bottom: 8px;
-  color: #fff;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .pageDescription {
   font-size: 16px;
-  color: #aaa;
+  color: var(--text-tertiary);
   margin-bottom: 0;
+  transition: color 0.3s ease;
 }
 
 .searchQuery {
-  color: #4169e1;
+  color: var(--accent-color);
   font-weight: 500;
+  transition: color 0.3s ease;
 }
 
 /* Filter controls */
@@ -132,10 +141,11 @@
   align-items: center;
   margin-bottom: 20px;
   padding: 16px;
-  background-color: #171717;
+  background-color: var(--bg-secondary);
   border-radius: 8px;
   flex-wrap: wrap;
   gap: 16px;
+  transition: background-color 0.3s ease;
 }
 
 .filterGroup {
@@ -144,24 +154,25 @@
 }
 
 .filterSelect {
-  background-color: #222;
-  color: #e0e0e0;
-  border: 1px solid #333;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 8px 12px;
   font-size: 14px;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 8px center;
   background-size: 16px;
   padding-right: 32px;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .filterSelect:focus {
   outline: none;
-  border-color: #4169e1;
+  border-color: var(--accent-color);
 }
 
 .searchGroup {
@@ -178,17 +189,18 @@
 .searchInput {
   width: 100%;
   height: 36px;
-  background-color: #222;
-  border: 1px solid #333;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 18px;
   padding: 0 36px 0 16px;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 14px;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .searchInput:focus {
   outline: none;
-  border-color: #4169e1;
+  border-color: var(--accent-color);
 }
 
 .searchButton {
@@ -197,26 +209,28 @@
   top: 0;
   background: none;
   border: none;
-  color: #888;
+  color: var(--text-tertiary);
   cursor: pointer;
   height: 36px;
   width: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: color 0.3s ease;
 }
 
 .searchButton:hover {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .viewToggle {
   display: flex;
   align-items: center;
-  background-color: #222;
+  background-color: var(--bg-tertiary);
   border-radius: 4px;
   overflow: hidden;
-  border: 1px solid #333;
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .viewButton {
@@ -225,21 +239,21 @@
   justify-content: center;
   background: none;
   border: none;
-  color: #888;
+  color: var(--text-tertiary);
   cursor: pointer;
   height: 36px;
   width: 36px;
-  transition: all 0.2s;
+  transition: all 0.2s ease, color 0.3s ease, background-color 0.3s ease;
 }
 
 .viewButton:hover {
-  color: #e0e0e0;
-  background-color: #2a2a2a;
+  color: var(--text-primary);
+  background-color: var(--hover-overlay);
 }
 
 .viewButton.active {
-  color: #fff;
-  background-color: #333;
+  color: var(--text-primary);
+  background-color: var(--hover-overlay);
 }
 
 /* Active filters display */
@@ -252,9 +266,10 @@
 }
 
 .activeFiltersLabel {
-  color: #888;
+  color: var(--text-tertiary);
   font-size: 14px;
   margin-right: 8px;
+  transition: color 0.3s ease;
 }
 
 .filterTags {
@@ -267,11 +282,12 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background-color: #222;
+  background-color: var(--bg-tertiary);
   border-radius: 16px;
   padding: 4px 12px;
   font-size: 13px;
-  color: #e0e0e0;
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .removeFilterButton {
@@ -280,27 +296,29 @@
   justify-content: center;
   background: none;
   border: none;
-  color: #888;
+  color: var(--text-tertiary);
   cursor: pointer;
   width: 16px;
   height: 16px;
   border-radius: 50%;
   padding: 0;
+  transition: color 0.3s ease, background-color 0.3s ease;
 }
 
 .removeFilterButton:hover {
-  color: #fff;
-  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  background-color: var(--hover-overlay);
 }
 
 .clearAllFiltersButton {
   background: none;
   border: none;
-  color: #4169e1;
+  color: var(--accent-color);
   cursor: pointer;
   font-size: 13px;
   padding: 4px 8px;
   margin-left: 8px;
+  transition: color 0.3s ease;
 }
 
 .clearAllFiltersButton:hover {
@@ -325,7 +343,7 @@
   /* Hide left sidebar by default, will be shown with toggle */
   .sidebarContainer {
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, background-color 0.3s ease;
   }
   
   /* Show sidebar when open class is applied */
@@ -441,5 +459,4 @@
   .viewToggle {
     display: none;
   }
-
 }

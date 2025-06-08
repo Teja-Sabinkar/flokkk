@@ -7,7 +7,6 @@
     position: relative;
 }
 
-
 /* Grid layout for items - already using 2 columns */
 .gridContainer {
     display: grid;
@@ -24,28 +23,32 @@
     justify-content: center;
     text-align: center;
     padding: 60px 20px;
-    background-color: #1a1a1a;
+    background-color: var(--bg-tertiary);
     border-radius: 12px;
-    border: 1px dashed #333;
+    border: 1px dashed var(--border-color);
     min-height: 300px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .noContentIcon {
-    color: #555;
+    color: var(--text-tertiary);
     margin-bottom: 20px;
+    transition: color 0.3s ease;
 }
 
 .noContentTitle {
     font-size: 18px;
     font-weight: 500;
-    color: #999;
+    color: var(--text-secondary);
     margin-bottom: 8px;
+    transition: color 0.3s ease;
 }
 
 .noContentText {
     font-size: 14px;
-    color: #777;
+    color: var(--text-tertiary);
     max-width: 400px;
+    transition: color 0.3s ease;
 }
 
 /* Responsive adjustments */
