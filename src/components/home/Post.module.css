@@ -258,7 +258,8 @@
   width: 32px;
   height: 32px;
   color: white;
-  margin-left: 3px; /* Slightly offset to center the triangle visually */
+  margin-left: 3px;
+  /* Slightly offset to center the triangle visually */
 }
 
 /* Video Player Wrapper */
@@ -266,7 +267,8 @@
   position: relative;
   width: 100%;
   height: 0;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  padding-bottom: 56.25%;
+  /* 16:9 aspect ratio */
   background-color: var(--bg-tertiary);
   border-radius: 8px;
   overflow: hidden;
@@ -434,6 +436,7 @@
   border-top: 1px solid var(--border-color);
   padding-top: 12px;
   transition: border-color 0.3s ease;
+  justify-content: space-between;
 }
 
 .discussionsBtn,
@@ -481,6 +484,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

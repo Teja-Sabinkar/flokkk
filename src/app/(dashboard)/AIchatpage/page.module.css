@@ -113,7 +113,7 @@
 
 /* Staggered Pulsing Lines Animation */
 .pulsingLine {
-    animation: svgPulse 3s infinite ease-in-out;
+    animation: svgPulse 5s infinite ease-in-out;
 }
 
 .line1 {
@@ -142,7 +142,7 @@
 
     25% {
         opacity: 1.2;
-        transform: scale(1.10);
+        transform: scale(1.07);
         filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
     }
 
