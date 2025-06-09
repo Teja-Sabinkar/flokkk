@@ -426,7 +426,7 @@
   height: 80px;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 0;
   cursor: pointer;
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
   background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-color) 100%);
@@ -608,11 +608,11 @@
 
   /* Right sidebar mobile adjustments for small screens */
   .rightSidebarContainer {
-    width: 330px !important;
+    width: 320px !important;
   }
 
   .rightSidebarContainer.hidden {
-    width: 330px !important;
+    width: 332px !important;
   }
 
   .widgetsArea {
@@ -636,7 +636,7 @@
   .aiChatWrapper {
     padding: 0 0 32px 0;
   }
-  
+
 }
 
 @keyframes fadeIn {

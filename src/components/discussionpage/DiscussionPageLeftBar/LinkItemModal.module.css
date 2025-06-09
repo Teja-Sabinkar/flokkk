@@ -191,7 +191,7 @@ html[data-theme="light"] .copyLinkButton:hover {
   width: 92%;
   word-break: break-all;
   overflow-y: auto;
-      height: 250px;
+  max-height: 250px;
 }
 
 .linkTitle a {
@@ -253,7 +253,7 @@ html[data-theme="light"] .copyLinkButton:hover {
   line-height: 1.5;
   margin-bottom: 24px;
   color: #ccc;
-  height: 150px;
+  max-height: 150px;
   overflow-y: auto;
   word-break: break-all;
 }
@@ -518,11 +518,11 @@ html[data-theme="light"] .copyLinkButton:hover {
     width: 95%;
     padding: 16px;
   }
-  
+
   .linkTitle {
     font-size: 20px;
   }
-  
+
   .linkActions {
     flex-wrap: wrap;
   }

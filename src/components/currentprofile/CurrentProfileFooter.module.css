@@ -28,6 +28,6 @@
 
   .tabContentContainer > div {
     grid-template-columns: 1fr;
-    padding: 0px;
+    padding: 16px 0 50px 0;
   }
 }

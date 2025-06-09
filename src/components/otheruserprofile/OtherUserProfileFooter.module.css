@@ -9,7 +9,7 @@
 .tabContentContainer {
   padding: 20px 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
 }
@@ -28,5 +28,7 @@
 
   .tabContentContainer > div {
     grid-template-columns: 1fr;
+    padding: 16px 16px 50px 16px;
   }
+  
 }
