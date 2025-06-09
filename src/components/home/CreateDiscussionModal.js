@@ -46,6 +46,12 @@ const compressImage = (file, maxWidth = 1200, maxHeight = 800, quality = 0.8) =>
   });
 };
 
+// Available categories for auto-suggestion
+const AVAILABLE_CATEGORIES = [
+  'Trending', 'Music', 'Gaming', 'Movies', 'News', 
+  'Sports', 'Learning', 'Fashion', 'Podcasts', 'Lifestyle'
+];
+
 export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
   const { theme } = useTheme();
   
@@ -76,8 +82,13 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
   const [currentLinkDescription, setCurrentLinkDescription] = useState('');
   const [linkError, setLinkError] = useState(null);
 
+  // Category suggestions state
+  const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+  const [filteredCategories, setFilteredCategories] = useState([]);
+
   // Refs
   const fileInputRef = useRef(null);
+  const hashtagInputRef = useRef(null);
 
   // If modal is not open, don't render anything
   if (!isOpen) return null;
@@ -288,6 +299,35 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
     fileInputRef.current.click();
   };
 
+  // Handle hashtag input changes with category suggestions
+  const handleHashtagInputChange = (e) => {
+    const value = e.target.value;
+    setCurrentHashtag(value);
+
+    // Show category suggestions when user types #
+    if (value.startsWith('#') && value.length > 1) {
+      const searchTerm = value.substring(1).toLowerCase();
+      const filtered = AVAILABLE_CATEGORIES.filter(category =>
+        category.toLowerCase().startsWith(searchTerm)
+      );
+      setFilteredCategories(filtered);
+      setShowCategorySuggestions(filtered.length > 0);
+    } else {
+      setShowCategorySuggestions(false);
+    }
+  };
+
+  // Select a category from suggestions
+  const selectCategorySuggestion = (category) => {
+    const categoryHashtag = `#${category}`;
+    if (!hashtags.includes(categoryHashtag)) {
+      setHashtags([...hashtags, categoryHashtag]);
+    }
+    setCurrentHashtag('');
+    setShowCategorySuggestions(false);
+    hashtagInputRef.current?.focus();
+  };
+
   // First, I'll add a new function to handle adding hashtags (can be reused)
   const addHashtag = () => {
     if (currentHashtag.trim()) {
@@ -299,6 +339,7 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
         setHashtags([...hashtags, newHashtag]);
       }
       setCurrentHashtag('');
+      setShowCategorySuggestions(false);
     }
   };
 
@@ -308,6 +349,10 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
     if ((e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
       addHashtag();
+    }
+    // Hide suggestions on Escape
+    if (e.key === 'Escape') {
+      setShowCategorySuggestions(false);
     }
   };
 
@@ -389,6 +434,8 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
     setIsYouTubeThumbnail(false);
     // Reset YouTube channel hashtag protection
     setYoutubeChannelHashtag(null);
+    // Reset category suggestions
+    setShowCategorySuggestions(false);
   };
 
   // Handle form submission
@@ -570,6 +617,9 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
 
           <div className={styles.formGroup}>
             <label className={styles.label}>Hashtags</label>
+            <div className={styles.categoryHelp}>
+              Include a category hashtag (e.g., #Music, #Gaming, #Movies, #News, #Sports, #Learning, #Fashion, #Podcasts, #Lifestyle) to help others discover your post
+            </div>
             
             {/* NEW: YouTube channel hashtag protection notice */}
             {youtubeChannelHashtag && (
@@ -583,24 +633,43 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
               </div>
             )}
             
-            <div className={styles.hashtagInputContainer}>
-              <input
-                type="text"
-                className={styles.hashtagInput}
-                placeholder="Type a hashtag"
-                value={currentHashtag}
-                onChange={(e) => setCurrentHashtag(e.target.value)}
-                onKeyDown={handleHashtagKeyDown}
-                disabled={isProcessing}
-              />
-              <button
-                type="button"
-                className={styles.addHashtagButton}
-                onClick={addHashtag}
-                disabled={isProcessing || !currentHashtag.trim()}
-              >
-                Add
-              </button>
+            <div className={styles.hashtagInputWrapper}>
+              <div className={styles.hashtagInputContainer}>
+                <input
+                  ref={hashtagInputRef}
+                  type="text"
+                  className={styles.hashtagInput}
+                  placeholder="Type a hashtag"
+                  value={currentHashtag}
+                  onChange={handleHashtagInputChange}
+                  onKeyDown={handleHashtagKeyDown}
+                  disabled={isProcessing}
+                />
+                <button
+                  type="button"
+                  className={styles.addHashtagButton}
+                  onClick={addHashtag}
+                  disabled={isProcessing || !currentHashtag.trim()}
+                >
+                  Add
+                </button>
+              </div>
+
+              {/* Category suggestions dropdown */}
+              {showCategorySuggestions && (
+                <div className={styles.categorySuggestions}>
+                  {filteredCategories.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      className={styles.categorySuggestionItem}
+                      onClick={() => selectCategorySuggestion(category)}
+                    >
+                      #{category}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {hashtags.length > 0 && (

@@ -143,7 +143,7 @@ export default function AboutPage() {
                             <div className={styles.contentBlock}>
                                 <h2 className={styles.sectionTitle}>Our Mission</h2>
                                 <p className={styles.missionText}>
-                                    Flokkk is rebuilding trust in digital learning. We're creating a human-first,
+                                    Flokkk is rebuilding trust in digital information. We're creating a human-first,
                                     community-curated discovery platform where people find the most valuable resources
                                     on any topic—through collective intelligence, not algorithmic guesswork.
                                 </p>
@@ -198,7 +198,7 @@ export default function AboutPage() {
                                     <h3 className={styles.featureTitle}>AI-Powered Insights</h3>
                                     <p className={styles.featureDescription}>
                                         Our AI assistant doesn't just scrape the web—it ranks and serves resources
-                                        based on what real learners have found useful. Better learning decisions, faster.
+                                        based on what real learners have found useful. Finding information, faster.
                                     </p>
                                 </div>
                             </div>
@@ -211,7 +211,7 @@ export default function AboutPage() {
                                 <p className={styles.visionText}>
                                     We're transforming shallow content consumption into informed, intentional learning.
                                     By combining human wisdom with intelligent technology, we're building a future where
-                                    quality education is accessible, transparent, and truly valuable.
+                                    quality information is accessible, transparent, and truly valuable.
                                 </p>
                             </div>
                         </section>
@@ -219,15 +219,13 @@ export default function AboutPage() {
                         {/* Call to Action */}
                         <section className={styles.ctaSection}>
                             <div className={styles.ctaContent}>
-                                <h2 className={styles.ctaTitle}>Join the Learning Revolution</h2>
+                                <h2 className={styles.ctaTitle}>Join the Revolution</h2>
                                 <p className={styles.ctaDescription}>
                                     Be part of a community that values quality over quantity,
                                     depth over algorithms, and human insight over automated recommendations.
                                 </p>
                                 <div className={styles.ctaButtons}>
-                                    <a href="/home" className={styles.primaryButton}>
-                                        Start Learning
-                                    </a>
+                                   
                                     <a href="/explore" className={styles.secondaryButton}>
                                         Explore Content
                                     </a>

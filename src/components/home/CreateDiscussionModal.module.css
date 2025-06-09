@@ -123,6 +123,14 @@
     transition: color 0.3s ease;
 }
 
+.categoryHelp {
+    font-size: 12px;
+    color: var(--accent-color);
+    margin-bottom: 10px;
+    font-style: italic;
+    transition: color 0.3s ease;
+}
+
 .videoLinkContainer {
     display: flex;
     gap: 10px;
