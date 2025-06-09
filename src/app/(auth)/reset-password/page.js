@@ -17,12 +17,7 @@ function ResetPasswordContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [isTokenValid, setIsTokenValid] = useState(true);
 
-  // Initialize theme on component mount
-  useEffect(() => {
-    // Set initial theme from localStorage to prevent flicker
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
+  // Theme is now handled by AuthLayout - no theme logic needed here
 
   useEffect(() => {
     // Get token from URL
@@ -169,7 +164,6 @@ function ResetPasswordContent() {
 
       <div className="reset-password-card">
         <div className="reset-password-title">
-          
           <span className="reset-password-title-text">Reset Password</span>
         </div>
         
@@ -234,12 +228,7 @@ function ResetPasswordContent() {
 }
 
 function LoadingFallback() {
-  // Initialize theme for loading state as well
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
-
+  // Theme is handled by AuthLayout
   return (
     <div className="loading-container">
       <div>Loading...</div>

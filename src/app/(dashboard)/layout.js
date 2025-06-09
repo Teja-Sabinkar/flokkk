@@ -11,9 +11,17 @@ export default function DashboardLayout({ children }) {
 
   // Initial theme setup from localStorage before providers are loaded
   useEffect(() => {
-    // Set initial theme from localStorage to prevent flicker
+    // MODIFIED: Ensure theme is properly restored when entering dashboard
+    // This handles cases where user came from login page (which forces light theme)
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Small delay to ensure theme is applied before showing content
+    const timeoutId = setTimeout(() => {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }, 50);
+    
+    return () => clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {

@@ -20,12 +20,7 @@ function SignupContent() {
   const [emailSent, setEmailSent] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
 
-  // Initialize theme on component mount
-  useEffect(() => {
-    // Set initial theme from localStorage to prevent flicker
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
+  // Theme is now handled by AuthLayout - no theme logic needed here
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -136,7 +131,6 @@ function SignupContent() {
 
       <div className="signup-card">
         <div className="signup-title">
-
           <span className="signup-title-text">Create Account</span>
         </div>
         
@@ -244,12 +238,7 @@ function SignupContent() {
 }
 
 function LoadingFallback() {
-  // Initialize theme for loading state as well
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
-
+  // Theme is handled by AuthLayout
   return (
     <div className="loading-container">
       <div>Loading...</div>

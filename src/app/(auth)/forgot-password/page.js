@@ -11,12 +11,7 @@ function ForgotPasswordContent() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize theme on component mount
-  useEffect(() => {
-    // Set initial theme from localStorage to prevent flicker
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
+  // Theme is now handled by AuthLayout - no theme logic needed here
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,7 +51,6 @@ function ForgotPasswordContent() {
 
       <div className="forgot-password-card">
         <div className="forgot-password-title">
-
           <span className="forgot-password-title-text">Reset Password</span>
         </div>
         
@@ -115,12 +109,7 @@ function ForgotPasswordContent() {
 }
 
 function LoadingFallback() {
-  // Initialize theme for loading state as well
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
-
+  // Theme is handled by AuthLayout
   return (
     <div className="loading-container">
       <div>Loading...</div>

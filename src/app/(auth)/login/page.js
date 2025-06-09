@@ -20,12 +20,7 @@ function LoginContent() {
   const [resendMessage, setResendMessage] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
-  // Initialize theme on component mount
-  useEffect(() => {
-    // Set initial theme from localStorage to prevent flicker
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
+  // Theme is now handled by AuthLayout, no need for theme logic here
 
   // Check URL params for messages
   useEffect(() => {
@@ -85,7 +80,7 @@ function LoginContent() {
       // Store token in localStorage
       localStorage.setItem('token', data.token);
       
-      // Redirect to dashboard home
+      // Redirect to dashboard home (theme will be restored by cleanup function)
       router.push('/home');
     } catch (err) {
       setError(err.message || 'An error occurred during login');
@@ -255,12 +250,7 @@ function LoginContent() {
 }
 
 function LoadingFallback() {
-  // Initialize theme for loading state as well
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
-
+  // Theme is handled by AuthLayout
   return (
     <div className="loading-container">
       <div>Loading...</div>
