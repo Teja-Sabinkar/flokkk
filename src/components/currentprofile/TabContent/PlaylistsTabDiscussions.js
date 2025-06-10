@@ -1,6 +1,7 @@
+// PlaylistsTabDiscussions.js - COMPLETE UPDATED FILE
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import styles from './PlaylistsTabDiscussions.module.css';
@@ -9,9 +10,10 @@ import { ReportModal, submitReport } from '@/components/report';
 import { useRouter } from 'next/navigation';
 import ShareModal from '@/components/share/ShareModal';
 import { fetchUserProfile } from '@/lib/profile';
+import { useAppearanceTracker } from '@/hooks/useAppearanceTracker';
 
 const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
-  const router = useRouter(); // Add this line
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hideSuccess, setHideSuccess] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -20,6 +22,145 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
   const [removeSuccess, setRemoveSuccess] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const menuRef = useRef(null);
+
+  // Video playback states
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [videoId, setVideoId] = useState(null);
+  const [videoError, setVideoError] = useState(false);
+
+  // Appearance tracking hook
+  const { elementRef: postRef, hasAppeared, isTracking, debugInfo, manualTrigger } = useAppearanceTracker(post.id || post._id, {
+    threshold: 0.3,
+    timeThreshold: 500
+  });
+
+  // Extract YouTube video ID from URL
+  const extractYouTubeVideoId = useCallback((url) => {
+    if (!url || typeof url !== 'string') return null;
+
+    try {
+      const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+      const match = url.match(youtubeRegex);
+      return match && match[1] ? match[1] : null;
+    } catch (error) {
+      console.error('Error extracting video ID:', error);
+      return null;
+    }
+  }, []);
+
+  // Extract video ID when component mounts or videoUrl changes
+  useEffect(() => {
+    if (post.videoUrl) {
+      const id = extractYouTubeVideoId(post.videoUrl);
+      setVideoId(id);
+    } else {
+      setVideoId(null);
+    }
+  }, [post.videoUrl, extractYouTubeVideoId]);
+
+  // Track view engagement
+  const trackViewEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-view`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track view engagement');
+      } else {
+        const data = await response.json();
+        console.log('View engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking view engagement:', error);
+    }
+  };
+
+  // Track penetrate engagement
+  const trackPenetrateEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-penetrate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track penetrate engagement');
+      } else {
+        const data = await response.json();
+        console.log('Penetrate engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking penetrate engagement:', error);
+    }
+  };
+
+  // Track share engagement
+  const trackShareEngagement = async (postId, platform = 'unknown') => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-share`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ platform })
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track share engagement');
+      } else {
+        const data = await response.json();
+        console.log('Share engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking share engagement:', error);
+    }
+  };
+
+  // Handle play button click with view tracking
+  const handlePlayClick = useCallback(async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (videoId) {
+      setIsVideoPlaying(true);
+      setVideoError(false);
+
+      // Track view engagement when play button is clicked
+      const postId = post.id || post._id;
+      await trackViewEngagement(postId);
+    }
+  }, [videoId, post.id, post._id]);
+
+  // Handle closing video
+  const handleCloseVideo = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsVideoPlaying(false);
+    setVideoError(false);
+  }, []);
+
+  // Handle video embedding error
+  const handleVideoError = useCallback(() => {
+    setVideoError(true);
+  }, []);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -55,7 +196,6 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
         return;
       }
 
-      // Call API to hide the post
       const response = await fetch('/api/posts/hide', {
         method: 'POST',
         headers: {
@@ -69,12 +209,9 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
         throw new Error('Failed to hide post');
       }
 
-      // Show success message temporarily
       setHideSuccess(true);
       setTimeout(() => {
         setHideSuccess(false);
-
-        // Call the parent function to remove this post from UI
         if (onHidePost) {
           onHidePost(post.id || post._id);
         }
@@ -90,20 +227,16 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
   const handleRemoveFromPlaylist = () => {
     setIsMenuOpen(false);
 
-    // Show success message immediately for better UX feedback
     setRemoveSuccess(true);
 
-    // Call the parent handler function
     if (onRemoveFromPlaylist) {
       onRemoveFromPlaylist(post.id || post._id)
         .then(() => {
-          // Success is already shown, just keep it visible for a moment
           setTimeout(() => {
             setRemoveSuccess(false);
           }, 1500);
         })
         .catch(error => {
-          // Hide the success message if there was an error
           setRemoveSuccess(false);
           alert('Failed to remove post from playlist. Please try again.');
         });
@@ -116,14 +249,12 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
     setIsReportModalOpen(true);
   };
 
-  // Handle report submission
   const handleReportSubmit = async (reportData) => {
     try {
       await submitReport(reportData);
       setIsReportModalOpen(false);
       setReportSuccess(true);
 
-      // Hide success message after 3 seconds
       setTimeout(() => {
         setReportSuccess(false);
       }, 3000);
@@ -133,25 +264,42 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
     }
   };
 
-  const handleDiscussionClick = () => {
-    const postId = post.id || post._id;
-    router.push(`/discussion?id=${postId}`);
-  };
+  // Handle discussion click with penetrate tracking
+  const handleDiscussionClick = useCallback(async () => {
+    if (!post || Object.keys(post).length === 0) {
+      console.error('Empty post object received');
+      return;
+    }
 
-  const handleShare = () => {
+    const postId = post.id || post._id;
+    if (!postId) {
+      console.error('No post ID available');
+      return;
+    }
+
+    // Track penetrate engagement when discussion button is clicked
+    await trackPenetrateEngagement(postId);
+
+    router.push(`/discussion?id=${postId}`);
+  }, [post, router]);
+
+  // Handle share with tracking
+  const handleShare = async () => {
     setIsShareModalOpen(true);
+    
+    // Track share engagement
+    const postId = post.id || post._id;
+    await trackShareEngagement(postId);
   };
 
   const generateColorFromUsername = (username) => {
-    if (!username) return '#3b5fe2'; // Default blue color
+    if (!username) return '#3b5fe2';
 
-    // Simple hash function for consistent color generation
     let hash = 0;
     for (let i = 0; i < username.length; i++) {
       hash = username.charCodeAt(i) + ((hash << 5) - hash);
     }
 
-    // Convert hash to a hex color
     let color = '#';
     for (let i = 0; i < 3; i++) {
       const value = (hash >> (i * 8)) & 0xFF;
@@ -162,7 +310,7 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
   };
 
   return (
-    <div className={styles.postCard}>
+    <div className={styles.postCard} ref={postRef} data-post-id={post.id || post._id}>
       <div className={styles.postHeader}>
         <div className={styles.userInfo}>
           <div className={styles.avatarContainer}>
@@ -175,7 +323,7 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
                 className={styles.avatarImage}
                 priority
                 unoptimized
-                key={post.profilePicture} // Force re-render when URL changes
+                key={post.profilePicture}
               />
             ) : (
               <div
@@ -211,8 +359,6 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
 
           {isMenuOpen && (
             <div className={styles.dropdown}>
-
-              {/* Remove from playlist option */}
               <button
                 className={styles.dropdownItem}
                 onClick={handleRemoveFromPlaylist}
@@ -256,22 +402,105 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
       <h2 className={styles.postTitle}>{post.title}</h2>
       <p className={styles.postDescription}>{post.content || post.description}</p>
 
-      {post.image && (
-        <div className={styles.postImageContainer}>
-          <div className={styles.postImageWrapper}>
-            <Image
-              src={post.image}
-              alt={post.title}
-              width={600}
-              height={300}
-              className={styles.postImage}
-              unoptimized
-              priority
-              key={`playlist-discussion-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
-            />
+      {/* Post Image/Video Container */}
+      <div className={styles.postImageContainer}>
+        {isVideoPlaying && videoId && !videoError ? (
+          // YouTube video player
+          <div className={styles.videoPlayerWrapper}>
+            <button
+              className={styles.closeVideoButton}
+              onClick={handleCloseVideo}
+              aria-label="Close video"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <iframe
+              className={styles.youtubeEmbed}
+              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+              title={post.title}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              onError={handleVideoError}
+            ></iframe>
           </div>
-        </div>
-      )}
+        ) : isVideoPlaying && videoError ? (
+          // Error fallback when embedding fails
+          <div className={styles.videoErrorContainer}>
+            <button
+              className={styles.closeVideoButton}
+              onClick={handleCloseVideo}
+              aria-label="Close video"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <div className={styles.videoErrorContent}>
+              <div className={styles.errorIcon}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+              </div>
+              <h3>Video cannot be embedded</h3>
+              <p>This video cannot be played directly. Click below to watch on YouTube.</p>
+              <a
+                href={post.videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.watchOnYoutubeBtn}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Watch on YouTube
+              </a>
+            </div>
+          </div>
+        ) : (
+          // Thumbnail with optional play button
+          post.image && (
+            <div className={styles.postImageWrapper}>
+              <Image
+                src={post.image}
+                alt={post.title}
+                width={600}
+                height={300}
+                className={styles.postImage}
+                unoptimized
+                priority
+                key={`playlist-discussion-image-${post.id || post._id}-${post.image}`}
+              />
+
+              {/* Play button overlay for videos */}
+              {post.videoUrl && videoId && (
+                <button
+                  className={styles.playButton}
+                  onClick={handlePlayClick}
+                  aria-label="Play video"
+                >
+                  <div className={styles.playButtonCircle}>
+                    <svg
+                      className={styles.playIcon}
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </button>
+              )}
+            </div>
+          )
+        )}
+      </div>
 
       <div className={styles.postEngagement}>
         <button className={styles.commentsBtn} onClick={handleDiscussionClick}>
@@ -281,7 +510,6 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
           <span>{post.commentsCount || post.discussions || '0'} Comments</span>
         </button>
 
-        {/* NEW: Links display (non-interactive) */}
         <div className={styles.linksDisplay}>
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
@@ -302,7 +530,26 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
         </button>
       </div>
 
-      {/* Add ShareModal component */}
+      {/* Success messages */}
+      {hideSuccess && (
+        <div className={styles.successMessage}>
+          Post hidden successfully.
+        </div>
+      )}
+
+      {removeSuccess && (
+        <div className={styles.successMessage}>
+          Post removed successfully.
+        </div>
+      )}
+
+      {reportSuccess && (
+        <div className={styles.successMessage}>
+          Report submitted successfully.
+        </div>
+      )}
+
+      {/* Modals */}
       {isShareModalOpen && (
         <ShareModal
           isOpen={isShareModalOpen}
@@ -327,7 +574,6 @@ const DiscussionPost = ({ post, onHidePost, onRemoveFromPlaylist }) => {
           }}
         />
       )}
-
     </div>
   );
 };
@@ -338,29 +584,22 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hiddenPostIds, setHiddenPostIds] = useState([]);
-  const [userProfiles, setUserProfiles] = useState({}); // Store user profiles by username
+  const [userProfiles, setUserProfiles] = useState({});
 
-  // Handle hiding a post
   const handleHidePost = (postId) => {
-    // Existing code unchanged
     setHiddenPostIds(prev => [...prev, postId]);
     setPosts(prevPosts => prevPosts.filter(post =>
       (post.id !== postId && post._id !== postId)
     ));
   };
 
-
-
-  // Handle removing a post from the playlist
   const handleRemoveFromPlaylist = async (postId) => {
     try {
-      // Get auth token
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('Authentication required');
       }
 
-      // Call API to remove post from playlist
       const response = await fetch(`/api/playlists/${playlist.id}/posts/${postId}`, {
         method: 'DELETE',
         headers: {
@@ -374,7 +613,6 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
         throw new Error('Failed to remove post from playlist');
       }
 
-      // Update local state to remove the post
       setPosts(prevPosts =>
         prevPosts.filter(post => {
           const currentPostId = post.id || post._id;
@@ -382,7 +620,6 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
         })
       );
 
-      // Dispatch an event for playlist update
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new Event('playlist-updated'));
       }
@@ -394,15 +631,12 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
     }
   };
 
-
   const fetchUserProfiles = async (postsArray) => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    // Get unique usernames from posts
     const usernames = [...new Set(postsArray.map(post => post.username))];
 
-    // Fetch profile data for each unique user
     const profileData = {};
 
     await Promise.all(usernames.map(async (username) => {
@@ -418,7 +652,6 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
 
     setUserProfiles(profileData);
 
-    // Update posts with latest profile pictures
     return postsArray.map(post => {
       const userProfile = profileData[post.username];
       return {
@@ -428,20 +661,16 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
     });
   };
 
-
-  // Fetch playlist details with posts
   useEffect(() => {
     const fetchPlaylistDetails = async () => {
       try {
         setLoading(true);
-        // Get detailed playlist data with posts
         const playlistDetails = await getPlaylistById(playlist.id);
 
         if (playlistDetails) {
           setCurrentPlaylist(playlistDetails);
 
           if (playlistDetails.posts && Array.isArray(playlistDetails.posts)) {
-            // Fetch hidden posts to filter out any hidden posts from the playlist
             const token = localStorage.getItem('token');
             if (token) {
               try {
@@ -453,32 +682,26 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
 
                 if (response.ok) {
                   const data = await response.json();
-                  // Store hidden post IDs
                   const hiddenIds = data.hiddenPosts.map(hp => hp.postId);
                   setHiddenPostIds(hiddenIds);
 
-                  // Filter out hidden posts
                   const filteredPosts = playlistDetails.posts.filter(post => {
                     const postId = post.id || post._id;
                     return !hiddenIds.includes(postId);
                   });
 
-                  // Fetch latest user profiles and update posts with current profile pictures
                   const updatedPosts = await fetchUserProfiles(filteredPosts);
                   setPosts(updatedPosts);
                 } else {
-                  // If can't fetch hidden posts, show all posts with updated profiles
                   const updatedPosts = await fetchUserProfiles(playlistDetails.posts);
                   setPosts(updatedPosts);
                 }
               } catch (error) {
                 console.error('Error fetching hidden posts:', error);
-                // Still show posts if hidden posts can't be fetched, with updated profiles
                 const updatedPosts = await fetchUserProfiles(playlistDetails.posts);
                 setPosts(updatedPosts);
               }
             } else {
-              // Not logged in, show all posts
               setPosts(playlistDetails.posts);
             }
           } else {
@@ -497,13 +720,11 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
 
     fetchPlaylistDetails();
 
-    // Listen for playlist updates and profile updates
     const handlePlaylistUpdate = () => {
       fetchPlaylistDetails();
     };
 
     window.addEventListener('playlist-updated', handlePlaylistUpdate);
-    // Add listener for profile updates
     window.addEventListener('profile-updated', handlePlaylistUpdate);
 
     return () => {
@@ -515,7 +736,6 @@ const PlaylistsTabDiscussions = ({ playlist, onBack }) => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-
         <p className={styles.tabdescription}>posts in here are not accessable or visible to other users.</p>
 
         <button className={styles.backButton} onClick={onBack}>

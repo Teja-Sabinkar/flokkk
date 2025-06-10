@@ -1,3 +1,4 @@
+/* PlaylistsTabDiscussions.module.css - COMPLETE UPDATED FILE */
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -43,7 +44,6 @@
 .discussionsContainer {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  /* Force 3 columns */
   gap: 20px;
 }
 
@@ -54,7 +54,7 @@
   overflow: hidden;
   padding: 16px;
   border: 1px solid var(--border-color);
- transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s ease, border-color 0.3s ease;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   height: 100%;
   display: flex;
@@ -227,7 +227,6 @@
   width: 100%;
   height: 0;
   padding-bottom: 50%;
-  /* Aspect ratio 2:1 */
   background-color: var(--bg-tertiary);
   transition: background-color 0.3s ease;
 }
@@ -241,16 +240,165 @@
   object-fit: cover;
 }
 
+/* Play Button Overlay */
+.playButton {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.playButton:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.playButtonCircle {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(0, 0, 0, 0.177);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.playButton:hover .playButtonCircle {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.playIcon {
+  width: 32px;
+  height: 32px;
+  color: white;
+  margin-left: 3px;
+}
+
+/* Video Player Wrapper */
+.videoPlayerWrapper {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: background-color 0.3s ease;
+}
+
+.youtubeEmbed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Close Video Button */
+.closeVideoButton {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  transition: background-color 0.2s ease;
+}
+
+.closeVideoButton:hover {
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+/* Video Error Container */
+.videoErrorContainer {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.videoErrorContent {
+  position: absolute;
+  text-align: center;
+  color: var(--text-primary);
+  padding: 20px;
+  max-width: 80%;
+  transition: color 0.3s ease;
+}
+
+.errorIcon {
+  color: var(--danger-color);
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+  transition: color 0.3s ease;
+}
+
+.videoErrorContent h3 {
+  margin-bottom: 12px;
+  color: var(--danger-color);
+  font-size: 18px;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.videoErrorContent p {
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+  transition: color 0.3s ease;
+}
+
+.watchOnYoutubeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ff0000;
+  color: white;
+  padding: 12px 20px;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.watchOnYoutubeBtn:hover {
+  background-color: #cc0000;
+}
+
 .postEngagement {
-    display: flex
-;
-    justify-content: flex-start;
-    border-top: 1px solid var(--border-color);
-    padding: 12px 16px;
-    align-items: center;
-    margin: 0 -16px -16px -16px;
-    transition: border-color 0.3s ease;
-    gap: 8px;
+  display: flex;
+  justify-content: flex-start;
+  border-top: 1px solid var(--border-color);
+  padding: 12px 16px;
+  align-items: center;
+  margin: 0 -16px -16px -16px;
+  transition: border-color 0.3s ease;
+  gap: 8px;
 }
 
 .linksDisplay {
@@ -336,7 +484,6 @@
   flex-shrink: 0;
 }
 
-/* Style for Remove dropdown item */
 .removeDropdownItem {
   color: var(--danger-color) !important;
 }
@@ -408,6 +555,16 @@
   transition: color 0.3s ease;
 }
 
+.errorMessage {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: var(--danger-color);
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 20px;
+  grid-column: 1 / -1;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -421,15 +578,13 @@
 @media (max-width: 1100px) {
   .discussionsContainer {
     grid-template-columns: repeat(2, 1fr);
-        /* 2 columns on medium screens */
   }
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 830px) {
   .discussionsContainer {
-    grid-template-columns: repeat(2, 1fr);
-        gap: 14px;
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
 
   .postTitle {
@@ -441,13 +596,11 @@
   }
 }
 
-
 @media (max-width: 480px) {
-
   .discussionsContainer {
     grid-template-columns: 1fr;
     gap: 24px;
-}
+  }
 
   .tabdescription {
     font-size: 12px;
@@ -461,7 +614,7 @@
   .postDate {
     font-size: 9px;
   }
-  
+
   .postMenu {
     height: 18px;
     width: 18px;
@@ -474,5 +627,38 @@
   .commentsBtn,
   .shareBtn {
     font-size: 12px;
+  }
+
+  .playButtonCircle {
+    width: 50px;
+    height: 50px;
+  }
+
+  .playIcon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .closeVideoButton {
+    width: 28px;
+    height: 28px;
+    right: 8px;
+  }
+
+  .videoErrorContent {
+    padding: 16px;
+  }
+
+  .videoErrorContent h3 {
+    font-size: 14px;
+  }
+
+  .videoErrorContent p {
+    font-size: 12px;
+  }
+
+  .watchOnYoutubeBtn {
+    padding: 10px 16px;
+    font-size: 13px;
   }
 }

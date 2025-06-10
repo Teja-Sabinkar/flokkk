@@ -391,7 +391,7 @@
   .open~.mobileOverlay,
   .open+.mobileOverlay,
   .open~* .mobileOverlay {
-    left: 240px;
+    left: 0px;
   }
 }
 

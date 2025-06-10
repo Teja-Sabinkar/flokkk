@@ -1,17 +1,18 @@
+// HomeTab.js - COMPLETE UPDATED FILE
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation';
 import styles from './HomeTab.module.css';
 import PostSaveModal from '@/components/home/PostSaveModal';
 import ShareModal from '@/components/share/ShareModal';
 import { ReportModal, submitReport } from '@/components/report';
 import AddtoModal from './AddtoModal';
-
+import { useAppearanceTracker } from '@/hooks/useAppearanceTracker';
 
 const Post = ({ post, onHidePost }) => {
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -24,6 +25,170 @@ const Post = ({ post, onHidePost }) => {
   const [addSuccess, setAddSuccess] = useState(false);
   const [addedForumName, setAddedForumName] = useState('');
   const menuRef = useRef(null);
+
+  // Video playback states
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [videoId, setVideoId] = useState(null);
+  const [videoError, setVideoError] = useState(false);
+
+  // Appearance tracking hook
+  const { elementRef: postRef, hasAppeared, isTracking, debugInfo, manualTrigger } = useAppearanceTracker(post.id || post._id, {
+    threshold: 0.3,
+    timeThreshold: 500
+  });
+
+  // Extract YouTube video ID from URL
+  const extractYouTubeVideoId = useCallback((url) => {
+    if (!url || typeof url !== 'string') return null;
+
+    try {
+      const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+      const match = url.match(youtubeRegex);
+      return match && match[1] ? match[1] : null;
+    } catch (error) {
+      console.error('Error extracting video ID:', error);
+      return null;
+    }
+  }, []);
+
+  // Extract video ID when component mounts or videoUrl changes
+  useEffect(() => {
+    if (post.videoUrl) {
+      const id = extractYouTubeVideoId(post.videoUrl);
+      setVideoId(id);
+    } else {
+      setVideoId(null);
+    }
+  }, [post.videoUrl, extractYouTubeVideoId]);
+
+  // Track view engagement
+  const trackViewEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-view`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track view engagement');
+      } else {
+        const data = await response.json();
+        console.log('View engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking view engagement:', error);
+    }
+  };
+
+  // Track penetrate engagement
+  const trackPenetrateEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-penetrate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track penetrate engagement');
+      } else {
+        const data = await response.json();
+        console.log('Penetrate engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking penetrate engagement:', error);
+    }
+  };
+
+  // Track save engagement
+  const trackSaveEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-save`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track save engagement');
+      } else {
+        const data = await response.json();
+        console.log('Save engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking save engagement:', error);
+    }
+  };
+
+  // Track share engagement
+  const trackShareEngagement = async (postId, platform = 'unknown') => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-share`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ platform })
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track share engagement');
+      } else {
+        const data = await response.json();
+        console.log('Share engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking share engagement:', error);
+    }
+  };
+
+  // Handle play button click with view tracking
+  const handlePlayClick = useCallback(async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (videoId) {
+      setIsVideoPlaying(true);
+      setVideoError(false);
+
+      // Track view engagement when play button is clicked
+      const postId = post.id || post._id;
+      await trackViewEngagement(postId);
+    }
+  }, [videoId, post.id, post._id]);
+
+  // Handle closing video
+  const handleCloseVideo = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsVideoPlaying(false);
+    setVideoError(false);
+  }, []);
+
+  // Handle video embedding error
+  const handleVideoError = useCallback(() => {
+    setVideoError(true);
+  }, []);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -43,21 +208,42 @@ const Post = ({ post, onHidePost }) => {
   }, [isMenuOpen]);
 
   // Menu option handlers
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsMenuOpen(false);
     setIsSaveModalOpen(true);
+    
+    // Track save engagement
+    const postId = post.id || post._id;
+    await trackSaveEngagement(postId);
   };
 
   // Handle share button click
-  const handleShare = () => {
+  const handleShare = async () => {
     setIsShareModalOpen(true);
+    
+    // Track share engagement
+    const postId = post.id || post._id;
+    await trackShareEngagement(postId);
   };
 
-  // Handle discussions button click - redirect to discussion page
-  const handleDiscussionClick = () => {
+  // Handle discussions button click with penetrate tracking
+  const handleDiscussionClick = useCallback(async () => {
+    if (!post || Object.keys(post).length === 0) {
+      console.error('Empty post object received');
+      return;
+    }
+
     const postId = post.id || post._id;
+    if (!postId) {
+      console.error('No post ID available');
+      return;
+    }
+
+    // Track penetrate engagement when discussion button is clicked
+    await trackPenetrateEngagement(postId);
+
     router.push(`/discussion?id=${postId}`);
-  };
+  }, [post, router]);
 
   // Implement the hide functionality
   const handleHide = async () => {
@@ -72,7 +258,6 @@ const Post = ({ post, onHidePost }) => {
 
       const postId = post.id || post._id;
 
-      // Call API to hide the post
       const response = await fetch('/api/posts/hide', {
         method: 'POST',
         headers: {
@@ -86,12 +271,9 @@ const Post = ({ post, onHidePost }) => {
         throw new Error('Failed to hide post');
       }
 
-      // Show success message temporarily
       setHideSuccess(true);
       setTimeout(() => {
         setHideSuccess(false);
-
-        // Call the parent function to remove this post from UI
         if (onHidePost) {
           onHidePost(postId);
         }
@@ -114,7 +296,6 @@ const Post = ({ post, onHidePost }) => {
       setIsReportModalOpen(false);
       setReportSuccess(true);
 
-      // Hide success message after 3 seconds
       setTimeout(() => {
         setReportSuccess(false);
       }, 3000);
@@ -130,22 +311,19 @@ const Post = ({ post, onHidePost }) => {
     setSaveSuccess(true);
     setSavedPlaylistName(saveData.playlistTitle);
 
-    // Hide success message after 3 seconds
     setTimeout(() => {
       setSaveSuccess(false);
     }, 3000);
   };
 
   const generateColorFromUsername = (username) => {
-    if (!username) return '#3b5fe2'; // Default blue color
+    if (!username) return '#3b5fe2';
 
-    // Simple hash function for consistent color generation
     let hash = 0;
     for (let i = 0; i < username.length; i++) {
       hash = username.charCodeAt(i) + ((hash << 5) - hash);
     }
 
-    // Convert hash to a hex color
     let color = '#';
     for (let i = 0; i < 3; i++) {
       const value = (hash >> (i * 8)) & 0xFF;
@@ -160,20 +338,18 @@ const Post = ({ post, onHidePost }) => {
     setIsAddtoModalOpen(true);
   };
 
-  // Add handler for completing the add to forum operation
   const handleAddToForum = (addData) => {
     console.log(`Post added to ${addData.isNewForum ? 'new' : 'existing'} forum: ${addData.forumTitle}`);
     setAddSuccess(true);
     setAddedForumName(addData.forumTitle);
 
-    // Hide success message after 3 seconds
     setTimeout(() => {
       setAddSuccess(false);
     }, 3000);
   };
 
   return (
-    <div className={styles.postCard}>
+    <div className={styles.postCard} ref={postRef} data-post-id={post.id || post._id}>
       <div className={styles.postHeader}>
         <div className={styles.userInfo}>
           <div className={styles.avatarContainer}>
@@ -186,7 +362,7 @@ const Post = ({ post, onHidePost }) => {
                 className={styles.avatar}
                 priority
                 unoptimized
-                key={post.profilePicture} // Force re-render when URL changes
+                key={post.profilePicture}
               />
             ) : (
               <div
@@ -248,7 +424,6 @@ const Post = ({ post, onHidePost }) => {
                 <span>Add To</span>
               </button>
 
-
               <button
                 className={styles.dropdownItem}
                 onClick={handleHide}
@@ -278,36 +453,107 @@ const Post = ({ post, onHidePost }) => {
       <h2 className={styles.postTitle}>{post.title}</h2>
       <p className={styles.postDescription}>{post.content || post.description}</p>
 
-
-      {isAddtoModalOpen && (
-        <AddtoModal
-          isOpen={isAddtoModalOpen}
-          onClose={() => setIsAddtoModalOpen(false)}
-          post={post}
-          onAdd={handleAddToForum}
-        />
-      )}
-
-
-      {post.image && (
-        <div className={styles.postImageContainer}>
-          <div className={styles.postImageWrapper}>
-            <Image
-              src={post.image}
-              alt={post.title}
-              width={600}
-              height={300}
-              className={styles.postImage}
-              unoptimized
-              priority
-              key={`home-tab-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
-            />
+      {/* Post Image/Video Container */}
+      <div className={styles.postImageContainer}>
+        {isVideoPlaying && videoId && !videoError ? (
+          // YouTube video player
+          <div className={styles.videoPlayerWrapper}>
+            <button
+              className={styles.closeVideoButton}
+              onClick={handleCloseVideo}
+              aria-label="Close video"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <iframe
+              className={styles.youtubeEmbed}
+              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+              title={post.title}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              onError={handleVideoError}
+            ></iframe>
           </div>
-        </div>
-      )}
+        ) : isVideoPlaying && videoError ? (
+          // Error fallback when embedding fails
+          <div className={styles.videoErrorContainer}>
+            <button
+              className={styles.closeVideoButton}
+              onClick={handleCloseVideo}
+              aria-label="Close video"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <div className={styles.videoErrorContent}>
+              <div className={styles.errorIcon}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+              </div>
+              <h3>Video cannot be embedded</h3>
+              <p>This video cannot be played directly. Click below to watch on YouTube.</p>
+              <a
+                href={post.videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.watchOnYoutubeBtn}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Watch on YouTube
+              </a>
+            </div>
+          </div>
+        ) : (
+          // Thumbnail with optional play button
+          post.image && (
+            <div className={styles.postImageWrapper}>
+              <Image
+                src={post.image}
+                alt={post.title}
+                width={600}
+                height={300}
+                className={styles.postImage}
+                unoptimized
+                priority
+                key={`home-tab-image-${post.id || post._id}-${post.image}`}
+              />
+
+              {/* Play button overlay for videos */}
+              {post.videoUrl && videoId && (
+                <button
+                  className={styles.playButton}
+                  onClick={handlePlayClick}
+                  aria-label="Play video"
+                >
+                  <div className={styles.playButtonCircle}>
+                    <svg
+                      className={styles.playIcon}
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </button>
+              )}
+            </div>
+          )
+        )}
+      </div>
 
       <div className={styles.postEngagement}>
-        {/* Modified discussions button to redirect to discussion page */}
         <button className={styles.discussionsBtn} onClick={handleDiscussionClick}>
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
@@ -315,7 +561,6 @@ const Post = ({ post, onHidePost }) => {
           <span>{post.discussions || post.discussionsCount || 0} Discussions</span>
         </button>
 
-        {/* NEW: Links display (non-interactive) */}
         <div className={styles.linksDisplay}>
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
@@ -335,6 +580,41 @@ const Post = ({ post, onHidePost }) => {
           <span>Share</span>
         </button>
       </div>
+
+      {/* Success messages */}
+      {saveSuccess && (
+        <div className={styles.successMessage}>
+          Post saved to "{savedPlaylistName}" playlist!
+        </div>
+      )}
+
+      {hideSuccess && (
+        <div className={styles.successMessage}>
+          Post hidden successfully.
+        </div>
+      )}
+
+      {addSuccess && (
+        <div className={styles.successMessage}>
+          Post added to "{addedForumName}" forum!
+        </div>
+      )}
+
+      {reportSuccess && (
+        <div className={styles.successMessage}>
+          Report submitted successfully.
+        </div>
+      )}
+
+      {/* Modals */}
+      {isAddtoModalOpen && (
+        <AddtoModal
+          isOpen={isAddtoModalOpen}
+          onClose={() => setIsAddtoModalOpen(false)}
+          post={post}
+          onAdd={handleAddToForum}
+        />
+      )}
 
       {isShareModalOpen && (
         <ShareModal
@@ -387,7 +667,6 @@ const HomeTab = ({ username }) => {
           throw new Error('No username provided');
         }
 
-        // Get token
         const token = localStorage.getItem('token');
         if (!token) {
           throw new Error('Authentication required');
@@ -409,7 +688,6 @@ const HomeTab = ({ username }) => {
           }
         } catch (hiddenError) {
           console.error('Error fetching hidden posts:', hiddenError);
-          // Continue even if hidden posts can't be fetched
         }
 
         // Get current user info first
@@ -429,7 +707,6 @@ const HomeTab = ({ username }) => {
         // Use the correct endpoint for fetching user posts
         const encodedUsername = encodeURIComponent(username);
 
-        // Add user ID as a query parameter if available
         let url = `/api/users/${encodedUsername}/posts`;
         if (userData && userData.id) {
           url += `?id=${userData.id}`;
@@ -453,7 +730,6 @@ const HomeTab = ({ username }) => {
         const data = await response.json();
         console.log('User posts API response:', data);
 
-        // Use the posts from the response and filter out hidden posts
         if (data && data.posts) {
           const filteredPosts = data.posts.filter(post => {
             const postId = post.id || post._id;
@@ -498,10 +774,7 @@ const HomeTab = ({ username }) => {
 
   // Handler for hiding posts
   const handleHidePost = (postId) => {
-    // Add to local hidden posts
     setHiddenPostIds(prev => [...prev, postId]);
-
-    // Remove the post from the UI
     setPosts(prevPosts => prevPosts.filter(post =>
       (post.id !== postId && post._id !== postId)
     ));

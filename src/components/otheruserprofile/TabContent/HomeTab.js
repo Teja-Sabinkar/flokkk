@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation'; // Import useRouter
 import styles from './HomeTab.module.css';
@@ -17,6 +17,89 @@ const Post = ({ post, onHidePost }) => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
   const menuRef = useRef(null);
+
+  // Video playback states
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [videoId, setVideoId] = useState(null);
+  const [videoError, setVideoError] = useState(false);
+
+  // Extract YouTube video ID from URL
+  const extractYouTubeVideoId = useCallback((url) => {
+    if (!url || typeof url !== 'string') return null;
+
+    try {
+      // Comprehensive regex that handles all YouTube URL formats
+      const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+      const match = url.match(youtubeRegex);
+      return match && match[1] ? match[1] : null;
+    } catch (error) {
+      console.error('Error extracting video ID:', error);
+      return null;
+    }
+  }, []);
+
+  // Track view engagement with the post
+  const trackViewEngagement = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/posts/${postId}/track-view`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to track view engagement');
+      } else {
+        const data = await response.json();
+        console.log('View engagement tracked:', data);
+      }
+    } catch (error) {
+      console.error('Error tracking view engagement:', error);
+    }
+  };
+
+  // Extract video ID when component mounts or videoUrl changes
+  useEffect(() => {
+    if (post.videoUrl) {
+      const id = extractYouTubeVideoId(post.videoUrl);
+      setVideoId(id);
+    } else {
+      setVideoId(null);
+    }
+  }, [post.videoUrl, extractYouTubeVideoId]);
+
+  // Handle play button click - WITH VIEW TRACKING
+  const handlePlayClick = useCallback(async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (videoId) {
+      setIsVideoPlaying(true);
+      setVideoError(false);
+
+      // Track view engagement when play button is clicked
+      const postId = post.id || post._id;
+      await trackViewEngagement(postId);
+    }
+  }, [videoId, post.id, post._id]);
+
+  // Handle closing video (return to thumbnail)
+  const handleCloseVideo = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsVideoPlaying(false);
+    setVideoError(false);
+  }, []);
+
+  // Handle video embedding error
+  const handleVideoError = useCallback(() => {
+    setVideoError(true);
+  }, []);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -239,8 +322,69 @@ const Post = ({ post, onHidePost }) => {
       <h2 className={styles.postTitle}>{post.title}</h2>
       <p className={styles.postDescription}>{post.content || post.description}</p>
 
-      {post.image && (
-        <div className={styles.postImageContainer}>
+      {/* Post Image/Video Container with Video Player Support */}
+      <div className={styles.postImageContainer}>
+        {isVideoPlaying && videoId && !videoError ? (
+          // YouTube video player
+          <div className={styles.videoPlayerWrapper}>
+            <button
+              className={styles.closeVideoButton}
+              onClick={handleCloseVideo}
+              aria-label="Close video"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <iframe
+              className={styles.youtubeEmbed}
+              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+              title={post.title}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              onError={handleVideoError}
+            ></iframe>
+          </div>
+        ) : isVideoPlaying && videoError ? (
+          // Error fallback when embedding fails
+          <div className={styles.videoErrorContainer}>
+            <button
+              className={styles.closeVideoButton}
+              onClick={handleCloseVideo}
+              aria-label="Close video"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <div className={styles.videoErrorContent}>
+              <div className={styles.errorIcon}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+              </div>
+              <h3>Video cannot be embedded</h3>
+              <p>This video cannot be played directly. Click below to watch on YouTube.</p>
+              <a
+                href={post.videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.watchOnYoutubeBtn}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Watch on YouTube
+              </a>
+            </div>
+          </div>
+        ) : post.image ? (
+          // Thumbnail with optional play button
           <div className={styles.postImageWrapper}>
             <Image
               src={post.image}
@@ -252,9 +396,29 @@ const Post = ({ post, onHidePost }) => {
               priority
               key={`home-tab-image-${post.id || post._id}-${post.image}`} // Force re-render when image changes
             />
+
+            {/* Play button overlay for videos */}
+            {post.videoUrl && videoId && (
+              <button
+                className={styles.playButton}
+                onClick={handlePlayClick}
+                aria-label="Play video"
+              >
+                <div className={styles.playButtonCircle}>
+                  <svg
+                    className={styles.playIcon}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </button>
+            )}
           </div>
-        </div>
-      )}
+        ) : null}
+      </div>
 
       <div className={styles.postEngagement}>
         {/* Add onClick handler to discussions button */}

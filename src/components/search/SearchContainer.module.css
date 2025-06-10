@@ -192,17 +192,12 @@
 
 /* Responsive Adjustments */
 @media (max-width: 992px) {
-  .itemsGrid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 16px;
-  }
-
   .profileCard {
     width: 250px;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 830px) {
   .itemsGrid {
     grid-template-columns: 1fr;
   }

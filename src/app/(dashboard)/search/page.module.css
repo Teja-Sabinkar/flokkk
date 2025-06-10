@@ -376,14 +376,14 @@
   }
   
   .sidebarContainer {
-    width: 240px; /* Slightly narrower for mobile */
+    width: 330px;
   }
   
   /* Update overlay left position to match sidebar width */
   .open ~ .mobileOverlay,
   .open + .mobileOverlay,
   .open ~ * .mobileOverlay {
-    left: 240px;
+    left: 0px;
   }
   
   .filtersContainer {
@@ -407,7 +407,7 @@
   }
   
   .sidebarContainer {
-    width: 220px;
+    width: 330px;
   }
   
   .sidebarScrollable {
