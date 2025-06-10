@@ -440,6 +440,113 @@ async function handleManualQuery(message, context, username, postId, theme) {
             };
         }
 
+        // NEW: Check if user is asking about "flokkk" (the platform)
+        const flokkkQuestionPatterns = [
+            /what\s+is\s+flokkk/i,
+            /tell\s+me\s+about\s+flokkk/i,
+            /explain\s+flokkk/i,
+            /how\s+does\s+flokkk\s+work/i,
+            /what\s+does\s+flokkk\s+do/i,
+            /flokkk\s+platform/i,
+            /flokkk\s+mission/i,
+            /flokkk\s+vision/i,
+            /what\s+is\s+this\s+platform/i,
+            /about\s+this\s+platform/i,
+            /tell\s+me\s+about\s+this\s+site/i,
+            /what\s+is\s+this\s+website/i,
+            /how\s+does\s+this\s+platform\s+work/i,
+            /mission\s+of\s+flokkk/i,
+            /purpose\s+of\s+flokkk/i,
+            /goals\s+of\s+flokkk/i,
+            /flokkk\s+features/i,
+            /community\s+curation/i,
+            /transparent\s+vetting/i
+        ];
+
+        const isFlokkkQuestion = flokkkQuestionPatterns.some(pattern => pattern.test(message.trim()));
+
+        if (isFlokkkQuestion) {
+            console.log('Detected question about flokkk platform, returning platform information');
+
+            // Array of comprehensive responses about flokkk based on the about page
+            const flokkkResponses = [
+                // Mission-focused response
+                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
+                    <h4 style="color: var(--accent-color); margin: 0 0 12px 0; font-size: 16px;">About Flokkk</h4>
+                    <p style="margin: 0 0 12px 0;">Flokkk is rebuilding trust in digital information. We're creating a human-first, community-curated discovery platform where people find the most valuable resources on any topic—through collective intelligence, not algorithmic guesswork.</p>
+                    
+                    <h5 style="color: var(--text-primary); margin: 12px 0 8px 0; font-size: 14px;">How It Works:</h5>
+                    <ul style="margin: 0; padding-left: 18px; color: var(--text-secondary); font-size: 13px;">
+                        <li><strong>Community Curation:</strong> Users contribute, vote, and discuss the best content, turning scattered information into structured, peer-endorsed knowledge hubs.</li>
+                        <li><strong>Transparent Vetting:</strong> Every link is vetted through honest peer review from real learners and subject-matter experts.</li>
+                        <li><strong>AI-Powered Insights:</strong> Our AI serves resources based on what real learners have found useful, not just web scraping.</li>
+                    </ul>
+                </div>`,
+
+                // Vision-focused response
+                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
+                    <h4 style="color: var(--accent-color); margin: 0 0 12px 0; font-size: 16px;">The Flokkk Vision</h4>
+                    <p style="margin: 0 0 12px 0;">We're transforming shallow content consumption into informed, intentional learning. By combining human wisdom with intelligent technology, we're building a future where quality information is accessible, transparent, and truly valuable.</p>
+                    
+                    <p style="margin: 12px 0 0 0; color: var(--text-secondary); font-style: italic;">"Quality over quantity, depth over algorithms, and human insight over automated recommendations."</p>
+                </div>`,
+
+                // Feature-focused response
+                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
+                    <h4 style="color: var(--accent-color); margin: 0 0 12px 0; font-size: 16px;">Flokkk Platform</h4>
+                    <p style="margin: 0 0 12px 0;">Flokkk is a human-first, community-curated discovery platform for meaningful learning. We're creating structured knowledge hubs where the best resources are found through collective intelligence.</p>
+                    
+                    <h5 style="color: var(--text-primary); margin: 12px 0 8px 0; font-size: 14px;">Key Features:</h5>
+                    <ul style="margin: 0; padding-left: 18px; color: var(--text-secondary); font-size: 13px;">
+                        <li>Community-driven content curation starting with YouTube and expanding to major platforms</li>
+                        <li>Transparent peer review system with no hidden algorithms</li>
+                        <li>AI assistant that ranks resources based on real learner feedback</li>
+                        <li>Discussion forums and collaborative learning spaces</li>
+                    </ul>
+                </div>`,
+
+                // Problem-solution focused response
+                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
+                    <h4 style="color: var(--accent-color); margin: 0 0 12px 0; font-size: 16px;">Why Flokkk Exists</h4>
+                    <p style="margin: 0 0 12px 0;">Flokkk addresses the problem of information overload and unreliable recommendations online. Instead of algorithmic guesswork, we use community wisdom to surface the most valuable resources.</p>
+                    
+                    <p style="margin: 0 0 12px 0; color: var(--text-secondary);">Our three pillars:</p>
+                    <ul style="margin: 0; padding-left: 18px; color: var(--text-secondary); font-size: 13px;">
+                        <li><strong>Community Curation:</strong> Real people finding and sharing valuable content</li>
+                        <li><strong>Transparent Vetting:</strong> Open peer review process with full transparency</li>
+                        <li><strong>AI Enhancement:</strong> Technology that amplifies human intelligence rather than replacing it</li>
+                    </ul>
+                </div>`,
+
+                // Comprehensive overview response
+                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
+                    <h4 style="color: var(--accent-color); margin: 0 0 12px 0; font-size: 16px;">Flokkk: Curating Information You Can Trust</h4>
+                    <p style="margin: 0 0 12px 0;">Flokkk is a revolutionary platform that's rebuilding trust in digital information through community-driven curation and transparent vetting processes.</p>
+                    
+                    <h5 style="color: var(--text-primary); margin: 12px 0 8px 0; font-size: 14px;">Our Mission:</h5>
+                    <p style="margin: 0 0 12px 0; color: var(--text-secondary); font-size: 13px;">Create a human-first discovery platform where people find the most valuable resources through collective intelligence, not algorithmic guesswork.</p>
+                    
+                    <h5 style="color: var(--text-primary); margin: 12px 0 8px 0; font-size: 14px;">Our Vision:</h5>
+                    <p style="margin: 0; color: var(--text-secondary); font-size: 13px;">Transform shallow content consumption into informed, intentional learning by combining human wisdom with intelligent technology.</p>
+                </div>`
+            ];
+
+            // Randomly select one response
+            const randomIndex = Math.floor(Math.random() * flokkkResponses.length);
+            const formattedFlokkkResponse = flokkkResponses[randomIndex];
+
+            return {
+                response: formattedFlokkkResponse,
+                model: "claude-3-haiku-20240307",
+                usage: null,
+                dataAvailable: [],
+                hasMoreDb: false,
+                hasMoreAi: false,
+                theme
+            };
+        }
+
+        // Continue with existing keyword extraction and search logic...
         // Extract keywords from user's question
         const keywords = await extractKeywordsFromText(message);
         console.log('Extracted keywords:', keywords);
