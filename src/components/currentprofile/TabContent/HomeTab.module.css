@@ -375,7 +375,7 @@
 
 .discussionsBtn,
 .shareBtn {
- display: flex;
+  display: flex;
   align-items: center;
   gap: 6px;
   background: none;
@@ -489,8 +489,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 1100px) {
@@ -528,9 +533,16 @@
     font-size: 12px;
   }
 
+  .postEngagement {
+    gap: 2px;
+  }
+
+
   .discussionsBtn,
-  .shareBtn {
-    font-size: 12px;
+  .shareBtn,
+  .linksDisplay {
+    font-size: 11px;
+    padding: 6px 6px;
   }
 
   .homeTabContainer {

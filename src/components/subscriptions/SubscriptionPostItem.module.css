@@ -408,18 +408,18 @@
 }
 
 .linksDisplay {
-  display: flex;
-  align-items: center;
-  color: var(--text-tertiary);
-  font-size: 14px;
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: default;
-  transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    color: var(--text-tertiary);
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: default;
+    transition: color 0.3s ease;
 }
 
 .linksDisplay svg {
-  margin-right: 8px;
+    margin-right: 8px;
 }
 
 .discussionsBtn,
@@ -502,9 +502,12 @@
         font-size: 12px;
     }
 
+
     .discussionsBtn,
-    .shareBtn {
-        font-size: 12px;
+    .shareBtn,
+    .linksDisplay {
+        font-size: 11px;
+        padding: 6px 6px;
     }
 
     .postMenu {

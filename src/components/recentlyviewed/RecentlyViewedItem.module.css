@@ -489,8 +489,10 @@
 @media (max-width: 480px) {
 
   .discussionsBtn,
-  .shareBtn {
-    font-size: 12px;
+  .shareBtn,
+  .linksDisplay {
+    font-size: 11px;
+    padding: 6px 6px;
   }
 
   .postContent {

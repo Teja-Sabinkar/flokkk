@@ -624,9 +624,16 @@
     font-size: 12px;
   }
 
+  
+  .postEngagement {
+    gap: 2px;
+  }
+
   .commentsBtn,
-  .shareBtn {
-    font-size: 12px;
+  .shareBtn,
+  .linksDisplay {
+    font-size: 11px;
+    padding: 6px 6px;
   }
 
   .playButtonCircle {

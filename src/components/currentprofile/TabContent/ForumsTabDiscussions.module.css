@@ -411,17 +411,17 @@
 
 .commentsBtn,
 .shareBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: none;
-  color: var(--text-tertiary);
-  font-size: 13px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
 }
 
 .commentsBtn:hover,
@@ -570,7 +570,7 @@
 
 @media (max-width: 830px) {
     .discussionsContainer {
-       grid-template-columns: 1fr;
+        grid-template-columns: 1fr;
         gap: 14px;
     }
 
@@ -615,9 +615,16 @@
         font-size: 12px;
     }
 
+
+    .postEngagement {
+        gap: 2px;
+    }
+
     .commentsBtn,
-    .shareBtn {
-        font-size: 12px;
+    .shareBtn,
+    .linksDisplay {
+        font-size: 11px;
+        padding: 6px 6px;
     }
 
     .playButtonCircle {
