@@ -9,13 +9,13 @@ const ExploreSection = ({ title, items = [] }) => {
 
   return (
     <div className={styles.section}>
-      
+
       {hasItems ? (
         <div className={styles.gridContainer}>
           {items.map((item, index) => (
-            <ExploreItem 
+            <ExploreItem
               key={item.id || index}
-              id={item.id} // Make sure we pass the id explicitly
+              id={item.id}
               username={item.username}
               timeAgo={item.timeAgo}
               title={item.title}
@@ -23,7 +23,9 @@ const ExploreSection = ({ title, items = [] }) => {
               imageUrl={item.imageUrl}
               discussionCount={item.discussionCount}
               profilePicture={item.profilePicture}
-              videoUrl={item.videoUrl} // Add this line for video support
+              videoUrl={item.videoUrl}
+              creatorLinks={item.creatorLinks || []}
+              communityLinks={item.communityLinks || []}
             />
           ))}
         </div>

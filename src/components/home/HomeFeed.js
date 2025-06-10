@@ -283,7 +283,10 @@ export default function HomeFeed() {
                   videoUrl: post.videoUrl, // IMPORTANT: Pass the videoUrl
                   discussions: post.discussions?.toString() || '0',
                   shares: post.shares || 0,
-                  hashtags: post.hashtags || []
+                  hashtags: post.hashtags || [],
+                  // NEW: Pass links data for the links button
+                  creatorLinks: post.creatorLinks || [],
+                  communityLinks: post.communityLinks || []
                 }}
               />
             ))

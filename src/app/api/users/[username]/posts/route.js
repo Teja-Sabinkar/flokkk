@@ -93,9 +93,12 @@ export async function GET(request, { params }) {
       discussions: post.discussions,
       shares: post.shares,
       username: post.username,
-      profilePicture: user.profilePicture || '/profile-placeholder.jpg', // Add this line
+      profilePicture: user.profilePicture || '/profile-placeholder.jpg',
       createdAt: post.createdAt,
-      timeAgo: getTimeAgo(post.createdAt)
+      timeAgo: getTimeAgo(post.createdAt),
+      // ADD THESE MISSING FIELDS:
+      creatorLinks: post.creatorLinks || [],
+      communityLinks: post.communityLinks || []
     }));
 
     return NextResponse.json({

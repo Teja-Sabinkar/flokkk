@@ -213,11 +213,27 @@
 
 .postEngagement {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   border-top: 1px solid var(--border-color);
   padding: 12px 0px 0 0px;
   align-items: center;
   transition: border-color 0.3s ease;
+  gap: 8px;
+}
+
+.linksDisplay {
+  display: flex;
+  align-items: center;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: default;
+  transition: color 0.3s ease;
+}
+
+.linksDisplay svg {
+  margin-right: 6px;
 }
 
 .discussionsBtn,
@@ -343,6 +359,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

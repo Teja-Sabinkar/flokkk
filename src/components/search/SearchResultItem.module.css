@@ -1,387 +1,638 @@
 .card {
-  background-color: var(--bg-secondary);
-  border-radius: 8px;
-  overflow: hidden;
-  padding: 16px;
-  margin-bottom: 0;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s ease, border-color 0.3s ease;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .card:hover {
-  border-color: var(--text-tertiary);
+    border-color: var(--text-tertiary);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Post Header with User Info */
-.postHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+/* List view styles */
+.card.listView {
+    flex-direction: column;
 }
 
-.userInfo {
-  display: flex;
-  align-items: center;
-}
-
-.avatarContainer {
-  width: 32px;
-  height: 32px;
-  margin-right: 12px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  position: relative;
-  overflow: hidden;
-}
-
-.avatarImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-.avatarInitialContainer {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.avatarInitial {
-  color: white;
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.userinfo {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.userDetails {
-  display: flex;
-  align-items: flex-start;
-  gap: 2px;
-  flex-direction: column;
-}
-
-.username {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.username:hover {
-  text-decoration: underline;
-}
-
-.postDate {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  margin-top: 2px;
-  transition: color 0.3s ease;
-}
-
-.username:hover {
-  cursor: pointer;
-}
-
-.typeBadge {
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 10px;
-  color: white;
-  font-weight: 500;
-}
-
-/* Menu and dropdown */
-.menuContainer {
-  position: relative;
-}
-
-.postMenu {
-  background: none;
-  border: none;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  height: 32px;
-  width: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.postMenu:hover {
-  background-color: var(--hover-overlay);
-  color: var(--text-primary);
-}
-
-.dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: var(--bg-tertiary);
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  min-width: 180px;
-  overflow: hidden;
-  z-index: 100;
-  border: 1px solid var(--border-color);
-  margin-top: 4px;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.dropdownItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 14px;
-  font-size: 14px;
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  cursor: pointer;
-  text-align: left;
-  transition: background-color 0.2s ease, color 0.3s ease;
-}
-
-.dropdownItem:hover {
-  background-color: var(--hover-overlay);
-}
-
-.dropdownItem:active {
-  background-color: var(--hover-overlay);
-}
-
-.dropdownItem svg {
-  flex-shrink: 0;
-  color: var(--text-tertiary);
-  transition: color 0.3s ease;
-}
-
-/* Content layout */
-.contentWrapper {
-  display: flex;
-  flex: 1;
-}
-
-/* Grid View specific styles */
-.gridContentWrapper {
-  flex-direction: column;
-}
-
-.gridContentWrapper .textContent {
-  margin-bottom: 12px;
-}
-
-.gridContentWrapper .postImageContainer {
-  margin-bottom: 16px;
-  width: 100%;
-}
-
-/* List View specific styles */
-.listContentWrapper {
-  flex-direction: row;
-  gap: 16px;
-}
-
-.listContentWrapper .textContent {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.listContentWrapper .postImageContainer {
-  width: 160px;
-  flex-shrink: 0;
-}
-
-.listContentWrapper .postImageWrapper {
-  padding-bottom: 100%;
-  /* Square aspect ratio for list view */
-}
-
-/* Post Content */
-.itemLink {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-}
-
-.postTitle {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 10px;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  transition: color 0.3s ease;
-}
-
-.itemLink:hover .postTitle {
-  color: var(--accent-color);
-}
-
-.postContent {
-  height: 36px;
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin: 0 0 16px 0;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  transition: color 0.3s ease;
-}
-
-/* Post Image */
-.postImageContainer {
-  margin-bottom: 16px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.postImageWrapper {
-  position: relative;
-  width: 100%;
-  height: 0;
-  padding-bottom: 56%;
-  /* Aspect ratio 16:9 */
-  background-color: var(--bg-tertiary);
-  transition: background-color 0.3s ease;
-}
-
-.postImage {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Post Engagement */
-.postEngagement {
-  display: flex;
-  border-top: 1px solid var(--border-color);
-  padding: 12px 16px 0 16px;
-  align-items: center;
-  justify-content: space-between;
-  transition: border-color 0.3s ease;
-}
-
-.listContentWrapper .postEngagement {
-  margin-top: auto;
-  /* Push to bottom of text content section in list view */
-  padding-top: 12px;
-}
-
-.discussionsBtn,
-.followersBtn,
-.shareBtn {
-  display: flex;
-  align-items: center;
-  background: none;
-  border: none;
-  color: var(--text-tertiary);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease, color 0.3s ease;
-}
-
-.discussionsBtn:hover,
-.followersBtn:hover,
-.shareBtn:hover {
-  background-color: var(--hover-overlay);
-  color: var(--text-primary);
-}
-
-.discussionsBtn svg,
-.followersBtn svg,
-.shareBtn svg {
-  margin-right: 8px;
-}
-
-.discussionsBtn,
-.followersBtn {
-  margin-right: 8px;
-}
-
+/* Success messages */
 .successMessage {
-  background-color: rgba(46, 213, 115, 0.1);
-  color: var(--success-color);
-  padding: 10px;
-  border-radius: 4px;
-  margin: 10px 0;
-  font-size: 14px;
-  text-align: center;
-  animation: fadeIn 0.3s ease-out;
-  transition: color 0.3s ease, background-color 0.3s ease;
+    background-color: rgba(46, 213, 115, 0.1);
+    color: var(--success-color);
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
 
-  to {
-    opacity: 1;
-  }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* Responsive Behavior */
-@media (max-width: 768px) {
-  .card.listView .contentWrapper {
-    flex-direction: column;
-  }
+/* Post header */
+.postHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
 
-  .card.listView .postImageContainer {
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatarContainer {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.avatarImage {
     width: 100%;
-    margin-bottom: 16px;
-  }
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
 
-  .card.listView .postImageWrapper {
-    padding-bottom: 56%;
-    /* Back to 16:9 on mobile */
-  }
+.avatarInitial {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.userDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.username {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    transition: color 0.2s ease;
+}
+
+.username:hover {
+    color: var(--accent-color);
+    text-decoration: underline;
+}
+
+.postDate {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+/* Menu */
+.menuContainer {
+    position: relative;
+}
+
+.menuButton {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.menuButton:hover {
+    background-color: var(--hover-overlay);
+    color: var(--text-primary);
+}
+
+.dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 160px;
+    overflow: hidden;
+    z-index: 100;
+    margin-top: 4px;
+}
+
+.dropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 14px;
+    text-align: left;
+    transition: background-color 0.2s ease;
+}
+
+.dropdownItem:hover {
+    background-color: var(--hover-overlay);
+}
+
+.dropdownItem svg {
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+}
+
+/* Content wrapper */
+.contentWrapper {
+    display: flex;
+    flex: 1;
+}
+
+.gridContent {
+    flex-direction: column;
+}
+
+.listContent {
+    flex-direction: row;
+    gap: 16px;
+}
+
+/* Text content */
+.textContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.content {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Image container and wrapper */
+.imageContainer {
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--bg-tertiary);
+}
+
+.gridContent .imageContainer {
+    margin-bottom: 12px;
+    width: 100%;
+    aspect-ratio: 16/9;
+}
+
+.listContent .imageContainer {
+    width: 160px;
+    height: 160px;
+    flex-shrink: 0;
+}
+
+.imageWrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-tertiary);
+    transition: background-color 0.3s ease;
+}
+
+.postImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Play Button Overlay */
+.playButton {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    z-index: 10;
+}
+
+.playButton:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.playButtonCircle {
+    width: 60px;
+    height: 60px;
+    background-color: rgba(0, 0, 0, 0.177);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.2s ease;
+}
+
+.playButton:hover .playButtonCircle {
+    background-color: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.playIcon {
+    width: 32px;
+    height: 32px;
+    color: white;
+    margin-left: 3px;
+    /* Slightly offset to center the triangle visually */
+}
+
+/* Video Player Wrapper */
+.videoPlayerWrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-tertiary);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: background-color 0.3s ease;
+}
+
+.gridContent .videoPlayerWrapper {
+    aspect-ratio: 16/9;
+}
+
+.listContent .videoPlayerWrapper {
+    height: 160px;
+}
+
+.youtubeEmbed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Close Video Button */
+.closeVideoButton {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    transition: background-color 0.2s ease;
+}
+
+.closeVideoButton:hover {
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+/* Video Error Container */
+.videoErrorContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-tertiary);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.gridContent .videoErrorContainer {
+    aspect-ratio: 16/9;
+}
+
+.listContent .videoErrorContainer {
+    height: 160px;
+}
+
+.videoErrorContent {
+    position: absolute;
+    text-align: center;
+    color: var(--text-primary);
+    padding: 20px;
+    max-width: 80%;
+    transition: color 0.3s ease;
+}
+
+.listContent .videoErrorContent {
+    padding: 10px;
+    max-width: 90%;
+}
+
+.errorIcon {
+    color: var(--danger-color);
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: center;
+    transition: color 0.3s ease;
+}
+
+.listContent .errorIcon {
+    margin-bottom: 8px;
+}
+
+.videoErrorContent h3 {
+    margin-bottom: 12px;
+    color: var(--danger-color);
+    font-size: 18px;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.listContent .videoErrorContent h3 {
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.videoErrorContent p {
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.5;
+    transition: color 0.3s ease;
+}
+
+.listContent .videoErrorContent p {
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.watchOnYoutubeBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #ff0000;
+    color: white;
+    padding: 12px 20px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    font-size: 14px;
+}
+
+.listContent .watchOnYoutubeBtn {
+    padding: 8px 12px;
+    font-size: 12px;
+    gap: 4px;
+}
+
+.watchOnYoutubeBtn:hover {
+    background-color: #cc0000;
+}
+
+/* Engagement */
+.engagement {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+    justify-content: flex-start;
+}
+
+.listContent .engagement {
+    margin-top: auto;
+}
+
+.linksDisplay {
+    display: flex;
+    align-items: center;
+    color: var(--text-tertiary);
+    font-size: 14px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: default;
+    transition: color 0.2s ease;
+}
+
+.linksDisplay svg {
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.engagementButton {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.engagementButton:hover {
+    background-color: var(--hover-overlay);
+    color: var(--text-primary);
+}
+
+.engagementButton svg {
+    flex-shrink: 0;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .card {
+        padding: 12px;
+    }
+
+    .listContent {
+        flex-direction: column;
+    }
+
+    .listContent .imageContainer {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16/9;
+    }
+
+    .title {
+        font-size: 15px;
+    }
+
+    .content {
+        font-size: 13px;
+    }
+
+    .engagement {
+        gap: 12px;
+    }
+
+    .engagementButton {
+        font-size: 13px;
+        padding: 4px 6px;
+    }
+
+    .playButtonCircle {
+        width: 50px;
+        height: 50px;
+    }
+
+    .playIcon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .closeVideoButton {
+        width: 28px;
+        height: 28px;
+        top: 8px;
+        right: 8px;
+    }
+
+    .videoErrorContent h3 {
+        font-size: 16px;
+    }
+
+    .videoErrorContent p {
+        font-size: 13px;
+    }
+
+    .watchOnYoutubeBtn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
 }
 
 @media (max-width: 480px) {
-  .card {
-    padding: 12px;
-  }
+    .userInfo {
+        gap: 8px;
+    }
 
-  .postTitle {
-    font-size: 15px;
-  }
+    .avatarContainer {
+        width: 28px;
+        height: 28px;
+    }
 
-  .postContent {
-    font-size: 13px;
-    -webkit-line-clamp: 2;
-  }
+    .username {
+        font-size: 13px;
+    }
 
-  .postEngagement {
-    flex-wrap: wrap;
-  }
+    .postDate {
+        font-size: 11px;
+    }
+
+    .dropdown {
+        min-width: 140px;
+    }
+
+    .dropdownItem {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .playButtonCircle {
+        width: 40px;
+        height: 40px;
+    }
+
+    .playIcon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .closeVideoButton {
+        width: 24px;
+        height: 24px;
+        top: 6px;
+        right: 6px;
+    }
+
+    .videoErrorContent {
+        padding: 12px;
+    }
+
+    .videoErrorContent h3 {
+        font-size: 14px;
+    }
+
+    .videoErrorContent p {
+        font-size: 12px;
+    }
+
+    .watchOnYoutubeBtn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .engagement {
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .engagementButton,
+    .linksDisplay {
+        font-size: 12px;
+        padding: 4px 6px;
+    }
 }

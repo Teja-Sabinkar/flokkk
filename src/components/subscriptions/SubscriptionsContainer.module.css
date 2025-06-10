@@ -1,87 +1,154 @@
 .container {
+  width: 100%;
   padding: 0;
-  color: var(--text-primary);
-  width: 100%;
-  /* ADDED: Ensure container doesn't exceed available space */
-  max-width: 100%;
-  box-sizing: border-box;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
-.heading {
-  font-size: 24px;
+/* Section Headers */
+.sectionHeader {
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: 20px;
   font-weight: 600;
-  margin: 0 0 8px 0;
   color: var(--text-primary);
+  margin-bottom: 6px;
   transition: color 0.3s ease;
 }
 
-.subtitle {
-  color: var(--text-tertiary);
+.sectionDescription {
   font-size: 14px;
-  margin: 0 0 32px 0;
+  color: var(--text-tertiary);
   transition: color 0.3s ease;
 }
 
-/* Grid and List view styles - FIXED */
-.itemsContainer {
-  width: 100%;
-  display: grid;
-  gap: 20px;
+/* Subscriptions Section */
+.subscriptionsSection {
   margin-bottom: 40px;
-  /* ADDED: Ensure proper box sizing and prevent overflow */
-  box-sizing: border-box;
-  max-width: 100%;
+}
+
+.subscriptionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  transition: all 0.3s ease;
+}
+
+.subscriptionsGrid.expanded {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* Feed Section */
+.feedSection {
+  width: 100%;
+}
+
+.feedContainer {
+  width: 100%;
 }
 
 .gridView {
-  /* CHANGED: Use minmax to prevent overflow while maintaining responsive behavior */
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  /* ADDED: Prevent grid items from growing too large */
-  grid-auto-rows: min-content;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  transition: all 0.3s ease;
+}
+
+.gridView.expanded {
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .listView {
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-/* Feed section */
-.feedSection {
-  margin-top: 40px;
-}
-
-/* Empty states */
-.emptyState {
-  background-color: var(--bg-tertiary);
-  border-radius: 8px;
-  padding: 40px 24px;
-  text-align: center;
-  margin: 24px 0;
+/* Loading States */
+.loadingContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: background-color 0.3s ease;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--text-tertiary);
+  grid-column: 1 / -1;
+  transition: color 0.3s ease;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(76, 160, 255, 0.2);
+  border-top: 3px solid var(--accent-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+  transition: border-color 0.3s ease;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Load More */
+.loadMoreTrigger {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.loadMoreSpinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
+}
+
+.loadMoreSpinner .loadingSpinner {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 12px;
+}
+
+/* Empty States */
+.emptyState,
+.noPostsState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+  padding: 40px 20px;
+  grid-column: 1 / -1;
 }
 
 .emptyStateIcon {
   color: var(--text-tertiary);
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+  opacity: 0.6;
   transition: color 0.3s ease;
 }
 
 .emptyStateTitle {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 600;
-  margin-bottom: 12px;
   color: var(--text-primary);
+  margin-bottom: 12px;
   transition: color 0.3s ease;
 }
 
-.emptyStateText {
-  color: var(--text-tertiary);
-  max-width: 400px;
-  margin: 0 auto 20px;
+.emptyStateDescription {
+  font-size: 16px;
+  color: var(--text-secondary);
+  max-width: 500px;
   line-height: 1.5;
+  margin-bottom: 24px;
   transition: color 0.3s ease;
 }
 
@@ -89,119 +156,89 @@
   background-color: var(--accent-color);
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 20px;
-  font-size: 14px;
+  border-radius: 6px;
+  padding: 12px 24px;
+  font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease;
 }
 
 .exploreButton:hover {
-  background-color: var(--accent-color);
-  opacity: 0.9;
+  background-color: var(--accent-color-hover, #5a6fd8);
 }
 
-.emptyFeed {
-  background-color: var(--hover-overlay);
-  border-radius: 8px;
-  padding: 24px;
-  text-align: center;
-  margin: 24px 0;
-  color: var(--text-tertiary);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Loading states */
-.loadingState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  color: var(--text-tertiary);
-  text-align: center;
-  transition: color 0.3s ease;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--hover-overlay);
-  border-radius: 50%;
-  border-top-color: var(--accent-color);
-  animation: spin 1s ease-in-out infinite;
-  margin-bottom: 16px;
-  transition: border-color 0.3s ease;
-}
-
-.loadingMore {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  color: var(--text-tertiary);
-  gap: 12px;
-  transition: color 0.3s ease;
-}
-
-.smallSpinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--hover-overlay);
-  border-radius: 50%;
-  border-top-color: var(--accent-color);
-  animation: spin 1s ease-in-out infinite;
-  transition: border-color 0.3s ease;
-}
-
-.endOfFeed {
-  text-align: center;
-  padding: 24px;
-  color: var(--text-tertiary);
-  font-size: 14px;
-  border-top: 1px solid var(--border-color);
-  margin-top: 16px;
-  transition: color 0.3s ease, border-color 0.3s ease;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .subscriptionsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
   }
-}
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
   .gridView {
     gap: 16px;
-    /* CHANGED: Better responsive grid for mobile */
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  }
-}
-
-@media (max-width: 580px) {
-  .gridView {
-    grid-template-columns: 1fr; /* Single column on small screens */
-    /* ADDED: Better spacing for mobile */
-    gap: 12px;
   }
   
+  .gridView.expanded {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 830px){
+  .subscriptionsGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .gridView,
+  .gridView.expanded {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .sectionTitle {
+    font-size: 18px;
+  }
+
+  .emptyStateTitle {
+    font-size: 20px;
+  }
+
+  .emptyStateDescription {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
   .container {
-    /* ADDED: Adjust padding for mobile */
-    padding: 0 4px;
+    padding: 0;
   }
-}
 
-/* NEW: Ensure grid items don't exceed container width */
-@media (min-width: 769px) {
-  .gridView {
-    /* Force exactly 2 columns on desktop when sidebar is visible */
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .sectionHeader {
+    margin-bottom: 20px;
   }
-}
 
-/* NEW: When container is expanded (no sidebar), allow more flexible grid */
-.container.expanded .gridView {
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  .subscriptionsSection {
+    margin-bottom: 32px;
+  }
+
+  .emptyState,
+  .noPostsState {
+    min-height: 250px;
+    padding: 32px 16px;
+  }
+
+  .emptyStateIcon {
+    margin-bottom: 20px;
+  }
+
+  .emptyStateIcon svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .exploreButton {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
 }

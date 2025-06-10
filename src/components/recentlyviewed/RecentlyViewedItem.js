@@ -344,9 +344,11 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
     return color;
   };
 
+  const totalLinksCount = (item.creatorLinks?.length || 0) + (item.communityLinks?.length || 0);
+
   return (
-    <div 
-      className={`${styles.card} ${viewMode === 'list' ? styles.listCard : ''}`} 
+    <div
+      className={`${styles.card} ${viewMode === 'list' ? styles.listCard : ''}`}
       data-theme={theme} // Add theme data attribute
     >
       {/* User Info and Post Header */}
@@ -460,7 +462,7 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
           {isVideoPlaying && videoId && !videoError ? (
             // YouTube video player
             <div className={styles.videoPlayerWrapper}>
-              <button 
+              <button
                 className={styles.closeVideoButton}
                 onClick={handleCloseVideo}
                 aria-label="Close video"
@@ -483,7 +485,7 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
           ) : isVideoPlaying && videoError ? (
             // Error fallback when embedding fails
             <div className={styles.videoErrorContainer}>
-              <button 
+              <button
                 className={styles.closeVideoButton}
                 onClick={handleCloseVideo}
                 aria-label="Close video"
@@ -503,9 +505,9 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
                 </div>
                 <h3>Video cannot be embedded</h3>
                 <p>This video cannot be played directly. Click below to watch on YouTube.</p>
-                <a 
-                  href={videoUrl} 
-                  target="_blank" 
+                <a
+                  href={videoUrl}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className={styles.watchOnYoutubeBtn}
                 >
@@ -529,22 +531,22 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
                 priority
                 key={`recently-viewed-image-${itemId}-${thumbnail}`} // Force re-render when image changes
               />
-              
+
               {/* Play button overlay for videos */}
               {videoUrl && videoId && (
-                <button 
+                <button
                   className={styles.playButton}
                   onClick={handlePlayClick}
                   aria-label="Play video"
                 >
                   <div className={styles.playButtonCircle}>
-                    <svg 
+                    <svg
                       className={styles.playIcon}
-                      xmlns="http://www.w3.org/2000/svg" 
-                      viewBox="0 0 24 24" 
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
                       fill="currentColor"
                     >
-                      <path d="M8 5v14l11-7z"/>
+                      <path d="M8 5v14l11-7z" />
                     </svg>
                   </div>
                 </button>
@@ -566,6 +568,14 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
           <span>{discussionCount} Discussions</span>
         </button>
 
+        <div className={styles.linksDisplay}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+          <span>{totalLinksCount} Links</span>
+        </div>
+
         <button
           className={styles.shareBtn}
           onClick={handleShare}
@@ -582,43 +592,43 @@ const RecentlyViewedItem = ({ item, viewMode = 'grid', onHideItem }) => {
         </button>
       </div>
 
-      {/* Report Modal */ }
-  {
-    isReportModalOpen && (
-      <ReportModal
-        isOpen={isReportModalOpen}
-        onClose={() => setIsReportModalOpen(false)}
-        onSubmit={handleReportSubmit}
-        contentDetails={{
-          postId: item.id || item._id,
-          userId: item.userId || (item.author?.id || ''),
-          username: item.author?.username || 'unknown',
-          title: item.title || 'Untitled',
-          content: (item.content || item.description || '').toString(),
-          hashtags: item.hashtags || [],
-          image: item.thumbnail || item.image
+      {/* Report Modal */}
+      {
+        isReportModalOpen && (
+          <ReportModal
+            isOpen={isReportModalOpen}
+            onClose={() => setIsReportModalOpen(false)}
+            onSubmit={handleReportSubmit}
+            contentDetails={{
+              postId: item.id || item._id,
+              userId: item.userId || (item.author?.id || ''),
+              username: item.author?.username || 'unknown',
+              title: item.title || 'Untitled',
+              content: (item.content || item.description || '').toString(),
+              hashtags: item.hashtags || [],
+              image: item.thumbnail || item.image
+            }}
+          />
+        )
+      }
+
+      {/* Save Modal */}
+      <PostSaveModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        post={item}
+        onSave={handleSaveToPlaylist}
+      />
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        postData={{
+          id: itemId,
+          title: title || 'Untitled Discussion'
         }}
       />
-    )
-  }
-
-  {/* Save Modal */ }
-  <PostSaveModal
-    isOpen={isSaveModalOpen}
-    onClose={() => setIsSaveModalOpen(false)}
-    post={item}
-    onSave={handleSaveToPlaylist}
-  />
-
-  {/* Share Modal */ }
-  <ShareModal
-    isOpen={isShareModalOpen}
-    onClose={() => setIsShareModalOpen(false)}
-    postData={{
-      id: itemId,
-      title: title || 'Untitled Discussion'
-    }}
-  />
     </div >
   );
 };

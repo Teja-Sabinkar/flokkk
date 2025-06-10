@@ -7,33 +7,33 @@ const RecentlyViewedContainer = ({ items: initialItems, viewMode = 'grid' }) => 
   const { theme } = useTheme(); // Add theme context
   const [items, setItems] = useState(initialItems || []);
   const [hiddenItemIds, setHiddenItemIds] = useState([]);
-  
+
   // Update items when props change
   useEffect(() => {
     setItems(initialItems || []);
   }, [initialItems]);
-  
+
   // Fetch hidden posts on mount
   useEffect(() => {
     const fetchHiddenPosts = async () => {
       const token = localStorage.getItem('token');
       if (!token) return;
-      
+
       try {
         const response = await fetch('/api/posts/hidden', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           const hiddenIds = data.hiddenPosts.map(hp => hp.postId);
           setHiddenItemIds(hiddenIds);
-          
+
           // Filter out already hidden items
           if (hiddenIds.length > 0) {
-            setItems(current => 
+            setItems(current =>
               current.filter(item => {
                 const itemId = item.id || item._id;
                 return !hiddenIds.includes(itemId?.toString());
@@ -45,17 +45,17 @@ const RecentlyViewedContainer = ({ items: initialItems, viewMode = 'grid' }) => 
         console.error('Error fetching hidden posts:', error);
       }
     };
-    
+
     fetchHiddenPosts();
   }, []);
-  
+
   // Handle hiding an item
   const handleHideItem = (itemId) => {
     // Add to local hidden items
     setHiddenItemIds(prev => [...prev, itemId]);
-    
+
     // Remove the item from the UI
-    setItems(prev => 
+    setItems(prev =>
       prev.filter(item => {
         const id = item.id || item._id;
         return id !== itemId;
@@ -73,11 +73,15 @@ const RecentlyViewedContainer = ({ items: initialItems, viewMode = 'grid' }) => 
               ...item,
               videoUrl: item.videoUrl || null // Ensure videoUrl is passed
             };
-            
+
             return (
-              <RecentlyViewedItem 
-                key={item.id || item._id || index} 
-                item={formattedItem} 
+              <RecentlyViewedItem
+                key={item.id || item._id || index}
+                item={{
+                  ...formattedItem,
+                  creatorLinks: formattedItem.creatorLinks || [],
+                  communityLinks: formattedItem.communityLinks || []
+                }}
                 viewMode={viewMode}
                 onHideItem={handleHideItem}
               />

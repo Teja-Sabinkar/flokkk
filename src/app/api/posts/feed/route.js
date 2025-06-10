@@ -77,12 +77,24 @@ export async function GET(request) {
     });
     
     // Format posts with profilePicture included
-    const formattedPosts = posts.map(post => {
+     const formattedPosts = posts.map(post => {
       // Convert to plain object if it's a Mongoose document
       const postObj = post.toObject ? post.toObject() : {...post};
       const userId = postObj.userId.toString();
       
-      // IMPORTANT: Make sure videoUrl is included in the response
+      // DEBUG: Log what we have in postObj
+      console.log('🔥 Post object from DB:', {
+        id: postObj._id,
+        title: postObj.title,
+        hasCreatorLinks: !!postObj.creatorLinks,
+        creatorLinksLength: postObj.creatorLinks?.length || 0,
+        hasCommunityLinks: !!postObj.communityLinks,
+        communityLinksLength: postObj.communityLinks?.length || 0,
+        sampleCreatorLinks: postObj.creatorLinks?.slice(0, 2), // Show first 2 for debugging
+        sampleCommunityLinks: postObj.communityLinks?.slice(0, 2) // Show first 2 for debugging
+      });
+      
+      // IMPORTANT: Make sure videoUrl AND LINKS are included in the response
       return {
         id: postObj._id,
         _id: postObj._id, // Include both for compatibility
@@ -97,6 +109,11 @@ export async function GET(request) {
         userId: userId,
         createdAt: postObj.createdAt,
         status: postObj.status || 'published', // Ensure status is included
+        // MISSING FIELDS - ADD THESE:
+        allowContributions: postObj.allowContributions,
+        creatorLinks: postObj.creatorLinks || [],
+        communityLinks: postObj.communityLinks || [],
+        youtubeChannelHashtag: postObj.youtubeChannelHashtag,
         // Add profile picture from our efficient lookup
         profilePicture: userDataMap[userId]?.profilePicture || '/profile-placeholder.jpg',
         // Keep userImage for backward compatibility

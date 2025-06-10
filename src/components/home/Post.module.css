@@ -436,7 +436,8 @@
   border-top: 1px solid var(--border-color);
   padding-top: 12px;
   transition: border-color 0.3s ease;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 8px;
 }
 
 .discussionsBtn,
@@ -464,7 +465,19 @@
   margin-right: 8px;
 }
 
-.discussionsBtn {
+/* Links display - non-interactive */
+.linksDisplay {
+  display: flex;
+  align-items: center;
+  color: var(--text-tertiary);
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: default;
+  transition: color 0.3s ease;
+}
+
+.linksDisplay svg {
   margin-right: 8px;
 }
 
@@ -526,6 +539,18 @@
   .videoErrorContent p {
     font-size: 13px;
   }
+
+  .postEngagement {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .discussionsBtn,
+  .linksDisplay,
+  .shareBtn {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -550,14 +575,6 @@
     font-size: 12px;
   }
 
-  .discussionsBtn {
-    font-size: 12px;
-  }
-
-  .shareBtn {
-    font-size: 12px;
-  }
-
   .hashtagsContainer {
     gap: 0px;
   }
@@ -579,7 +596,15 @@
     display: flex;
     border-top: 1px solid var(--border-color);
     padding-top: 12px;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+
+  .discussionsBtn,
+  .linksDisplay,
+  .shareBtn {
+    font-size: 11px;
+    padding: 6px 6px;
   }
 
   .playButtonCircle {

@@ -26,6 +26,70 @@ const fetchUserProfile = async (username) => {
   }
 };
 
+// NEW: Function to fetch comment counts for posts
+const fetchCommentCounts = async (postsArray) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return postsArray;
+
+    // Create an array of promises to fetch comment counts for each post
+    const commentCountPromises = postsArray.map(async (post) => {
+      try {
+        const postId = post.id || post._id;
+        const response = await fetch(`/api/posts/${postId}/comments`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const commentsData = await response.json();
+          // Count total comments including nested replies
+          const totalComments = countTotalComments(commentsData.comments || []);
+          return {
+            ...post,
+            commentsCount: totalComments
+          };
+        } else {
+          console.warn(`Failed to fetch comments for post ${postId}`);
+          return {
+            ...post,
+            commentsCount: 0
+          };
+        }
+      } catch (error) {
+        console.error(`Error fetching comments for post ${post.id || post._id}:`, error);
+        return {
+          ...post,
+          commentsCount: 0
+        };
+      }
+    });
+
+    // Wait for all comment count fetches to complete
+    const postsWithCommentCounts = await Promise.all(commentCountPromises);
+    return postsWithCommentCounts;
+  } catch (error) {
+    console.error('Error fetching comment counts:', error);
+    return postsArray;
+  }
+};
+
+// NEW: Helper function to count total comments including nested replies
+const countTotalComments = (comments) => {
+  let total = 0;
+  
+  const countReplies = (commentArray) => {
+    commentArray.forEach(comment => {
+      total++;
+      if (comment.replies && comment.replies.length > 0) {
+        countReplies(comment.replies);
+      }
+    });
+  };
+  
+  countReplies(comments);
+  return total;
+};
+
 const DiscussionPost = ({ post, onHidePost, onRemovePost }) => {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -290,8 +354,18 @@ const DiscussionPost = ({ post, onHidePost, onRemovePost }) => {
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
           </svg>
-          <span>{post.commentsCount || post.discussions || '0'} Comments</span>
+          {/* UPDATED: Display actual comment count with fallbacks, similar to Post component */}
+          <span>{post.commentsCount?.toString() || post.discussions?.toString() || '0'} Discussions</span>
         </button>
+
+        {/* Links display (non-interactive) */}
+        <div className={styles.linksDisplay}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+          <span>{((post.creatorLinks?.length || 0) + (post.communityLinks?.length || 0))} Links</span>
+        </div>
 
         <button className={styles.shareBtn} onClick={handleShare}>
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -526,9 +600,15 @@ const ForumsTabDiscussions = ({ forum, onBack, onForumUpdate }) => {
                 return !hiddenIds.includes(postId);
               });
 
-              // Get profile pictures for posts - this is the new step
+              // Get profile pictures for posts
               const postsWithProfiles = await fetchUserProfiles(filteredPosts);
-              setPosts(postsWithProfiles);
+              
+              // NEW: Fetch comment counts for all posts
+              console.log('Fetching comment counts for', postsWithProfiles.length, 'posts...');
+              const postsWithCommentCounts = await fetchCommentCounts(postsWithProfiles);
+              console.log('Comment counts fetched successfully');
+              
+              setPosts(postsWithCommentCounts);
 
               // Update post count state
               const newPostCount = filteredPosts.length;
@@ -542,7 +622,13 @@ const ForumsTabDiscussions = ({ forum, onBack, onForumUpdate }) => {
             } else {
               // If can't fetch hidden posts, still show all posts
               const postsWithProfiles = await fetchUserProfiles(data.posts);
-              setPosts(postsWithProfiles);
+              
+              // NEW: Fetch comment counts for all posts
+              console.log('Fetching comment counts for', postsWithProfiles.length, 'posts...');
+              const postsWithCommentCounts = await fetchCommentCounts(postsWithProfiles);
+              console.log('Comment counts fetched successfully');
+              
+              setPosts(postsWithCommentCounts);
 
               // Update post count state
               const newPostCount = data.posts.length;
@@ -558,7 +644,13 @@ const ForumsTabDiscussions = ({ forum, onBack, onForumUpdate }) => {
             console.error('Error fetching hidden posts:', hiddenError);
             // Still show posts if hidden posts can't be fetched
             const postsWithProfiles = await fetchUserProfiles(data.posts);
-            setPosts(postsWithProfiles);
+            
+            // NEW: Fetch comment counts for all posts
+            console.log('Fetching comment counts for', postsWithProfiles.length, 'posts...');
+            const postsWithCommentCounts = await fetchCommentCounts(postsWithProfiles);
+            console.log('Comment counts fetched successfully');
+            
+            setPosts(postsWithCommentCounts);
 
             // Update post count state
             const newPostCount = data.posts.length;

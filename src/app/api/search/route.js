@@ -245,12 +245,17 @@ export async function GET(request) {
         title: post.title || 'Untitled Post',
         content: post.content ? post.content.substring(0, 100) : '',
         image: post.image,
+        videoUrl: post.videoUrl || null, // ✅ FIXED: Added missing videoUrl field
         username: post.username,
         userId: post.userId ? post.userId.toString() : null,
         profilePicture: userProfilePictures[post.userId?.toString()] || null,
         type: 'post',
         discussions: post.discussions,
-        createdAt: post.createdAt
+        createdAt: post.createdAt,
+        hashtags: post.hashtags || [], // ✅ FIXED: Added missing hashtags field
+        // Include links data for proper link count display
+        creatorLinks: post.creatorLinks || [],
+        communityLinks: post.communityLinks || []
       }));
 
       results = [...results, ...mappedPosts];

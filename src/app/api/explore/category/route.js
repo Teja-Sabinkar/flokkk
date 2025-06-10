@@ -65,7 +65,7 @@ export async function GET(request) {
     // Special handling for Trending category
     if (category === 'Trending') {
       console.log('📈 Fetching trending posts based on engagement metrics');
-      
+
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       baseQuery.createdAt = { $gte: thirtyDaysAgo };
@@ -81,10 +81,10 @@ export async function GET(request) {
     } else {
       // Hashtag-based categorization for all other categories
       console.log(`🏷️ Searching for posts with #${category} hashtag`);
-      
+
       // Create case-insensitive regex for the category hashtag
       const categoryHashtagRegex = new RegExp(`^#${category}$`, 'i');
-      
+
       // Query for posts that have this category hashtag
       const categoryQuery = {
         ...baseQuery,
@@ -99,7 +99,7 @@ export async function GET(request) {
         .toArray();
 
       totalPosts = await db.collection('posts').countDocuments(categoryQuery);
-      
+
       console.log(`📝 Found ${posts.length} posts with #${category} hashtag`);
     }
 
@@ -109,7 +109,7 @@ export async function GET(request) {
     // Return response
     if (items.length === 0 && category !== 'Trending') {
       console.log(`⚠️ No results found for ${category}`);
-      
+
       return NextResponse.json({
         category,
         items: [],
@@ -190,7 +190,10 @@ async function formatPostsForExplore(db, posts) {
       videoUrl: post.videoUrl || null,
       discussionCount: formatCount(post.discussions || 0),
       hashtags: post.hashtags || [],
-      profilePicture: user.profilePicture
+      profilePicture: user.profilePicture,
+      // Make sure these lines are preserving the original arrays
+      creatorLinks: Array.isArray(post.creatorLinks) ? post.creatorLinks : [],
+      communityLinks: Array.isArray(post.communityLinks) ? post.communityLinks : []
     };
   });
 }

@@ -52,12 +52,13 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 830px){
     .title {
         font-size: 20px;
     }
 
     .gridContainer {
+            grid-template-columns: 1fr; /* Single column on small screens */
         gap: 16px;
     }
 }

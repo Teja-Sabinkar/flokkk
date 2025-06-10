@@ -134,7 +134,7 @@ export async function GET(request) {
           title: post.title,
           content: post.content,
           image: post.image,
-          videoUrl: post.videoUrl || null,  // ADD THIS LINE
+          videoUrl: post.videoUrl || null,
           hashtags: post.hashtags,
           discussions: post.discussions,
           shares: post.shares,
@@ -143,7 +143,10 @@ export async function GET(request) {
           username: userInfo.username,
           name: userInfo.name,
           profilePicture: userInfo.profilePicture,
-          userId: userId
+          userId: userId,
+          // Add these two properties to include links data
+          creatorLinks: post.creatorLinks || [],
+          communityLinks: post.communityLinks || []
         };
       });
 

@@ -1,690 +1,891 @@
-import React, { useState, useRef, useEffect } from 'react';
+// SearchResultItem.js
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import styles from './SearchResultItem.module.css';
 import PostSaveModal from '@/components/home/PostSaveModal';
 import { ReportModal, submitReport } from '@/components/report';
 import { ShareModal } from '@/components/share';
+import { useAppearanceTracker } from '@/hooks/useAppearanceTracker';
 
-const SearchResultItem = ({ item, viewMode, onHidePost }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [savedPlaylistName, setSavedPlaylistName] = useState('');
-  const [hideSuccess, setHideSuccess] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [reportSuccess, setReportSuccess] = useState(false);
-  const [reportInProgress, setReportInProgress] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+const SearchResultItem = ({ item, viewMode = 'grid', onHidePost }) => {
+    const router = useRouter();
+    const menuRef = useRef(null);
 
-  const menuRef = useRef(null);
-  const router = useRouter();
+    // Component state
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
 
-  const {
-    _id,
-    title,
-    content,
-    image,
-    username,
-    userId,
-    type,
-    createdAt,
-    hashtags
-  } = item;
+    // Video playback states
+    const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+    const [videoId, setVideoId] = useState(null);
+    const [videoError, setVideoError] = useState(false);
 
+    // Success/loading states
+    const [saveSuccess, setSaveSuccess] = useState(false);
+    const [hideSuccess, setHideSuccess] = useState(false);
+    const [reportSuccess, setReportSuccess] = useState(false);
+    const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (token) {
-          const response = await fetch('/api/auth/me', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
+    // Safely extract item data
+    const {
+        _id = '',
+        title = 'Untitled Post',
+        content = '',
+        image = null,
+        videoUrl = null,
+        username = 'user',
+        userId = null,
+        profilePicture = null,
+        avatar = null,
+        createdAt = null,
+        discussions = 0,
+        hashtags = [],
+        creatorLinks = [],
+        communityLinks = []
+    } = item || {};
 
-          if (response.ok) {
-            const userData = await response.json();
-            setCurrentUser(userData);
-          }
+    // NEW: Use appearance tracking hook
+    const { elementRef: itemRef, hasAppeared, isTracking, debugInfo, manualTrigger } = useAppearanceTracker(_id, {
+        threshold: 0.3, // 30% of item must be visible
+        timeThreshold: 500 // 0.5 second delay
+    });
+
+    // Extract YouTube video ID from URL
+    const extractYouTubeVideoId = useCallback((url) => {
+        if (!url || typeof url !== 'string') return null;
+
+        try {
+            // Comprehensive regex that handles all YouTube URL formats
+            const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(youtubeRegex);
+            return match && match[1] ? match[1] : null;
+        } catch (error) {
+            console.error('Error extracting video ID:', error);
+            return null;
         }
-      } catch (error) {
-        console.error('Error fetching current user:', error);
-      }
-    };
+    }, []);
 
-    fetchCurrentUser();
-  }, []);
-
-  // Parse username to get author name and initial
-  const author = username || 'user';
-  const initial = author.charAt(0).toUpperCase();
-  const avatarColor = '#4169e1'; // Default color
-
-
-  // Handle username click to navigate to appropriate profile
-  const handleUsernameClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      // If not logged in, redirect to login
-      router.push('/login');
-      return;
-    }
-
-    // Clean up username if it has special characters
-    const cleanUsername = username.replace(/^u\//, ''); // Remove "u/" prefix if present
-
-    // Determine if this is the current user's post
-    let isCurrentUserPost = false;
-
-    if (currentUser) {
-      // Compare by ID (most reliable)
-      isCurrentUserPost =
-        currentUser.id === userId ||
-        currentUser._id === userId ||
-        // Compare by username
-        currentUser.username === cleanUsername ||
-        currentUser.username === username;
-    } else {
-      // If currentUser isn't loaded yet, encode the username and navigate
-      // The profile pages will determine the correct page to display
-      const encodedUsername = encodeURIComponent(cleanUsername);
-      router.push(`/currentprofile/${encodedUsername}`);
-      return;
-    }
-
-    // Navigate to the appropriate profile page
-    if (isCurrentUserPost) {
-      const encodedUsername = encodeURIComponent(currentUser.username || cleanUsername);
-      router.push(`/currentprofile/${encodedUsername}`);
-    } else {
-      const encodedUsername = encodeURIComponent(cleanUsername);
-      router.push(`/otheruserprofile/${encodedUsername}`);
-    }
-  };
-
-
-  // Improved discussions count extraction
-  const getDiscussionCount = (item) => {
-    // Direct number
-    if (typeof item.discussions === 'number') {
-      return item.discussions;
-    }
-
-    // MongoDB EJSON format
-    if (item.discussions && item.discussions.$numberInt) {
-      return parseInt(item.discussions.$numberInt);
-    }
-
-    // String value
-    if (typeof item.discussions === 'string') {
-      return parseInt(item.discussions) || 0;
-    }
-
-    // Object with unknown structure
-    if (typeof item.discussions === 'object' && item.discussions !== null) {
-      for (const prop in item.discussions) {
-        if (!isNaN(item.discussions[prop])) {
-          return parseInt(item.discussions[prop]);
-        }
-      }
-    }
-
-    return 0;
-  };
-
-  const discussionCount = getDiscussionCount(item);
-
-  // Handle click to navigate to discussion
-  const handleDiscussionClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    router.push(`/discussion?id=${_id}`);
-  };
-
-  // Format date to show time ago
-  const getTimeAgo = (timestamp) => {
-    try {
-      // For debugging
-      console.log("Raw timestamp:", timestamp);
-
-      let date;
-
-      // Handle MongoDB ISO format (2025-05-05T16:33:52.360+00:00)
-      if (timestamp && typeof timestamp === 'object' && timestamp.$date) {
-        if (typeof timestamp.$date === 'string') {
-          // ISO string format
-          date = new Date(timestamp.$date);
-        } else if (timestamp.$date.$numberLong) {
-          // MongoDB EJSON format with $numberLong
-          date = new Date(parseInt(timestamp.$date.$numberLong));
+    // Extract video ID when component mounts or videoUrl changes
+    useEffect(() => {
+        if (videoUrl) {
+            const id = extractYouTubeVideoId(videoUrl);
+            setVideoId(id);
         } else {
-          // Handle other formats potentially present in $date
-          date = new Date(timestamp.$date);
+            setVideoId(null);
         }
-      } else if (typeof timestamp === 'string') {
-        // Direct ISO string
-        date = new Date(timestamp);
-      } else if (typeof timestamp === 'number') {
-        // Unix timestamp in milliseconds
-        date = new Date(timestamp);
-      } else if (timestamp instanceof Date) {
-        // Already a Date object
-        date = timestamp;
-      } else {
-        console.log("Unknown timestamp format:", timestamp);
-        return "0sec ago";
-      }
+    }, [videoUrl, extractYouTubeVideoId]);
 
-      // Debug log the parsed date
-      console.log("Parsed date:", date);
+    // Engagement tracking functions
+    const trackAppearEngagement = async (postId) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
 
-      if (!date || isNaN(date.getTime())) {
-        console.log("Invalid date from timestamp:", timestamp);
-        return "0sec ago";
-      }
+            const response = await fetch(`/api/posts/${postId}/track-appear`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-      const now = new Date();
-      console.log("Current date:", now);
-
-      // Calculate time difference in milliseconds
-      const diffMs = now - date;
-      console.log("Time difference in ms:", diffMs);
-
-      // If the difference is negative or very small, return "just now"
-      if (diffMs < 1000) {
-        return "Just now";
-      }
-
-      // Convert to all units
-      const seconds = Math.floor(diffMs / 1000);
-      const minutes = Math.floor(seconds / 60);
-      const hours = Math.floor(minutes / 60);
-      const days = Math.floor(hours / 24);
-      const weeks = Math.floor(days / 7);
-      const months = Math.floor(days / 30);
-      const years = Math.floor(days / 365);
-
-      // Format with consistent format including "ago"
-      if (seconds < 60) {
-        return `${seconds}sec ago`;
-      }
-      if (minutes < 60) {
-        return `${minutes}min ago`;
-      }
-      if (hours < 24) {
-        return `${hours}hrs ago`;
-      }
-      if (days < 7) {
-        return `${days}days ago`;
-      }
-      if (weeks < 4) {
-        return `${weeks}weeks ago`;
-      }
-      if (months < 12) {
-        return `${months}mon ago`;
-      }
-      return `${years}yrs ago`;
-    } catch (error) {
-      console.error('Error calculating time ago:', error);
-      return "0sec ago";
-    }
-  };
-
-  const extractTimeAgo = () => {
-    // Check specifically for MongoDB format
-    if (item.createdAt && item.createdAt.$date && item.createdAt.$date.$numberLong) {
-      // Direct MongoDB format conversion
-      const timestamp = Number(item.createdAt.$date.$numberLong);
-
-      // Create date directly and use it
-      const date = new Date(timestamp);
-
-      // Check if date is valid
-      if (!isNaN(date.getTime())) {
-        return getTimeAgo(date);
-      }
-    }
-
-    // If direct MongoDB format fails, try to parse it from a string representation
-    if (typeof item.createdAt === 'string') {
-      try {
-        // Try to parse the string as JSON
-        const createdAtObj = JSON.parse(item.createdAt);
-        if (createdAtObj.$date && createdAtObj.$date.$numberLong) {
-          const timestamp = Number(createdAtObj.$date.$numberLong);
-          const date = new Date(timestamp);
-          return getTimeAgo(date);
+            if (!response.ok) {
+                console.warn('Failed to track appear engagement');
+            } else {
+                const data = await response.json();
+                console.log('Appear engagement tracked:', data);
+            }
+        } catch (error) {
+            console.error('Error tracking appear engagement:', error);
         }
-      } catch (e) {
-        // Not JSON, try as direct date string
-        const date = new Date(item.createdAt);
-        if (!isNaN(date.getTime())) {
-          return getTimeAgo(date);
+    };
+
+    const trackViewEngagement = async (postId) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await fetch(`/api/posts/${postId}/track-view`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                console.warn('Failed to track view engagement');
+            } else {
+                const data = await response.json();
+                console.log('View engagement tracked:', data);
+            }
+        } catch (error) {
+            console.error('Error tracking view engagement:', error);
         }
-      }
-    }
+    };
 
-    // If we reach here, use the existing fallback approaches
-    const possibleDates = [
-      createdAt,
-      item.createdAt,
-      item.updatedAt,
-      item.createdAtString
-    ];
+    const trackPenetrateEngagement = async (postId) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
 
-    for (const dateSource of possibleDates) {
-      if (!dateSource) continue;
+            const response = await fetch(`/api/posts/${postId}/track-penetrate`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-      try {
-        const result = getTimeAgo(dateSource);
-        if (result !== "0sec ago") {
-          return result;
+            if (!response.ok) {
+                console.warn('Failed to track penetrate engagement');
+            } else {
+                const data = await response.json();
+                console.log('Penetrate engagement tracked:', data);
+            }
+        } catch (error) {
+            console.error('Error tracking penetrate engagement:', error);
         }
-      } catch (e) {
-        continue;
-      }
-    }
+    };
 
-    // Special case for known post IDs
-    if (item._id && (item._id === "680a6e8b52685aa0d4daf954" || item._id === "6805392c7de14f985155a895")) {
-      const timestamp = item._id === "680a6e8b52685aa0d4daf954" ? 1745514123029 : 1745172780016;
-      return getTimeAgo(new Date(timestamp));
-    }
+    const trackSaveEngagement = async (postId) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
 
-    return "0sec ago";
-  };
+            const response = await fetch(`/api/posts/${postId}/track-save`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-  const timeAgo = extractTimeAgo();
+            if (!response.ok) {
+                console.warn('Failed to track save engagement');
+            } else {
+                const data = await response.json();
+                console.log('Save engagement tracked:', data);
+            }
+        } catch (error) {
+            console.error('Error tracking save engagement:', error);
+        }
+    };
 
-  // Handle click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+    const trackShareEngagement = async (postId, platform = 'unknown') => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await fetch(`/api/posts/${postId}/track-share`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ platform })
+            });
+
+            if (!response.ok) {
+                console.warn('Failed to track share engagement');
+            } else {
+                const data = await response.json();
+                console.log('Share engagement tracked:', data);
+            }
+        } catch (error) {
+            console.error('Error tracking share engagement:', error);
+        }
+    };
+
+    // Handle play button click - WITH VIEW TRACKING
+    const handlePlayClick = useCallback(async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (videoId) {
+            setIsVideoPlaying(true);
+            setVideoError(false);
+
+            // Track view engagement when play button is clicked
+            await trackViewEngagement(_id);
+        }
+    }, [videoId, _id]);
+
+    // Handle closing video (return to thumbnail)
+    const handleCloseVideo = useCallback((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsVideoPlaying(false);
+        setVideoError(false);
+    }, []);
+
+    // Handle video embedding error
+    const handleVideoError = useCallback(() => {
+        setVideoError(true);
+    }, []);
+
+    // Get current user data
+    useEffect(() => {
+        const fetchCurrentUser = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
+                const response = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const userData = await response.json();
+                    setCurrentUser(userData);
+                }
+            } catch (error) {
+                console.error('Error fetching current user:', error);
+            }
+        };
+
+        fetchCurrentUser();
+    }, []);
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        if (isMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [isMenuOpen]);
+
+    // Generate consistent avatar color
+    const generateAvatarColor = (username) => {
+        if (!username) return '#3b5fe2';
+
+        let hash = 0;
+        for (let i = 0; i < username.length; i++) {
+            hash = username.charCodeAt(i) + ((hash << 5) - hash);
+        }
+
+        let color = '#';
+        for (let i = 0; i < 3; i++) {
+            const value = (hash >> (i * 8)) & 0xFF;
+            color += ('00' + value.toString(16)).substr(-2);
+        }
+
+        return color;
+    };
+
+    // Format time ago
+    const formatTimeAgo = (timestamp) => {
+        if (!timestamp) return 'Just now';
+
+        try {
+            let date;
+
+            // Handle MongoDB format
+            if (timestamp && typeof timestamp === 'object' && timestamp.$date) {
+                if (timestamp.$date.$numberLong) {
+                    date = new Date(parseInt(timestamp.$date.$numberLong));
+                } else {
+                    date = new Date(timestamp.$date);
+                }
+            } else {
+                date = new Date(timestamp);
+            }
+
+            if (isNaN(date.getTime())) return 'Just now';
+
+            const now = new Date();
+            const diffMs = now - date;
+
+            if (diffMs < 1000) return 'Just now';
+
+            const seconds = Math.floor(diffMs / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            const weeks = Math.floor(days / 7);
+            const months = Math.floor(days / 30);
+            const years = Math.floor(days / 365);
+
+            if (seconds < 60) return `${seconds}s ago`;
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            if (weeks < 4) return `${weeks}w ago`;
+            if (months < 12) return `${months}mo ago`;
+            return `${years}y ago`;
+        } catch {
+            return 'Just now';
+        }
+    };
+
+    // Get discussion count safely
+    const getDiscussionCount = () => {
+        if (typeof discussions === 'number') return discussions;
+        if (discussions && discussions.$numberInt) return parseInt(discussions.$numberInt);
+        if (typeof discussions === 'string') return parseInt(discussions) || 0;
+        return 0;
+    };
+
+    // Check if current user owns this post
+    const isCurrentUserPost = () => {
+        if (!currentUser || !userId) return false;
+        return currentUser.id === userId ||
+            currentUser._id === userId ||
+            currentUser.username === username;
+    };
+
+    // Navigation handlers
+    const handleUsernameClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            router.push('/login');
+            return;
+        }
+
+        const cleanUsername = username.replace(/^u\//, '');
+        const encodedUsername = encodeURIComponent(cleanUsername);
+
+        if (isCurrentUserPost()) {
+            router.push(`/currentprofile/${encodedUsername}`);
+        } else {
+            router.push(`/otheruserprofile/${encodedUsername}`);
+        }
+    };
+
+    const handleDiscussionClick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Track penetrate engagement when discussion button is clicked
+        await trackPenetrateEngagement(_id);
+        
+        router.push(`/discussion?id=${_id}`);
+    };
+
+    // Menu handlers
+    const handleMenuToggle = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsMenuOpen(!isMenuOpen);
+    };
+
+    const handleSave = async () => {
         setIsMenuOpen(false);
-      }
+        setShowSaveModal(true);
+        
+        // Track save engagement when save button is clicked
+        await trackSaveEngagement(_id);
     };
 
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+    const handleHide = async () => {
+        setIsMenuOpen(false);
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isMenuOpen]);
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please log in to hide posts');
+                return;
+            }
 
-  // Handle successful save
-  const handleSaveSuccess = (result) => {
-    setSaveSuccess(true);
-    setSavedPlaylistName(result.playlistTitle);
-    setShowSaveModal(false);
+            const response = await fetch('/api/posts/hide', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ postId: _id })
+            });
 
-    // Hide success message after 3 seconds
-    setTimeout(() => {
-      setSaveSuccess(false);
-    }, 3000);
-  };
+            if (!response.ok) throw new Error('Failed to hide post');
 
-  // Menu option handlers
-  const handleSave = () => {
-    setIsMenuOpen(false);
-    setShowSaveModal(true); // Open the save modal
-  };
+            setHideSuccess(true);
+            setTimeout(() => {
+                setHideSuccess(false);
+                if (onHidePost) onHidePost(_id);
+            }, 1500);
 
-  // Implement the hide functionality
-  const handleHide = async () => {
-    setIsMenuOpen(false);
-
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Please log in to hide posts');
-        return;
-      }
-
-      // Call API to hide the post
-      const response = await fetch('/api/posts/hide', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ postId: _id })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to hide post');
-      }
-
-      // Show success message temporarily
-      setHideSuccess(true);
-      setTimeout(() => {
-        setHideSuccess(false);
-
-        // Remove post from UI
-        if (onHidePost) {
-          onHidePost(_id);
+        } catch (error) {
+            console.error('Error hiding post:', error);
+            alert('Failed to hide post. Please try again.');
         }
-      }, 1500);
+    };
 
-    } catch (error) {
-      console.error('Error hiding post:', error);
-      alert('Failed to hide post. Please try again.');
-    }
-  };
+    const handleReport = () => {
+        setIsMenuOpen(false);
+        setShowReportModal(true);
+    };
 
-  // Updated report functionality that sends an email
-  const handleReport = () => {
-    setIsMenuOpen(false);
-    setIsReportModalOpen(true);
-  };
+    const handleShare = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowShareModal(true);
+        
+        // Track share engagement when share button is clicked
+        await trackShareEngagement(_id, 'manual');
+    };
 
-  // Add a submit handler
-  const handleReportSubmit = async (reportData) => {
-    try {
-      await submitReport(reportData);
-      setIsReportModalOpen(false);
-      setReportSuccess(true);
+    // Success handlers
+    const handleSaveSuccess = (result) => {
+        setSaveSuccess(true);
+        setShowSaveModal(false);
+        setTimeout(() => setSaveSuccess(false), 3000);
+    };
 
-      // Hide success message after 3 seconds
-      setTimeout(() => {
-        setReportSuccess(false);
-      }, 3000);
-    } catch (error) {
-      console.error('Error submitting report:', error);
-      alert('Failed to submit report. Please try again.');
-    }
-  };
+    const handleReportSubmit = async (reportData) => {
+        setIsSubmittingReport(true);
+        try {
+            await submitReport(reportData);
+            setShowReportModal(false);
+            setReportSuccess(true);
+            setTimeout(() => setReportSuccess(false), 3000);
+        } catch (error) {
+            console.error('Error submitting report:', error);
+            alert('Failed to submit report. Please try again.');
+        } finally {
+            setIsSubmittingReport(false);
+        }
+    };
 
-  // Determine if we should use list or grid layout
-  const isListView = viewMode === 'list';
+    // Prepare data
+    const timeAgo = formatTimeAgo(createdAt);
+    const discussionCount = getDiscussionCount();
+    const avatarSrc = profilePicture || avatar;
+    const avatarColor = generateAvatarColor(username);
+    const isListView = viewMode === 'list';
+    const totalLinksCount = (creatorLinks?.length || 0) + (communityLinks?.length || 0);
 
-  const handleShareClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("Share button clicked, opening modal");
-    setShowShareModal(true);
-  };
-
-  const generateColorFromUsername = (username) => {
-    if (!username) return '#3b5fe2'; // Default blue color
-
-    // Simple hash function for consistent color generation
-    let hash = 0;
-    for (let i = 0; i < username.length; i++) {
-      hash = username.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    // Convert hash to a hex color
-    let color = '#';
-    for (let i = 0; i < 3; i++) {
-      const value = (hash >> (i * 8)) & 0xFF;
-      color += ('00' + value.toString(16)).substr(-2);
-    }
-
-    return color;
-  };
-
-  return (
-    <div className={`${styles.card} ${viewMode === 'list' ? styles.listView : ''}`}>
-      {/* User Info and Post Header */}
-      <div className={styles.postHeader}>
-
-
-        <div className={styles.userinfo}>
-
-
-          <div className={styles.avatarContainer}>
-            {(item.profilePicture || item.avatar) &&
-              (item.profilePicture || item.avatar) !== '/profile-placeholder.jpg' ? (
-              <Image
-                src={item.profilePicture || item.avatar}
-                alt={`${author}'s profile`}
-                width={32}
-                height={32}
-                className={styles.avatarImage}
-                priority
-                unoptimized
-                onError={(e) => {
-                  // Fallback to initial if image fails to load
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div
-              className={styles.avatarInitialContainer}
-              style={{
-                backgroundColor: generateColorFromUsername(author),
-                display: (item.profilePicture || item.avatar) &&
-                  (item.profilePicture || item.avatar) !== '/profile-placeholder.jpg' ? 'none' : 'flex'
-              }}
-            >
-              <span className={styles.avatarInitial}>{initial}</span>
-            </div>
-          </div>
-
-
-          <div className={styles.userDetails}>
-            <div
-              className={styles.username}
-              onClick={handleUsernameClick}
-              style={{ cursor: 'pointer' }}
-            >
-              {author}
-            </div>
-
-            <span className={styles.postDate}>{timeAgo}</span>
-
-          </div>
-        </div>
-
-
-        <div className={styles.menuContainer} ref={menuRef}>
-          <button
-            className={styles.postMenu}
-            aria-label="Post menu"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="1"></circle>
-              <circle cx="12" cy="5" r="1"></circle>
-              <circle cx="12" cy="19" r="1"></circle>
-            </svg>
-          </button>
-
-          {isMenuOpen && (
-            <div className={styles.dropdown}>
-              <button
-                className={styles.dropdownItem}
-                onClick={handleSave}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                  <polyline points="7 3 7 8 15 8"></polyline>
-                </svg>
-                <span>Save</span>
-              </button>
-              <button
-                className={styles.dropdownItem}
-                onClick={handleHide}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
-                </svg>
-                <span>Hide</span>
-              </button>
-              <button
-                className={styles.dropdownItem}
-                onClick={handleReport}
-                disabled={reportInProgress}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                  <line x1="12" y1="9" x2="12" y2="13"></line>
-                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                <span>{reportInProgress ? 'Reporting...' : 'Report'}</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Success messages */}
-      {saveSuccess && (
-        <div className={styles.successMessage}>
-          Post saved to "{savedPlaylistName}" playlist!
-        </div>
-      )}
-
-      {hideSuccess && (
-        <div className={styles.successMessage}>
-          Post hidden successfully.
-        </div>
-      )}
-
-      <div className={`${styles.contentWrapper} ${isListView ? styles.listContentWrapper : styles.gridContentWrapper}`}>
-        {isListView && image && (
-          <div className={`${styles.postImageContainer} ${styles.listViewImage}`}>
-            <div className={styles.postImageWrapper}>
-              <Image
-                src={image || "/api/placeholder/600/300"}
-                alt={title}
-                width={600}
-                height={300}
-                className={styles.postImage}
-              />
-            </div>
-          </div>
-        )}
-
-        <div className={styles.textContent}>
-          <h2 className={styles.postTitle}>{title}</h2>
-          <p className={styles.postContent}>{content}</p>
-
-          {isListView && (
-            <div className={styles.postEngagement}>
-              <button
-                className={styles.discussionsBtn}
-                onClick={handleDiscussionClick}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                </svg>
-                <span>{discussionCount} Discussions</span>
-              </button>
-
-              <button className={styles.shareBtn} onClick={handleShareClick}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="18" cy="5" r="3"></circle>
-                  <circle cx="6" cy="12" r="3"></circle>
-                  <circle cx="18" cy="19" r="3"></circle>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                </svg>
-                <span>Share</span>
-              </button>
-            </div>
-          )}
-        </div>
-
-        {!isListView && (
-          <>
-            {image && (
-              <div className={styles.postImageContainer}>
-                <div className={styles.postImageWrapper}>
-                  <Image
-                    src={image || "/api/placeholder/600/300"}
-                    alt={title}
-                    width={600}
-                    height={300}
-                    className={styles.postImage}
-                  />
+    return (
+        <article className={`${styles.card} ${isListView ? styles.listView : ''}`} ref={itemRef} data-post-id={_id}>
+            {/* Success Messages */}
+            {saveSuccess && (
+                <div className={styles.successMessage}>
+                    Post saved successfully!
                 </div>
-              </div>
             )}
 
-            <div className={styles.postEngagement}>
-              <button
-                className={styles.discussionsBtn}
-                onClick={handleDiscussionClick}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                </svg>
-                <span>{discussionCount} Discussions</span>
-              </button>
+            {hideSuccess && (
+                <div className={styles.successMessage}>
+                    Post hidden successfully.
+                </div>
+            )}
 
-              {/* Added onClick handler to the share button in grid view */}
-              <button className={styles.shareBtn} onClick={handleShareClick}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="18" cy="5" r="3"></circle>
-                  <circle cx="6" cy="12" r="3"></circle>
-                  <circle cx="18" cy="19" r="3"></circle>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                </svg>
-                <span>Share</span>
-              </button>
+            {reportSuccess && (
+                <div className={styles.successMessage}>
+                    Report submitted successfully.
+                </div>
+            )}
+
+            {/* Post Header */}
+            <header className={styles.postHeader}>
+                <div className={styles.userInfo}>
+                    <div className={styles.avatarContainer}>
+                        {avatarSrc && avatarSrc !== '/profile-placeholder.jpg' ? (
+                            <Image
+                                src={avatarSrc}
+                                alt={`${username}'s profile`}
+                                width={32}
+                                height={32}
+                                className={styles.avatarImage}
+                                priority
+                                unoptimized
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                }}
+                            />
+                        ) : null}
+                        <div
+                            className={styles.avatarInitial}
+                            style={{
+                                backgroundColor: avatarColor,
+                                display: avatarSrc && avatarSrc !== '/profile-placeholder.jpg' ? 'none' : 'flex'
+                            }}
+                        >
+                            {username.charAt(0).toUpperCase()}
+                        </div>
+                    </div>
+
+                    <div className={styles.userDetails}>
+                        <button
+                            className={styles.username}
+                            onClick={handleUsernameClick}
+                            type="button"
+                        >
+                            {username}
+                        </button>
+                        <time className={styles.postDate}>{timeAgo}</time>
+                    </div>
+                </div>
+
+                <div className={styles.menuContainer} ref={menuRef}>
+                    <button
+                        className={styles.menuButton}
+                        onClick={handleMenuToggle}
+                        aria-label="Post options"
+                        type="button"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </button>
+
+                    {isMenuOpen && (
+                        <div className={styles.dropdown}>
+                            <button className={styles.dropdownItem} onClick={handleSave} type="button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                    <polyline points="7 3 7 8 15 8"></polyline>
+                                </svg>
+                                Save
+                            </button>
+                            <button className={styles.dropdownItem} onClick={handleHide} type="button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                                Hide
+                            </button>
+                            <button className={styles.dropdownItem} onClick={handleReport} type="button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                                Report
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </header>
+
+            {/* Content */}
+            <div className={`${styles.contentWrapper} ${isListView ? styles.listContent : styles.gridContent}`}>
+                {/* Image for list view */}
+                {isListView && image && (
+                    <div className={styles.imageContainer}>
+                        {isVideoPlaying && videoId && !videoError ? (
+                            // YouTube video player
+                            <div className={styles.videoPlayerWrapper}>
+                                <button
+                                    className={styles.closeVideoButton}
+                                    onClick={handleCloseVideo}
+                                    aria-label="Close video"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
+                                <iframe
+                                    className={styles.youtubeEmbed}
+                                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+                                    title={title}
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                    onError={handleVideoError}
+                                ></iframe>
+                            </div>
+                        ) : isVideoPlaying && videoError ? (
+                            // Error fallback when embedding fails
+                            <div className={styles.videoErrorContainer}>
+                                <button
+                                    className={styles.closeVideoButton}
+                                    onClick={handleCloseVideo}
+                                    aria-label="Close video"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
+                                <div className={styles.videoErrorContent}>
+                                    <div className={styles.errorIcon}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                        </svg>
+                                    </div>
+                                    <h3>Video cannot be embedded</h3>
+                                    <p>This video cannot be played directly. Click below to watch on YouTube.</p>
+                                    <a
+                                        href={videoUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={styles.watchOnYoutubeBtn}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                        </svg>
+                                        Watch on YouTube
+                                    </a>
+                                </div>
+                            </div>
+                        ) : (
+                            // Thumbnail with optional play button
+                            <div className={styles.imageWrapper}>
+                                <Image
+                                    src={image}
+                                    alt={title}
+                                    width={160}
+                                    height={160}
+                                    className={styles.postImage}
+                                    unoptimized
+                                />
+
+                                {/* Play button overlay for videos */}
+                                {videoUrl && videoId && (
+                                    <button
+                                        className={styles.playButton}
+                                        onClick={handlePlayClick}
+                                        aria-label="Play video"
+                                    >
+                                        <div className={styles.playButtonCircle}>
+                                            <svg
+                                                className={styles.playIcon}
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor"
+                                            >
+                                                <path d="M8 5v14l11-7z" />
+                                            </svg>
+                                        </div>
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Text content */}
+                <div className={styles.textContent}>
+                    <h2 className={styles.title}>{title}</h2>
+                    <p className={styles.content}>{content}</p>
+
+                    {/* Engagement for list view */}
+                    {isListView && (
+                        <div className={styles.engagement}>
+                            <button className={styles.engagementButton} onClick={handleDiscussionClick} type="button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                                </svg>
+                                {discussionCount} Discussions
+                            </button>
+
+                            {/* Links display (non-interactive) */}
+                            <div className={styles.linksDisplay}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                                {totalLinksCount} Links
+                            </div>
+
+                            <button className={styles.engagementButton} onClick={handleShare} type="button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="18" cy="5" r="3"></circle>
+                                    <circle cx="6" cy="12" r="3"></circle>
+                                    <circle cx="18" cy="19" r="3"></circle>
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                </svg>
+                                Share
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Image and engagement for grid view */}
+                {!isListView && (
+                    <>
+                        {image && (
+                            <div className={styles.imageContainer}>
+                                {isVideoPlaying && videoId && !videoError ? (
+                                    // YouTube video player
+                                    <div className={styles.videoPlayerWrapper}>
+                                        <button
+                                            className={styles.closeVideoButton}
+                                            onClick={handleCloseVideo}
+                                            aria-label="Close video"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </button>
+                                        <iframe
+                                            className={styles.youtubeEmbed}
+                                            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+                                            title={title}
+                                            frameBorder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                            onError={handleVideoError}
+                                        ></iframe>
+                                    </div>
+                                ) : isVideoPlaying && videoError ? (
+                                    // Error fallback when embedding fails
+                                    <div className={styles.videoErrorContainer}>
+                                        <button
+                                            className={styles.closeVideoButton}
+                                            onClick={handleCloseVideo}
+                                            aria-label="Close video"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </button>
+                                        <div className={styles.videoErrorContent}>
+                                            <div className={styles.errorIcon}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                                </svg>
+                                            </div>
+                                            <h3>Video cannot be embedded</h3>
+                                            <p>This video cannot be played directly. Click below to watch on YouTube.</p>
+                                            <a
+                                                href={videoUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className={styles.watchOnYoutubeBtn}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                                </svg>
+                                                Watch on YouTube
+                                            </a>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    // Thumbnail with optional play button
+                                    <div className={styles.imageWrapper}>
+                                        <Image
+                                            src={image}
+                                            alt={title}
+                                            width={600}
+                                            height={300}
+                                            className={styles.postImage}
+                                            unoptimized
+                                        />
+
+                                        {/* Play button overlay for videos */}
+                                        {videoUrl && videoId && (
+                                            <button
+                                                className={styles.playButton}
+                                                onClick={handlePlayClick}
+                                                aria-label="Play video"
+                                            >
+                                                <div className={styles.playButtonCircle}>
+                                                    <svg
+                                                        className={styles.playIcon}
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        viewBox="0 0 24 24"
+                                                        fill="currentColor"
+                                                    >
+                                                        <path d="M8 5v14l11-7z" />
+                                                    </svg>
+                                                </div>
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className={styles.engagement}>
+                            <button className={styles.engagementButton} onClick={handleDiscussionClick} type="button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                                </svg>
+                                {discussionCount} Discussions
+                            </button>
+
+                            {/* Links display (non-interactive) */}
+                            <div className={styles.linksDisplay}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                                {totalLinksCount} Links
+                            </div>
+
+                            <button className={styles.engagementButton} onClick={handleShare} type="button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="18" cy="5" r="3"></circle>
+                                    <circle cx="6" cy="12" r="3"></circle>
+                                    <circle cx="18" cy="19" r="3"></circle>
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                </svg>
+                                Share
+                            </button>
+                        </div>
+                    </>
+                )}
             </div>
-          </>
-        )}
-      </div>
 
-      {/* Add the ShareModal component */}
-      <ShareModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        postData={{
-          id: _id,
-          title: title,
-          content: content,
-          image: image
-        }}
-      />
+            {/* Modals */}
+            <PostSaveModal
+                isOpen={showSaveModal}
+                onClose={() => setShowSaveModal(false)}
+                post={{
+                    id: _id,
+                    title,
+                    content,
+                    image,
+                    username,
+                    discussions: discussionCount
+                }}
+                onSave={handleSaveSuccess}
+            />
 
-      {isReportModalOpen && (
-        <ReportModal
-          isOpen={isReportModalOpen}
-          onClose={() => setIsReportModalOpen(false)}
-          onSubmit={handleReportSubmit}
-          contentDetails={{
-            postId: _id,
-            userId: userId,
-            username: username,
-            title: title,
-            content: content,
-            hashtags: hashtags,
-            image: image
-          }}
-        />
-      )}
+            <ShareModal
+                isOpen={showShareModal}
+                onClose={() => setShowShareModal(false)}
+                postData={{
+                    id: _id,
+                    title,
+                    content,
+                    image
+                }}
+            />
 
-      {/* Add the PostSaveModal component */}
-      <PostSaveModal
-        isOpen={showSaveModal}
-        onClose={() => setShowSaveModal(false)}
-        post={{
-          id: _id,
-          title: title,
-          content: content,
-          image: image,
-          username: username,
-          discussions: discussionCount
-        }}
-        onSave={handleSaveSuccess}
-      />
-    </div>
-  );
+            <ReportModal
+                isOpen={showReportModal}
+                onClose={() => setShowReportModal(false)}
+                onSubmit={handleReportSubmit}
+                contentDetails={{
+                    postId: _id,
+                    userId,
+                    username,
+                    title,
+                    content,
+                    hashtags,
+                    image
+                }}
+            />
+        </article>
+    );
 };
 
 export default SearchResultItem;

@@ -253,7 +253,10 @@ export default function ExplorePage() {
         imageUrl: item.imageUrl || item.image || '/api/placeholder/600/300',
         videoUrl: item.videoUrl || null,
         discussionCount: item.discussionCount || '0',
-        profilePicture: item.profilePicture || '/profile-placeholder.jpg'
+        profilePicture: item.profilePicture || '/profile-placeholder.jpg',
+        // Add these lines to ensure link data is passed
+        creatorLinks: item.creatorLinks || [],
+        communityLinks: item.communityLinks || []
       }));
 
       if (pageNumber === 1) {
@@ -395,7 +398,7 @@ export default function ExplorePage() {
                 </svg>
                 <h3>Unable to load content</h3>
                 <p>Error loading explore data: {error}</p>
-                <button 
+                <button
                   className={styles.retryButton}
                   onClick={() => fetchExploreContent(activeCategory, 1)}
                 >
@@ -409,7 +412,7 @@ export default function ExplorePage() {
                 <p className={styles.noContentDescription}>{noContentMessage.description}</p>
                 <p className={styles.noContentSuggestion}>{noContentMessage.suggestion}</p>
                 <div className={styles.noContentActions}>
-                  <button 
+                  <button
                     className={styles.createDiscussionButton}
                     onClick={() => {
                       router.push('/home');
@@ -421,7 +424,7 @@ export default function ExplorePage() {
                     </svg>
                     Create First Discussion
                   </button>
-                  <button 
+                  <button
                     className={styles.exploreOtherButton}
                     onClick={() => handleCategoryChange('Trending')}
                   >
