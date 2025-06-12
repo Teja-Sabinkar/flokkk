@@ -73,7 +73,7 @@ export default function SidebarNavigation({ isOpen }) {
     },
     {
       name: 'Help',
-      path: '/settings/feedback', // Changed from '/help' to '/settings/feedback'
+      path: '/help', // Changed from '/settings/feedback' to '/help'
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
@@ -105,8 +105,8 @@ export default function SidebarNavigation({ isOpen }) {
           if (item.path === '/home') {
             isActive = pathname === '/home';
           } else if (item.name === 'Help') {
-            // Add special handling for Help to properly highlight when on feedback page
-            isActive = pathname === '/settings/feedback';
+            // Add special handling for Help to properly highlight when on help page
+            isActive = pathname === '/help';
           } else if (item.name === 'flokkk A.I.') {
             // Special handling for flokkk A.I. page
             isActive = pathname === '/AIchatpage' || pathname.startsWith('/AIchatpage/');
