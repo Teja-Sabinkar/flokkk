@@ -23,21 +23,11 @@ export async function POST(request) {
     // Use username as name if not provided
     const displayName = name || username;
     
-    // Check if username is valid (letters, numbers, underscores only)
+    // Check if username is valid
     const usernameRegex = /^[a-zA-Z0-9_]+$/;
     if (!usernameRegex.test(username)) {
       return NextResponse.json(
         { message: 'Username can only contain letters, numbers, and underscores' },
-        { status: 400 }
-      );
-    }
-
-    // Check if username contains "flokkk" in any variation (case-insensitive)
-    // Exception: Allow specific email to use "flokkk" in username
-    const allowedEmailForFlokkk = 'teja.sabinkar2304@gmail.com';
-    if (username.toLowerCase().includes('flokkk') && email !== allowedEmailForFlokkk) {
-      return NextResponse.json(
-        { message: 'This username is not available. Please choose a different username.' },
         { status: 400 }
       );
     }
