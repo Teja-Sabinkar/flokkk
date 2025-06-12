@@ -653,7 +653,7 @@ async function handleManualQuery(message, context, username, postId, theme) {
     }
 }
 
-// Handle summarize discussion suggestion (theme-aware)
+// Handle summarize discussion suggestion (theme-aware), (ignore this)
 async function handleSummarizeDiscussionSuggestion(message, postId, username, theme) {
     console.log('Handling summarize suggestion for post:', postId, 'with theme:', theme);
 
