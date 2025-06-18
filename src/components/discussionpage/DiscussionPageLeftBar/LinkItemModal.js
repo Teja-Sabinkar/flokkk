@@ -11,6 +11,8 @@ export default function LinkItemModal({ link, section, onClose, onVote, userVote
   const [isShareView, setIsShareView] = useState(false);
   // Add state for copy success indicator
   const [copySuccess, setCopySuccess] = useState(false);
+  // Add state for verification prompt
+  const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
   
   // Create the link URL to be shared
   const linkUrl = link?.url || '#';
@@ -56,11 +58,32 @@ export default function LinkItemModal({ link, section, onClose, onVote, userVote
       window.removeEventListener('keydown', handleEsc);
     };
   }, [onClose]);
+  
+  // Auto-hide verification prompt after 3 seconds
+  useEffect(() => {
+    if (showVerificationPrompt) {
+      const timer = setTimeout(() => {
+        setShowVerificationPrompt(false);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showVerificationPrompt]);
 
   // Ensure we have a valid link object
   if (!link) {
     return null;
   }
+  
+  // Check if user is verified
+  const isUserVerified = () => {
+    return currentUser?.isEmailVerified === true;
+  };
+  
+  // Handle verification prompt
+  const handleVerificationPrompt = () => {
+    setShowVerificationPrompt(true);
+  };
 
   // Function to handle opening the URL
   const handleOpenUrl = (e) => {
@@ -98,6 +121,18 @@ export default function LinkItemModal({ link, section, onClose, onVote, userVote
     
     // Close the modal
     onClose();
+  };
+  
+  // Handle vote with verification check
+  const handleVote = (linkId, section, isUpvote) => {
+    // Check if user is verified before allowing vote
+    if (!isUserVerified()) {
+      handleVerificationPrompt();
+      return;
+    }
+    
+    // Proceed with vote if verified
+    onVote(linkId, section, isUpvote);
   };
 
   // Sharing functions
@@ -166,6 +201,18 @@ export default function LinkItemModal({ link, section, onClose, onVote, userVote
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         </button>
+        
+        {/* Verification prompt */}
+        {showVerificationPrompt && (
+          <div className={styles.verificationPrompt}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>Please verify your email to vote on links</span>
+          </div>
+        )}
 
         {/* Check which view to show */}
         {isShareView ? (
@@ -306,7 +353,7 @@ export default function LinkItemModal({ link, section, onClose, onVote, userVote
               <div className={`${styles.voteContainer} ${isVoting ? styles.voting : ''}`}>
                 <button
                   className={`${styles.voteButton} ${styles.upvoteButton} ${userVote === 'up' ? styles.active : ''}`}
-                  onClick={() => onVote(link.id, section, true)}
+                  onClick={() => handleVote(link.id, section, true)}
                   disabled={isVoting}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -316,7 +363,7 @@ export default function LinkItemModal({ link, section, onClose, onVote, userVote
                 <span className={styles.voteCount}>{link.votes}</span>
                 <button
                   className={`${styles.voteButton} ${styles.downvoteButton} ${userVote === 'down' ? styles.active : ''}`}
-                  onClick={() => onVote(link.id, section, false)}
+                  onClick={() => handleVote(link.id, section, false)}
                   disabled={isVoting}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

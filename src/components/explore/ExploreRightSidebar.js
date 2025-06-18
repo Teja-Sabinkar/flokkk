@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext'; // Add theme context import
+import { useRouter } from 'next/navigation'; // Add router import
 import RotatingNewsContainer from '@/components/widgets/rotatingNewsContainer';
 import QuickActions from '@/components/widgets/quickActions';
 import AiChat from '@/components/aichat/AiChat';
@@ -14,8 +15,12 @@ export default function ExploreRightSidebar({
   onWidthChange
 }) {
   const { theme } = useTheme(); // Add theme context
+  const router = useRouter(); // Add router for redirects
   const [isResizing, setIsResizing] = useState(false);
   const [rightSidebarWidth, setRightSidebarWidth] = useState(330);
+
+  // Add auth status tracking
+  const [authStatus, setAuthStatus] = useState('loading'); // 'loading', 'guest', 'unverified', 'verified'
 
   // Chat related states
   const [messages, setMessages] = useState([]);
@@ -25,6 +30,48 @@ export default function ExploreRightSidebar({
   // Refs
   const containerRef = useRef(null);
   const messagesEndRef = useRef(null);
+
+  // Check authentication status on component mount
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        setAuthStatus('guest');
+        return;
+      }
+
+      // Check if user is verified
+      const isVerified = localStorage.getItem('isVerified') === 'true';
+      setAuthStatus(isVerified ? 'verified' : 'unverified');
+    };
+
+    checkAuthStatus();
+  }, []);
+
+  // Function to get time-based greeting
+  const getTimeBasedGreeting = () => {
+    const hour = new Date().getHours();
+
+    if (hour >= 5 && hour < 12) {
+      return "Good Morning";
+    } else if (hour >= 12 && hour < 17) {
+      return "Good Afternoon";
+    } else if (hour >= 17 && hour < 21) {
+      return "Good Evening";
+    } else if (hour >= 21 && hour < 24) {
+      return "Good Late Evening";
+    } else {
+      return "Good Early Morning";
+    }
+  };
+
+  // Format username for greeting with larger time-based greeting
+  const getUserGreeting = () => {
+    const username = user?.username || 'there';
+    const timeGreeting = getTimeBasedGreeting();
+    return `Hi @${username}<br/><span style="font-size: 2em; font-weight: 500;">${timeGreeting}</span>`;
+  };
 
   // Check if there are any user messages to determine header visibility
   const hasUserMessages = messages.some(message => message.type === 'user');
@@ -149,9 +196,48 @@ export default function ExploreRightSidebar({
     }
   }, [onWidthChange]);
 
-  // Enhanced function to handle AI chat submission with contextual keyword support
-  const handleAiChatSubmit = async (message) => {
+  // Enhanced function to handle AI chat submission with authentication check
+  const handleAiChatSubmit = async (message, response = null, isWebSearch = false) => {
+    console.log('🎯 ExploreRightSidebar onSubmit called:', {
+      message,
+      hasResponse: !!response,
+      isWebSearch,
+      responseLength: response?.length || 0
+    });
+
     if (!message.trim() || isLoading) return;
+
+    // Check if user is authenticated
+    if (authStatus === 'guest') {
+      router.push('/login');
+      return;
+    }
+
+    // CRITICAL FIX: If this is a web search response, just display it!
+    if (isWebSearch && response) {
+      console.log('🌐 Displaying web search response directly');
+
+      const userMessage = {
+        id: Date.now(),
+        type: 'user',
+        content: message,
+      };
+
+      const webSearchMessage = {
+        id: Date.now() + 1,
+        type: 'ai',
+        content: response, // Use the web search response directly
+        isWebSearch: true
+      };
+
+      setMessages(prev => [...prev, userMessage, webSearchMessage]);
+
+      // Don't make any additional API calls!
+      return;
+    }
+
+    // Only make community search API call if it's NOT a web search
+    console.log('🏠 Making community search for:', message);
 
     // Add user message
     const userMessage = {
@@ -182,27 +268,28 @@ export default function ExploreRightSidebar({
       };
 
       // Make API request to your backend Claude endpoint
-      const response = await fetch('/api/ai/claude', requestOptions);
+      const apiResponse = await fetch('/api/ai/claude', requestOptions);
 
       // Handle response and add the message
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (!apiResponse.ok) {
+        const errorData = await apiResponse.json();
 
         // Check if it's a rate limit error
-        if (response.status === 429) {
+        if (apiResponse.status === 429) {
           throw new Error(`Rate limit exceeded: ${errorData.message}`);
         }
 
-        throw new Error(`Error: ${response.status}`);
+        throw new Error(`Error: ${apiResponse.status}`);
       }
 
-      const data = await response.json();
+      const data = await apiResponse.json();
 
       // Add AI response message
       const aiResponse = {
         id: Date.now() + 1,
         type: 'ai',
-        content: data.response || "I'm sorry, I couldn't process your request."
+        content: data.response || "I'm sorry, I couldn't process your request.",
+        isWebSearch: false
       };
 
       setMessages(prev => [...prev, aiResponse]);
@@ -226,9 +313,16 @@ export default function ExploreRightSidebar({
     }
   };
 
-  // Helper function to handle show more requests with proper context preservation
+  // Helper function to handle show more requests with authentication check
   const handleShowMoreRequest = async (type, originalQuery, element) => {
     if (isLoading) return;
+
+    // Check if user is authenticated
+    if (authStatus === 'guest') {
+      // Redirect to login page if not authenticated
+      router.push('/login');
+      return;
+    }
 
     setIsLoading(true);
 
@@ -291,10 +385,16 @@ export default function ExploreRightSidebar({
     }
   };
 
-  // Add click event listeners for dynamically generated content
+  // Add click event listeners for dynamically generated content with authentication check
   useEffect(() => {
     const handleDynamicClicks = (event) => {
       const target = event.target;
+
+      // Check for authentication before handling any dynamic clicks
+      if (authStatus === 'guest') {
+        router.push('/login');
+        return;
+      }
 
       // Handle "Show more insights" clicks
       if (target.classList.contains('show-more-insights')) {
@@ -330,58 +430,48 @@ export default function ExploreRightSidebar({
         messagesContainer.removeEventListener('click', handleDynamicClicks);
       }
     };
-  }, [messages, isLoading, user]);
+  }, [messages, isLoading, user, authStatus, router]);
 
-  // Function to get time-based greeting
-  const getTimeBasedGreeting = () => {
-    const hour = new Date().getHours();
-
-    if (hour >= 5 && hour < 12) {
-      return "Good Morning";
-    } else if (hour >= 12 && hour < 17) {
-      return "Good Afternoon";
-    } else if (hour >= 17 && hour < 21) {
-      return "Good Evening";
-    } else {
-      return "Good Night";
-    }
-  };
-
-  // Add or update welcome message when component mounts or user changes
+  // Initialize messages based on authentication status
   useEffect(() => {
     console.log('useEffect triggered - User object received:', user);
+    console.log('Auth status:', authStatus);
 
-    // Don't create welcome message for fallback/guest users - wait for real user data
-    if (!user || user.name === 'Guest' || user.username === 'Guest') {
-      console.log('Skipping welcome message - waiting for real user data or user is Guest');
-      return;
+    if (authStatus === 'guest') {
+      const timeGreeting = getTimeBasedGreeting();
+      setMessages([
+        {
+          id: 1,
+          type: 'system',
+          content: `Hi @there<br/><span style="font-size: 2em; font-weight: 500;">${timeGreeting}</span>`,
+        },
+        {
+          id: 2,
+          type: 'system',
+          content: 'Sign in to use flokkk A.I. assistant and get personalized help.',
+        }
+      ]);
+    } else if (authStatus === 'verified' && user && user.username !== 'Guest') {
+      // More robust username extraction with multiple fallbacks
+      let username = 'there';
+      if (user) {
+        username = user.username || user.name || (user.email ? user.email.split('@')[0] : 'there');
+      }
+
+      // Clean username by removing @ symbols and spaces
+      const cleanUsername = username.replace(/[@\s]/g, '');
+
+      console.log('Creating/updating welcome message for:', cleanUsername);
+
+      const welcomeMessage = {
+        id: 1,
+        type: 'system',
+        content: getUserGreeting()
+      };
+
+      setMessages([welcomeMessage]);
     }
-
-    // Get username from user object with robust fallback logic
-    let username = 'there'; // default fallback
-
-    if (user) {
-      // Try username first, then name, then email prefix as last resort
-      username = user.username ||
-        user.name ||
-        (user.email ? user.email.split('@')[0] : 'there');
-    }
-
-    // Clean the username (remove any @ symbols or spaces)
-    const cleanUsername = username.replace(/[@\s]/g, '');
-
-    console.log('Creating/updating welcome message for:', cleanUsername);
-
-    const timeGreeting = getTimeBasedGreeting();
-    const welcomeMessage = {
-      id: 1,
-      type: 'system',
-      content: `Hi ${cleanUsername}, ${timeGreeting}! How can I assist you today?`
-    };
-
-    // Always set the welcome message when we have real user data
-    setMessages([welcomeMessage]);
-  }, [user]); // Only depend on user changes
+  }, [authStatus, user]);
 
   return (
     <div

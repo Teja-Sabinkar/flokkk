@@ -1,4 +1,4 @@
-// /api/ai/claude/route.js - Enhanced with Discussion Analysis, New Suggestion System, and Theme Support
+// /api/ai/claude/route.js - Enhanced with Discussion Analysis, New Suggestion System, Theme Support, and Community Brief
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
@@ -8,10 +8,12 @@ import dbConnect from '@/lib/mongoose';
 import Post from '@/models/Post';
 import Comment from '@/models/Comment';
 import UserSettings from '@/models/UserSettings';
+import { SearchHandler } from '@/lib/mcp/handlers/search-handler';
 
-// Safe imports with fallbacks
+// Safe imports with fallbacks - Initialize with default values
 let rateLimiter = {
-    checkRateLimit: async () => ({ allowed: true, remainingRequests: 30, resetTime: new Date() })
+    checkRateLimit: async () => ({ allowed: true, remainingRequests: 30, resetTime: new Date() }),
+    getStatus: async () => ({ ai: null, webSearch: null })
 };
 
 let responseCache = {
@@ -38,6 +40,20 @@ try {
 } catch (e) {
     console.warn('responseCache module not available:', e.message);
 }
+
+// Simple in-memory cache for community briefs
+const briefMemoryCache = new Map();
+
+// Clean up old cache entries periodically
+setInterval(() => {
+    const now = Date.now();
+    const oneHour = 60 * 60 * 1000;
+    for (const [key, value] of briefMemoryCache.entries()) {
+        if (now - value.timestamp > oneHour) {
+            briefMemoryCache.delete(key);
+        }
+    }
+}, 15 * 60 * 1000); // Clean every 15 minutes
 
 // Theme detection and CSS variable mapping
 async function detectUserTheme(userId, requestTheme = null) {
@@ -70,6 +86,42 @@ async function detectUserTheme(userId, requestTheme = null) {
     } catch (error) {
         console.error('Error in theme detection:', error);
         return 'dark'; // Safe fallback
+    }
+}
+
+// NEW: Enhanced status check for MCP
+async function getEnhancedUserStatus(userId, requestTheme = null) {
+    try {
+        const userTheme = await detectUserTheme(userId, requestTheme);
+        
+        let aiStatus = null;
+        let webSearchStatus = null;
+
+        if (userId) {
+            try {
+                // Get comprehensive status including web search quota
+                const fullStatus = await rateLimiter.getStatus(userId, 'manual');
+                aiStatus = fullStatus?.ai || null;
+                webSearchStatus = fullStatus?.webSearch || null;
+            } catch (statusError) {
+                console.warn('Error getting user status:', statusError.message);
+            }
+        }
+
+        return {
+            theme: userTheme,
+            aiStatus,
+            webSearchStatus,
+            isAuthenticated: !!userId
+        };
+    } catch (error) {
+        console.error('Error getting enhanced user status:', error);
+        return {
+            theme: 'dark',
+            aiStatus: null,
+            webSearchStatus: null,
+            isAuthenticated: false
+        };
     }
 }
 
@@ -123,16 +175,242 @@ function getThemeColor(theme, colorVar) {
     return variables[colorVar] || variables['--text-primary'];
 }
 
+// NEW: Generate community brief using Claude AI
+async function generateCommunityBrief(query, discussions, links, theme) {
+    try {
+        console.log('🧠 Generating community brief for query:', query);
+        
+        if (!process.env.CLAUDE_API_KEY) {
+            console.warn('No Claude API key available for brief generation');
+            return null;
+        }
+
+        // Fetch full content from top 2-3 discussions
+        let discussionContent = '';
+        try {
+            const topDiscussions = discussions.slice(0, 3);
+            console.log('📖 Fetching full content for', topDiscussions.length, 'discussions');
+            
+            for (const discussion of topDiscussions) {
+                const fullPost = await extractCurrentPostData(discussion.id);
+                if (fullPost) {
+                    discussionContent += `\n--- Discussion: "${discussion.title}" by @${discussion.username} ---\n`;
+                    discussionContent += `${fullPost.postContent?.substring(0, 800) || 'No content'}\n`;
+                    
+                    // Add top comments if available
+                    if (fullPost.comments && fullPost.comments.length > 0) {
+                        discussionContent += `Top comments:\n`;
+                        fullPost.comments.slice(0, 2).forEach(comment => {
+                            discussionContent += `- @${comment.username}: ${comment.content?.substring(0, 150) || ''}\n`;
+                        });
+                    }
+                    discussionContent += '\n';
+                }
+            }
+        } catch (contentError) {
+            console.warn('Error fetching discussion content:', contentError.message);
+        }
+
+        // Include link information
+        let linkContent = '';
+        if (links && links.length > 0) {
+            linkContent = '\n--- Related Links ---\n';
+            links.slice(0, 3).forEach(link => {
+                linkContent += `- ${link.title}: ${link.description || 'No description'}\n`;
+            });
+        }
+
+        // Generate brief using Claude AI
+        const claudeRequest = {
+            model: "claude-3-haiku-20240307",
+            system: `You are creating a brief, direct answer to the user's question based on community discussions and links. 
+
+IMPORTANT REQUIREMENTS:
+- Maximum 250 characters total
+- 2-3 sentences maximum
+- Directly answer the user's specific question: "${query}"
+- Use information from the community content provided
+- Be conversational and informative
+- Do NOT mention "based on community discussions" or similar meta-references
+- Just provide the answer directly as if you're knowledgeable about the topic
+
+Focus on giving the user immediate value and answering their specific question.`,
+            messages: [
+                {
+                    role: "user",
+                    content: `User asked: "${query}"
+
+Community Content:
+${discussionContent}
+${linkContent}
+
+Please provide a brief, direct answer to their question in maximum 250 characters.`
+                }
+            ],
+            max_tokens: 100,
+            temperature: 0.7,
+        };
+
+        console.log('🤖 Calling Claude API for brief generation');
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.CLAUDE_API_KEY,
+                'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify(claudeRequest)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Claude API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const generatedBrief = data.content[0]?.text || "";
+        
+        // Ensure it's within character limit
+        const brief = generatedBrief.length > 250 ? 
+            generatedBrief.substring(0, 247) + '...' : 
+            generatedBrief;
+
+        console.log('✅ Community brief generated:', brief.substring(0, 50) + '...');
+        return brief;
+
+    } catch (error) {
+        console.error('❌ Error generating community brief:', error);
+        return null; // Return null to skip brief on error
+    }
+}
+
+// NEW: Generate brief for no community content scenario
+async function generateNoCommunityBrief(query, theme) {
+    try {
+        console.log('🤔 Generating general knowledge brief for:', query);
+        
+        if (!process.env.CLAUDE_API_KEY) {
+            console.warn('No Claude API key available for no-community brief');
+            return null;
+        }
+
+        const claudeRequest = {
+            model: "claude-3-haiku-20240307",
+            system: `Provide a brief, helpful answer using general knowledge about the topic the user asked about.
+
+REQUIREMENTS:
+- Maximum 200 characters (leave room for community message)
+- 2 sentences maximum  
+- Directly answer their question using your knowledge
+- Be informative and helpful
+- Do NOT mention that you're an AI or that this is general knowledge`,
+            messages: [
+                {
+                    role: "user",
+                    content: `Please provide a brief answer about: "${query}"`
+                }
+            ],
+            max_tokens: 80,
+            temperature: 0.7,
+        };
+
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.CLAUDE_API_KEY,
+                'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify(claudeRequest)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Claude API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const generatedBrief = data.content[0]?.text || "";
+        
+        // Ensure it fits with community message
+        const brief = generatedBrief.length > 200 ? 
+            generatedBrief.substring(0, 197) + '...' : 
+            generatedBrief;
+
+        console.log('✅ General knowledge brief generated');
+        return brief;
+
+    } catch (error) {
+        console.error('❌ Error generating no-community brief:', error);
+        return null;
+    }
+}
+
+// NEW: Helper function to get search results data for brief generation
+async function getSearchResultsForBrief(query, userId, limit = 3) {
+    try {
+        console.log('📊 Getting search results data for brief generation');
+        
+        // Extract keywords
+        const keywords = await extractKeywordsFromText(query);
+        
+        // Use existing search function
+        const searchResults = await findRelevantDiscussionsAndLinks(keywords, limit);
+        
+        return {
+            discussions: searchResults.discussions || [],
+            links: searchResults.links || []
+        };
+        
+    } catch (error) {
+        console.error('Error getting search results for brief:', error);
+        return { discussions: [], links: [] };
+    }
+}
+
+// NEW: Caching functions for community briefs
+const communityBriefCache = {
+    generateCacheKey(query, discussionIds, linkIds) {
+        const contentSignature = [...discussionIds, ...linkIds].sort().join(',');
+        return `community_brief_${query.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${contentSignature.substring(0, 20)}`;
+    },
+
+    async get(cacheKey) {
+        try {
+            // Check in-memory cache first
+            const cached = briefMemoryCache.get(cacheKey);
+            if (cached && Date.now() - cached.timestamp < 60 * 60 * 1000) { // 1 hour
+                console.log('📋 Community brief cache hit (memory)');
+                return cached.brief;
+            }
+            return null;
+        } catch (error) {
+            console.warn('Brief cache get error:', error);
+            return null;
+        }
+    },
+
+    async set(cacheKey, brief) {
+        try {
+            // Store in memory cache
+            briefMemoryCache.set(cacheKey, {
+                brief,
+                timestamp: Date.now()
+            });
+            console.log('📝 Cached community brief');
+        } catch (error) {
+            console.warn('Brief cache set error:', error);
+        }
+    }
+};
+
 export async function POST(request) {
-    console.log('Claude API route called');
+    console.log('Claude API route called with MCP integration');
 
     try {
-        // Get authentication info if available
+        // Enhanced authentication and status check
         const headersList = headers();
         const authHeader = headersList.get('Authorization');
         let userId = null;
         let username = 'Anonymous User';
-        let userTheme = 'dark'; // Default theme
 
         console.log('Setting up database connections...');
 
@@ -183,14 +461,14 @@ export async function POST(request) {
             postId = null,
             showMoreType = null,
             originalQuery = null,
-            theme: requestTheme = null // NEW: Theme from frontend
+            theme: requestTheme = null
         } = requestData;
 
         console.log('Processing request:', { source, suggestionType, postId, showMoreType, requestTheme });
 
-        // Detect user theme
-        userTheme = await detectUserTheme(userId, requestTheme);
-        console.log('Detected user theme:', userTheme);
+        // Get enhanced user status with MCP support
+        const userStatus = await getEnhancedUserStatus(userId, requestTheme);
+        const userTheme = userStatus.theme;
 
         // Use username from request if provided and no authenticated user
         if (providedUsername && !userId) {
@@ -206,7 +484,7 @@ export async function POST(request) {
             );
         }
 
-        // Rate limiting check with fallback
+        // Rate limiting check (existing functionality)
         const rateLimitUserId = userId || 'anonymous';
         let rateLimit;
         try {
@@ -223,7 +501,7 @@ export async function POST(request) {
                 message: rateLimit.message || 'Too many requests',
                 resetTime: rateLimit.resetTime,
                 remainingRequests: rateLimit.remainingRequests,
-                theme: userTheme // Include theme in error response
+                theme: userTheme
             }, { status: 429 });
         }
 
@@ -238,44 +516,18 @@ export async function POST(request) {
 
         console.log('Processing request type:', { source, suggestionType, showMoreType });
 
-        // Handle show more requests
-        if (showMoreType && originalQuery) {
-            console.log('Handling show more request:', showMoreType);
-            try {
-                const showMoreResult = await handleShowMoreRequest(showMoreType, originalQuery, message, postId, username, userTheme);
-                return NextResponse.json({
-                    ...showMoreResult,
-                    theme: userTheme // Include theme in response
-                }, {
-                    headers: {
-                        'X-RateLimit-Limit': source === 'suggestion' ? '60' : '30',
-                        'X-RateLimit-Remaining': rateLimit.remainingRequests.toString(),
-                        'X-RateLimit-Reset': rateLimit.resetTime.toISOString()
-                    }
-                });
-            } catch (showMoreError) {
-                console.error('Show more request failed:', showMoreError);
-                return NextResponse.json({
-                    response: "I couldn't load additional content. Please try again.",
-                    model: "claude-3-haiku-20240307",
-                    usage: null,
-                    dataAvailable: [],
-                    hasMoreDb: false,
-                    hasMoreAi: false,
-                    theme: userTheme
-                }, { status: 200 });
-            }
-        }
-
-        // Process the request based on source and type
+        // Handle different request types
         let responseData;
         try {
-            if (source === 'suggestion') {
+            if (showMoreType && originalQuery) {
+                console.log('Handling show more request:', showMoreType);
+                responseData = await handleShowMoreRequest(showMoreType, originalQuery, message, postId, username, userTheme);
+            } else if (source === 'suggestion') {
                 console.log('Handling suggestion query:', suggestionType);
                 responseData = await handleSuggestionQuery(message, suggestionType, postId, username, userTheme);
             } else {
-                console.log('Handling manual query');
-                responseData = await handleManualQuery(message, context, username, postId, userTheme);
+                console.log('Handling manual query with MCP');
+                responseData = await handleManualQueryMCP(message, context, username, postId, userTheme, userId);
             }
         } catch (processingError) {
             console.error('Request processing error:', processingError);
@@ -286,7 +538,7 @@ export async function POST(request) {
                     response: "I encountered an error processing your request. Please try again.",
                     theme: userTheme
                 },
-                { status: 200 } // Return 200 with error message instead of 500
+                { status: 200 }
             );
         }
 
@@ -294,7 +546,8 @@ export async function POST(request) {
 
         return NextResponse.json({
             ...responseData,
-            theme: userTheme // Include theme in successful response
+            theme: userTheme,
+            userStatus: userStatus
         }, {
             headers: {
                 'X-RateLimit-Limit': source === 'suggestion' ? '60' : '30',
@@ -310,9 +563,9 @@ export async function POST(request) {
                 error: 'Internal server error',
                 details: error.message,
                 response: "I'm experiencing technical difficulties. Please try again in a moment.",
-                theme: 'dark' // Safe fallback theme
+                theme: 'dark'
             },
-            { status: 200 } // Return 200 with error message instead of 500
+            { status: 200 }
         );
     }
 }
@@ -352,85 +605,17 @@ async function handleSuggestionQuery(message, suggestionType, postId, username, 
     }
 }
 
-// Handle manual queries from input field with enhanced relevance filtering (theme-aware)
-async function handleManualQuery(message, context, username, postId, theme) {
-    console.log('Processing manual query:', message, 'with theme:', theme);
+// MODIFIED: Enhanced manual query handler with MCP integration and community brief
+async function handleManualQueryMCP(message, context, username, postId, theme, userId) {
+    console.log('Processing manual query with MCP:', message, 'with theme:', theme);
 
     try {
-        // Check if user is asking "who are you" type questions
-        const whoAreYouPatterns = [
-            /who\s+are\s+you/i,
-            /what\s+are\s+you/i,
-            /tell\s+me\s+about\s+yourself/i,
-            /introduce\s+yourself/i,
-            /what\s+is\s+your\s+name/i,
-            /who\s+is\s+this/i,
-            /what\s+do\s+you\s+do/i,
-            /what\s+can\s+you\s+do/i,
-            /what\s+are\s+your\s+capabilities/i,
-            /explain\s+yourself/i,
-            /describe\s+yourself/i,
-            /what\s+is\s+this\s+bot/i,
-            /what\s+kind\s+of\s+(assistant|ai|bot)\s+are\s+you/i,
-            /tell\s+me\s+what\s+you\s+do/i,
-            /what\s*\'?s\s+your\s+(purpose|role|function|job)/i,
-            /what\s+are\s+you\s+for/i,
-            /are\s+you\s+(an\s+)?(ai|bot|assistant)/i,
-            /what\s+type\s+of\s+(ai|bot|assistant)/i,
-            /can\s+you\s+introduce\s+yourself/i,
-            /tell\s+me\s+your\s+purpose/i,
-            /explain\s+what\s+you\s+do/i,
-            /who\s+am\s+i\s+(talking|speaking)\s+to/i,
-            /what\s+am\s+i\s+(talking|speaking)\s+to/i,
-            /what\s+exactly\s+are\s+you/i,
-            /help\s+me\s+understand\s+what\s+you\s+are/i,
-            /flockkk/i  // Direct mention of the bot name
-        ];
-
-        const isWhoAreYouQuestion = whoAreYouPatterns.some(pattern => pattern.test(message.trim()));
-
-        if (isWhoAreYouQuestion) {
-            console.log('Detected "who are you" question, returning themed introduction');
-
-            // Theme-aware responses with CSS variables
-            const whoAreYouResponses = [
-                // Original response with theme support
-                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
-          Hi there! I'm flockkk. I'm an AI assistant created to help you discover content and gain insights within this community platform.
-        </div>`,
-
-                // Alternate 1 - More casual/friendly
-                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
-          Hey! I'm flockkk, your AI companion for exploring this community. I'm here to help you find interesting discussions, discover useful links, and uncover insights from all the content shared here.
-        </div>`,
-
-                // Alternate 2 - More professional/informative
-                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
-          Hello! I'm flockkk, an AI-powered content discovery assistant. My role is to help you navigate through community discussions, find relevant resources, and provide meaningful insights based on the collective knowledge shared on this platform.
-        </div>`,
-
-                // Alternate 3 - Conversational/welcoming
-                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
-          Nice to meet you! I'm flockkk, and I'm here to be your guide through this community. Think of me as your personal assistant for finding the best discussions, most useful links, and valuable insights that match what you're looking for.
-        </div>`,
-
-                // Alternate 4 - Direct/helpful
-                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
-          I'm flockkk! I'm an AI assistant designed specifically for this community platform. My job is to help you discover relevant content, connect you with interesting discussions, and provide insights that enhance your experience here.
-        </div>`,
-
-                // Alternate 5 - Enthusiastic/engaging
-                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
-          Great question! I'm flockkk, your AI-powered community explorer. I love helping people like you discover amazing content, find exactly what they're looking for, and gain fresh perspectives from the wealth of knowledge shared in this community.
-        </div>`
-            ];
-
-            // Randomly select one response
-            const randomIndex = Math.floor(Math.random() * whoAreYouResponses.length);
-            const formattedIntroduction = whoAreYouResponses[randomIndex];
-
+        // Require authentication for MCP features
+        if (!userId) {
             return {
-                response: formattedIntroduction,
+                response: `<div style="${generateThemeCSS(theme)}; color: var(--text-secondary); font-size: 13px; padding: 10px 0; text-align: center; border: 1px dashed var(--border-color); border-radius: 8px;">
+                    🔒 Please sign in to use flokkk AI search
+                </div>`,
                 model: "claude-3-haiku-20240307",
                 usage: null,
                 dataAvailable: [],
@@ -440,209 +625,171 @@ async function handleManualQuery(message, context, username, postId, theme) {
             };
         }
 
-        // NEW: Check if user is asking about "flokkk" (the platform)
-        const flokkkQuestionPatterns = [
-            /what\s+is\s+flokkk/i,
-            /tell\s+me\s+about\s+flokkk/i,
-            /explain\s+flokkk/i,
-            /how\s+does\s+flokkk\s+work/i,
-            /what\s+does\s+flokkk\s+do/i,
-            /flokkk\s+platform/i,
-            /flokkk\s+mission/i,
-            /flokkk\s+vision/i,
-            /what\s+is\s+this\s+platform/i,
-            /about\s+this\s+platform/i,
-            /tell\s+me\s+about\s+this\s+site/i,
-            /what\s+is\s+this\s+website/i,
-            /how\s+does\s+this\s+platform\s+work/i,
-            /mission\s+of\s+flokkk/i,
-            /purpose\s+of\s+flokkk/i,
-            /goals\s+of\s+flokkk/i,
-            /flokkk\s+features/i,
-            /community\s+curation/i,
-            /transparent\s+vetting/i
-        ];
-
-        const isFlokkkQuestion = flokkkQuestionPatterns.some(pattern => pattern.test(message.trim()));
-
-        if (isFlokkkQuestion) {
-            console.log('Detected question about flokkk platform, returning platform information');
-
-            // Array of comprehensive responses about flokkk based on the about page
-            const flokkkResponses = [
-                // Mission-focused response
-                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
-                    <h4 style="color: var(--accent-color); margin: 0 0 12px 0; font-size: 16px;">About Flokkk</h4>
-                    <p style="margin: 0 0 12px 0;">Flokkk is rebuilding trust in digital information. We're creating a human-first, community-curated discovery platform where people find the most valuable resources on any topic—through collective intelligence, not algorithmic guesswork.</p>
-                    
-                    <h5 style="color: var(--text-primary); margin: 12px 0 8px 0; font-size: 14px;">How It Works:</h5>
-                    <ul style="margin: 0; padding-left: 18px; color: var(--text-secondary); font-size: 13px;">
-                        <li><strong>Community Curation:</strong> Users contribute, vote, and discuss the best content, turning scattered information into structured, peer-endorsed knowledge hubs.</li>
-                        <li><strong>Transparent Vetting:</strong> Every link is vetted through honest peer review from real learners and subject-matter experts.</li>
-                        <li><strong>AI-Powered Insights:</strong> Our AI serves resources based on what real learners have found useful, not just web scraping.</li>
-                    </ul>
-                </div>`,
-
-                // Vision-focused response
-                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
-                    <h4 style="color: var(--accent-color); margin: 0 0 12px 0; font-size: 16px;">The Flokkk Vision</h4>
-                    <p style="margin: 0 0 12px 0;">We're transforming shallow content consumption into informed, intentional learning. By combining human wisdom with intelligent technology, we're building a future where quality information is accessible, transparent, and truly valuable.</p>
-                    
-                    <p style="margin: 12px 0 0 0; color: var(--text-secondary); font-style: italic;">"Quality over quantity, depth over algorithms, and human insight over automated recommendations."</p>
-                </div>`,
-
-                // Feature-focused response
-                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
-                    <h4 style="color: var(--accent-color); margin: 0 0 12px 0; font-size: 16px;">Flokkk Platform</h4>
-                    <p style="margin: 0 0 12px 0;">Flokkk is a human-first, community-curated discovery platform for meaningful learning. We're creating structured knowledge hubs where the best resources are found through collective intelligence.</p>
-                    
-                    <h5 style="color: var(--text-primary); margin: 12px 0 8px 0; font-size: 14px;">Key Features:</h5>
-                    <ul style="margin: 0; padding-left: 18px; color: var(--text-secondary); font-size: 13px;">
-                        <li>Community-driven content curation starting with YouTube and expanding to major platforms</li>
-                        <li>Transparent peer review system with no hidden algorithms</li>
-                        <li>AI assistant that ranks resources based on real learner feedback</li>
-                        <li>Discussion forums and collaborative learning spaces</li>
-                    </ul>
-                </div>`,
-
-                // Problem-solution focused response
-                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
-                    <h4 style="color: var(--accent-color); margin: 0 0 12px 0; font-size: 16px;">Why Flokkk Exists</h4>
-                    <p style="margin: 0 0 12px 0;">Flokkk addresses the problem of information overload and unreliable recommendations online. Instead of algorithmic guesswork, we use community wisdom to surface the most valuable resources.</p>
-                    
-                    <p style="margin: 0 0 12px 0; color: var(--text-secondary);">Our three pillars:</p>
-                    <ul style="margin: 0; padding-left: 18px; color: var(--text-secondary); font-size: 13px;">
-                        <li><strong>Community Curation:</strong> Real people finding and sharing valuable content</li>
-                        <li><strong>Transparent Vetting:</strong> Open peer review process with full transparency</li>
-                        <li><strong>AI Enhancement:</strong> Technology that amplifies human intelligence rather than replacing it</li>
-                    </ul>
-                </div>`,
-
-                // Comprehensive overview response
-                `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
-                    <h4 style="color: var(--accent-color); margin: 0 0 12px 0; font-size: 16px;">Flokkk: Curating Information You Can Trust</h4>
-                    <p style="margin: 0 0 12px 0;">Flokkk is a revolutionary platform that's rebuilding trust in digital information through community-driven curation and transparent vetting processes.</p>
-                    
-                    <h5 style="color: var(--text-primary); margin: 12px 0 8px 0; font-size: 14px;">Our Mission:</h5>
-                    <p style="margin: 0 0 12px 0; color: var(--text-secondary); font-size: 13px;">Create a human-first discovery platform where people find the most valuable resources through collective intelligence, not algorithmic guesswork.</p>
-                    
-                    <h5 style="color: var(--text-primary); margin: 12px 0 8px 0; font-size: 14px;">Our Vision:</h5>
-                    <p style="margin: 0; color: var(--text-secondary); font-size: 13px;">Transform shallow content consumption into informed, intentional learning by combining human wisdom with intelligent technology.</p>
-                </div>`
-            ];
-
-            // Randomly select one response
-            const randomIndex = Math.floor(Math.random() * flokkkResponses.length);
-            const formattedFlokkkResponse = flokkkResponses[randomIndex];
-
-            return {
-                response: formattedFlokkkResponse,
-                model: "claude-3-haiku-20240307",
-                usage: null,
-                dataAvailable: [],
-                hasMoreDb: false,
-                hasMoreAi: false,
-                theme
-            };
+        // Check for special queries first
+        const specialResponse = await handleSpecialQueries(message, theme);
+        if (specialResponse) {
+            return specialResponse;
         }
 
-        // Continue with existing keyword extraction and search logic...
-        // Extract keywords from user's question
-        const keywords = await extractKeywordsFromText(message);
-        console.log('Extracted keywords:', keywords);
-
-        // Find relevant discussions and links from database
-        const searchResults = await findRelevantDiscussionsAndLinks(keywords, 15); // Get more results for better filtering
-        console.log('Found search results:', searchResults.discussions.length, 'discussions,', searchResults.links.length, 'links');
-
-        // Apply quality filtering for initial results
-        const hasPhrasesInKeywords = keywords.some(keyword => keyword.includes(' '));
-        const minDiscussionScore = hasPhrasesInKeywords ? 8 : 4;
-        const minLinkScore = hasPhrasesInKeywords ? 8 : 5;
-
-        // Get top quality discussions and links for initial response
-        const topDiscussions = searchResults.discussions
-            .filter(discussion => !discussion.relevanceScore || discussion.relevanceScore >= minDiscussionScore)
-            .slice(0, 2);
-
-        const topLinks = searchResults.links
-            .filter(link => !link.relevanceScore || link.relevanceScore >= minLinkScore)
-            .slice(0, 2);
-
-        console.log('Top quality results:', topDiscussions.length, 'discussions,', topLinks.length, 'links');
-
-        // Generate brief about the topics using Claude AI
-        const briefResponse = await generateTopicBrief(message, keywords, topDiscussions, topLinks);
-
-        // Build HTML response with theme support
-        let htmlResponse = '';
-
-        // Add discussions with theme-aware styling
-        if (topDiscussions.length > 0) {
-            topDiscussions.forEach(discussion => {
-                htmlResponse += formatDiscussionCard(discussion, theme);
-            });
+        // **NEW: Generate community brief for manual queries**
+        let communityBrief = null;
+        let searchData = null;
+        
+        try {
+            console.log('🔍 Getting search results for brief generation');
+            searchData = await getSearchResultsForBrief(message, userId, 3);
+            
+            const hasCommunityContent = searchData.discussions.length > 0 || searchData.links.length > 0;
+            
+            if (hasCommunityContent) {
+                console.log('🧠 Community content found, generating brief');
+                
+                // Create cache key
+                const discussionIds = searchData.discussions.map(d => d.id);
+                const linkIds = searchData.links.map(l => l.id);
+                const cacheKey = communityBriefCache.generateCacheKey(message, discussionIds, linkIds);
+                
+                // Try to get from cache first
+                communityBrief = await communityBriefCache.get(cacheKey);
+                
+                if (!communityBrief) {
+                    console.log('📝 Cache miss, generating new brief');
+                    communityBrief = await generateCommunityBrief(
+                        message, 
+                        searchData.discussions, 
+                        searchData.links, 
+                        theme
+                    );
+                    
+                    // Cache the result
+                    if (communityBrief) {
+                        await communityBriefCache.set(cacheKey, communityBrief);
+                    }
+                } else {
+                    console.log('📋 Using cached community brief');
+                }
+            } else {
+                // No community content - generate general knowledge brief
+                console.log('🤔 No community content, generating general knowledge brief');
+                const cacheKey = `general_brief_${message.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+                
+                communityBrief = await communityBriefCache.get(cacheKey);
+                
+                if (!communityBrief) {
+                    const generalBrief = await generateNoCommunityBrief(message, theme);
+                    if (generalBrief) {
+                        communityBrief = generalBrief + " The flokkk community hasn't discussed this topic yet.";
+                        await communityBriefCache.set(cacheKey, communityBrief);
+                    }
+                }
+            }
+        } catch (briefError) {
+            console.warn('Brief generation failed, continuing without brief:', briefError.message);
+            communityBrief = null;
         }
 
-        // Add links with theme-aware styling
-        if (topLinks.length > 0) {
-            topLinks.forEach(link => {
-                htmlResponse += formatLinkCard(link, theme);
-            });
-        }
-
-        // Check for more quality content
-        const remainingDiscussions = searchResults.discussions
-            .filter(discussion => !discussion.relevanceScore || discussion.relevanceScore >= minDiscussionScore)
-            .slice(2);
-
-        const remainingLinks = searchResults.links
-            .filter(link => !link.relevanceScore || link.relevanceScore >= minLinkScore)
-            .slice(2);
-
-        const validRemainingDiscussions = remainingDiscussions.filter(discussion =>
-            validateContentRelevance(discussion.title, keywords)
+        // Use MCP Search Handler for community-first search
+        console.log('Using MCP SearchHandler for query:', message);
+        const searchResult = await SearchHandler.handleUserQuery(
+            message,
+            userId,
+            theme,
+            false // Don't auto-trigger web search
         );
 
-        const validRemainingLinks = remainingLinks.filter(link =>
-            validateContentRelevance(link.title, keywords) || validateContentRelevance(link.description, keywords)
-        );
+        // **NEW: Enhance the response with community brief**
+        let enhancedResponse = searchResult.response;
+        
+        if (communityBrief) {
+            console.log('🎨 Adding community brief to response');
+            
+            // Format the brief box
+            const briefHTML = `
+                <div style="${generateThemeCSS(theme)}; 
+                            background-color: var(--bg-tertiary); 
+                            border: 1px solid var(--border-color);
+                            border-radius: 12px; 
+                            padding: 16px; 
+                            margin: 12px 0 16px 0; 
+                            color: var(--text-primary); 
+                            font-size: 14px; 
+                            line-height: 1.4;
+                            box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    ${communityBrief}
+                </div>
+            `;
+            
+            // Add brief before the rest of the response
+            enhancedResponse = briefHTML + searchResult.response;
+        }
 
-        const hasMoreQualityContent = validRemainingDiscussions.length > 0 || validRemainingLinks.length > 0;
-
-        console.log('Quality content check:', {
-            remainingDiscussions: remainingDiscussions.length,
-            remainingLinks: remainingLinks.length,
-            validRemainingDiscussions: validRemainingDiscussions.length,
-            validRemainingLinks: validRemainingLinks.length,
-            hasMoreQualityContent
+        console.log('MCP search completed with brief:', {
+            hasBrief: !!communityBrief,
+            hasMoreOptions: searchResult.hasMoreOptions,
+            quotaRemaining: searchResult.quotaRemaining,
+            hasCommunityContent: searchResult.hasCommunityContent
         });
 
-        // Add show more button with theme-aware styling
-        if (hasMoreQualityContent) {
-            htmlResponse += `<div style="${generateThemeCSS(theme)}; color: var(--accent-color); font-size: 13px; padding: 10px 0 5px 0; cursor: pointer;" class="show-more-discussions-links" data-query="${encodeURIComponent(message)}" data-type="more-discussions-links">Show more relevant discussions & links</div>`;
-        }
-
-        // Add brief response with theme-aware styling
-        htmlResponse += `<div style="${generateThemeCSS(theme)}; padding: 10px 0; color: var(--text-tertiary); font-size: 13px; line-height: 1.4;">${briefResponse}</div>`;
-
-        // Add show more insights button with theme-aware styling
-        htmlResponse += `<div style="${generateThemeCSS(theme)}; color: var(--accent-color); font-size: 13px; padding: 5px 0 10px 0; cursor: pointer;" class="show-more-insights" data-query="${encodeURIComponent(message)}" data-type="more-insights">Show more insights</div>`;
-
         return {
-            response: htmlResponse || `<div style="${generateThemeCSS(theme)}; color: var(--text-secondary); font-size: 13px; padding: 10px 0;">No related content found for your question.</div>`,
+            response: enhancedResponse,
+            model: "claude-3-haiku-20240307",
+            usage: null,
+            dataAvailable: [],
+            hasMoreDb: searchResult.hasMoreOptions,
+            hasMoreAi: false,
+            theme,
+            quotaRemaining: searchResult.quotaRemaining,
+            hasCommunityContent: searchResult.hasCommunityContent,
+            mcpEnabled: true,
+            communityBrief: communityBrief // Include in response for debugging
+        };
+
+    } catch (error) {
+        console.error('Error in manual query with MCP:', error);
+        
+        // Fallback to basic response
+        return {
+            response: `<div style="${generateThemeCSS(theme)}; color: var(--text-secondary); font-size: 13px; padding: 10px 0;">
+                I encountered an error processing your question. Please try again.
+                <br><small style="color: var(--text-tertiary);">Error: ${error.message}</small>
+            </div>`,
             model: "claude-3-haiku-20240307",
             usage: null,
             dataAvailable: [],
             hasMoreDb: false,
             hasMoreAi: false,
-            theme
+            theme,
+            mcpError: true
         };
+    }
+}
 
-    } catch (error) {
-        console.error('Error in manual query:', error);
+// Helper function to handle special queries (add this as a new function)
+async function handleSpecialQueries(message, theme) {
+    // Who are you questions
+    const whoAreYouPatterns = [
+        /who\s+are\s+you/i,
+        /what\s+are\s+you/i,
+        /tell\s+me\s+about\s+yourself/i,
+        /introduce\s+yourself/i,
+        /flockkk/i
+    ];
+
+    const isWhoAreYouQuestion = whoAreYouPatterns.some(pattern => pattern.test(message.trim()));
+
+    if (isWhoAreYouQuestion) {
+        const responses = [
+            `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
+                Hi there! I'm flockkk AI. I help you discover content by searching our community first, then offering web search when needed. I prioritize community knowledge while giving you control over when to use web search credits.
+            </div>`,
+            `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
+                Hey! I'm flockkk AI, your community-first search assistant. I always check what our community has discussed first, then give you the option to search the broader web if you need more information.
+            </div>`
+        ];
+
+        const randomIndex = Math.floor(Math.random() * responses.length);
         return {
-            response: "I encountered an error processing your question. Please try again.",
+            response: responses[randomIndex],
             model: "claude-3-haiku-20240307",
             usage: null,
             dataAvailable: [],
@@ -651,6 +798,40 @@ async function handleManualQuery(message, context, username, postId, theme) {
             theme
         };
     }
+
+    // Flokkk platform questions
+    const flokkkQuestionPatterns = [
+        /what\s+is\s+flokkk/i,
+        /tell\s+me\s+about\s+flokkk/i,
+        /flokkk\s+platform/i,
+        /how\s+does\s+flokkk\s+work/i
+    ];
+
+    const isFlokkkQuestion = flokkkQuestionPatterns.some(pattern => pattern.test(message.trim()));
+
+    if (isFlokkkQuestion) {
+        return {
+            response: `<div style="${generateThemeCSS(theme)}; padding: 15px 0; color: var(--text-tertiary); font-size: 14px; line-height: 1.6;">
+                <h4 style="color: var(--accent-color); margin: 0 0 12px 0; font-size: 16px;">About Flokkk</h4>
+                <p style="margin: 0 0 12px 0;">Flokkk is a community-centric discussion platform that combines human curation with AI intelligence. We prioritize community knowledge while providing web search when you need more information.</p>
+                
+                <h5 style="color: var(--text-primary); margin: 12px 0 8px 0; font-size: 14px;">How It Works:</h5>
+                <ul style="margin: 0; padding-left: 18px; color: var(--text-secondary); font-size: 13px;">
+                    <li><strong>Community First:</strong> Always search our community discussions and links first</li>
+                    <li><strong>Web Search Option:</strong> Get the choice to search the broader web when needed</li>
+                    <li><strong>Transparent Costs:</strong> Control your web search usage with clear quotas</li>
+                </ul>
+            </div>`,
+            model: "claude-3-haiku-20240307",
+            usage: null,
+            dataAvailable: [],
+            hasMoreDb: false,
+            hasMoreAi: false,
+            theme
+        };
+    }
+
+    return null; // No special query detected
 }
 
 // Handle summarize discussion suggestion (theme-aware), (ignore this)

@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Add theme context import
 import RotatingNewsContainer from '@/components/widgets/rotatingNewsContainer';
 import QuickActions from '@/components/widgets/quickActions';
 import AiChat from '@/components/aichat/AiChat';
@@ -12,6 +13,7 @@ export default function SubscriptionRightSidebar({
   onClose,
   onWidthChange
 }) {
+  const { theme } = useTheme(); // Add theme context
   const [isResizing, setIsResizing] = useState(false);
   const [rightSidebarWidth, setRightSidebarWidth] = useState(330);
 
@@ -71,7 +73,7 @@ export default function SubscriptionRightSidebar({
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
     document.body.style.pointerEvents = 'none';
-    
+
     if (containerRef.current) {
       containerRef.current.style.pointerEvents = 'auto';
     }
@@ -133,8 +135,41 @@ export default function SubscriptionRightSidebar({
   }, [onWidthChange]);
 
   // Enhanced function to handle AI chat submission with contextual keyword support
-  const handleAiChatSubmit = async (message) => {
+  const handleAiChatSubmit = async (message, response = null, isWebSearch = false) => {
+    console.log('🎯 SubscriptionRightSidebar onSubmit called:', {
+      message,
+      hasResponse: !!response,
+      isWebSearch,
+      responseLength: response?.length || 0
+    });
+
     if (!message.trim() || isLoading) return;
+
+    // CRITICAL FIX: If this is a web search response, just display it!
+    if (isWebSearch && response) {
+      console.log('🌐 Displaying web search response directly');
+
+      const userMessage = {
+        id: Date.now(),
+        type: 'user',
+        content: message,
+      };
+
+      const webSearchMessage = {
+        id: Date.now() + 1,
+        type: 'ai',
+        content: response, // Use the web search response directly
+        isWebSearch: true
+      };
+
+      setMessages(prev => [...prev, userMessage, webSearchMessage]);
+
+      // Don't make any additional API calls!
+      return;
+    }
+
+    // Only make community search API call if it's NOT a web search
+    console.log('🏠 Making community search for:', message);
 
     const userMessage = {
       id: Date.now(),
@@ -161,21 +196,22 @@ export default function SubscriptionRightSidebar({
         })
       };
 
-      const response = await fetch('/api/ai/claude', requestOptions);
+      const apiResponse = await fetch('/api/ai/claude', requestOptions);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 429) {
+      if (!apiResponse.ok) {
+        const errorData = await apiResponse.json();
+        if (apiResponse.status === 429) {
           throw new Error(`Rate limit exceeded: ${errorData.message}`);
         }
-        throw new Error(`Error: ${response.status}`);
+        throw new Error(`Error: ${apiResponse.status}`);
       }
 
-      const data = await response.json();
+      const data = await apiResponse.json();
       const aiResponse = {
         id: Date.now() + 1,
         type: 'ai',
-        content: data.response || "I'm sorry, I couldn't process your request."
+        content: data.response || "I'm sorry, I couldn't process your request.",
+        isWebSearch: false
       };
 
       setMessages(prev => [...prev, aiResponse]);
@@ -297,42 +333,60 @@ export default function SubscriptionRightSidebar({
     };
   }, [messages, isLoading, user]);
 
-  // Function to get time-based greeting
+  // Function to get time-based greeting (EXACT MATCH to RecentlyViewed)
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return "Good Morning";
-    else if (hour >= 12 && hour < 17) return "Good Afternoon";
-    else if (hour >= 17 && hour < 21) return "Good Evening";
-    else return "Good Night";
+
+    if (hour >= 5 && hour < 12) {
+      return "Good Morning";
+    } else if (hour >= 12 && hour < 17) {
+      return "Good Afternoon";
+    } else if (hour >= 17 && hour < 21) {
+      return "Good Evening";
+    } else if (hour >= 21 && hour < 24) {
+      return "Good Late Evening";
+    } else {
+      return "Good Early Morning";
+    }
   };
 
-  // Add welcome message when component mounts or user changes
+  // Format username for greeting with larger time-based greeting (EXACT MATCH to RecentlyViewed)
+  const getUserGreeting = () => {
+    const username = user?.username || 'there';
+    const timeGreeting = getTimeBasedGreeting();
+    return `Hi @${username}<br/><span style="font-size: 2em; font-weight: 500;">${timeGreeting}</span>`;
+  };
+
+  // Add welcome message when component mounts or user changes (EXACT MATCH to RecentlyViewed)
   useEffect(() => {
+    console.log('🔍 SubscriptionRightSidebar useEffect triggered - User object received:', user);
+
+    // Don't create welcome message for fallback/guest users - wait for real user data
     if (!user || user.name === 'Guest' || user.username === 'Guest') {
+      console.log('❌ Skipping welcome message - waiting for real user data or user is Guest');
       return;
     }
 
-    let username = 'there';
-    if (user) {
-      username = user.username || user.name || (user.email ? user.email.split('@')[0] : 'there');
-    }
+    console.log('✅ Creating welcome message with getUserGreeting() format for subscriptions page');
 
-    const cleanUsername = username.replace(/[@\s]/g, '');
-    const timeGreeting = getTimeBasedGreeting();
+    // Use the same greeting format as RecentlyViewed page
     const welcomeMessage = {
       id: 1,
       type: 'system',
-      content: `Hi ${cleanUsername}, ${timeGreeting}! How can I assist you today?`
+      content: getUserGreeting() // Returns: "Hi @username<br/><span>Good Evening</span>"
     };
 
+    console.log('📢 Subscriptions page welcome message:', welcomeMessage);
+
     setMessages([welcomeMessage]);
-  }, [user]);
+  }, [user]); // Only depend on user changes
 
   return (
     <div
       className={`${styles.rightSidebarContainer} ${isRightSidebarVisible ? styles.visible : styles.hidden} ${isResizing ? styles.resizing : ''}`}
       ref={containerRef}
       data-width={rightSidebarWidth}
+      data-theme={theme} // Add theme data attribute
     >
       {/* Resize handle */}
       <div

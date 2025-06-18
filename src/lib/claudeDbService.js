@@ -888,6 +888,108 @@ export const claudeDbService = {
       console.error('Error searching forums for Claude:', error);
       return [];
     }
+  },
+
+  /**
+   * Enhanced search for MCP integration - prioritizes relevance
+   * @param {string} query - Search query
+   * @param {number} limit - Max results
+   */
+  async mcpEnhancedSearch(query, limit = 10) {
+    try {
+      if (!query) return { posts: [], links: [], hasContent: false };
+      await this.init();
+      // Extract keywords for better matching
+      const keywords = this.extractSimpleKeywords(query);
+      
+      // Use existing comprehensive search but with enhanced scoring
+      const results = await this.comprehensiveSearch(query, limit);
+      
+      // Apply MCP-specific relevance scoring
+      const scoredPosts = results.posts.map(post => ({
+        ...post,
+        mcpRelevanceScore: this.calculateMCPRelevance(post, keywords)
+      })).filter(post => post.mcpRelevanceScore > 0.3);
+      const scoredLinks = results.links.map(link => ({
+        ...link,
+        mcpRelevanceScore: this.calculateMCPRelevance(link, keywords)
+      })).filter(link => link.mcpRelevanceScore > 0.3);
+      // Sort by MCP relevance score
+      scoredPosts.sort((a, b) => b.mcpRelevanceScore - a.mcpRelevanceScore);
+      scoredLinks.sort((a, b) => b.mcpRelevanceScore - a.mcpRelevanceScore);
+      return {
+        posts: scoredPosts.slice(0, limit),
+        links: scoredLinks.slice(0, limit),
+        hasContent: scoredPosts.length > 0 || scoredLinks.length > 0,
+        totalFound: scoredPosts.length + scoredLinks.length
+      };
+    } catch (error) {
+      console.error('Error in MCP enhanced search:', error);
+      return { posts: [], links: [], hasContent: false, totalFound: 0 };
+    }
+  },
+
+  /**
+   * Calculate MCP-specific relevance score
+   */
+  calculateMCPRelevance(item, keywords) {
+    let score = 0;
+    const title = (item.title || '').toLowerCase();
+    const content = (item.content || item.description || '').toLowerCase();
+    
+    keywords.forEach(keyword => {
+      const keywordLower = keyword.toLowerCase();
+      // Higher weight for title matches
+      if (title.includes(keywordLower)) score += 2;
+      // Lower weight for content matches
+      if (content.includes(keywordLower)) score += 1;
+    });
+    
+    // Normalize score
+    return Math.min(score / keywords.length, 1);
+  },
+
+  /**
+   * Simple keyword extraction for MCP
+   */
+  extractSimpleKeywords(text) {
+    if (!text) return [];
+    
+    const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by']);
+    
+    return text.toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .split(/\s+/)
+      .filter(word => word.length > 2 && !stopWords.has(word))
+      .slice(0, 10);
+  },
+
+  /**
+   * Get content quality assessment for MCP
+   */
+  async assessContentQuality(query, results) {
+    try {
+      const { posts, links } = results;
+      
+      // Simple quality assessment
+      const qualityScore = {
+        hasRelevantPosts: posts.length > 0,
+        hasRelevantLinks: links.length > 0,
+        totalItems: posts.length + links.length,
+        confidence: posts.length > 0 ? 'high' : links.length > 0 ? 'medium' : 'low',
+        needsWebSearch: posts.length === 0 && links.length === 0
+      };
+      return qualityScore;
+    } catch (error) {
+      console.error('Error assessing content quality:', error);
+      return {
+        hasRelevantPosts: false,
+        hasRelevantLinks: false,
+        totalItems: 0,
+        confidence: 'low',
+        needsWebSearch: true
+      };
+    }
   }
 };
 

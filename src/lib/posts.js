@@ -3,14 +3,33 @@
  * This extends the existing posts.js file with edit functionality
  */
 
+// Helper function to check if user is verified
+const isUserVerified = () => {
+  const isVerified = localStorage.getItem('isVerified');
+  return isVerified === 'true';
+};
+
 // Create a post with the given data
 export async function createPost(postData, token) {
-  // ... existing createPost function
+  try {
+    if (!token) throw new Error('Authentication required');
+    
+    // Check if user is verified
+    if (!isUserVerified()) {
+      throw new Error('Email verification required to create posts');
+    }
+    
+    // ... existing createPost function implementation
+  } catch (error) {
+    console.error('Error creating post:', error);
+    throw error;
+  }
 }
 
 // Fetch posts with various filtering options
 export async function fetchPosts(options = {}) {
-  // ... existing fetchPosts function
+  // ... existing fetchPosts function - no verification needed for fetching
+  // This allows unverified and guest users to view posts
 }
 
 // Get a single post by ID
@@ -39,6 +58,11 @@ export async function updatePost(postId, postData, token = localStorage.getItem(
   try {
     if (!token) throw new Error('Authentication required');
     if (!postId) throw new Error('Post ID is required');
+    
+    // Check if user is verified
+    if (!isUserVerified()) {
+      throw new Error('Email verification required to update posts');
+    }
     
     console.log('Updating post with data:', postData);
     
@@ -107,6 +131,11 @@ export async function deletePost(postId, token = localStorage.getItem('token')) 
   try {
     if (!token) throw new Error('Authentication required');
     if (!postId) throw new Error('Post ID is required');
+    
+    // Check if user is verified
+    if (!isUserVerified()) {
+      throw new Error('Email verification required to delete posts');
+    }
 
     const response = await fetch(`/api/posts/${postId}`, {
       method: 'DELETE',
@@ -123,6 +152,53 @@ export async function deletePost(postId, token = localStorage.getItem('token')) 
     return await response.json();
   } catch (error) {
     console.error('Error deleting post:', error);
+    throw error;
+  }
+}
+
+/**
+ * Vote on a post
+ * @param {string} postId - The ID of the post to vote on
+ * @param {number} voteValue - The vote value (1, -1, or 0)
+ * @param {string} token - Authentication token (optional)
+ * @returns {Promise<Object>} - Updated vote information
+ */
+export async function voteOnPost(postId, voteValue, voteType = 'creator', token = localStorage.getItem('token')) {
+  try {
+    if (!token) throw new Error('Authentication required');
+    
+    // Check if user is verified
+    if (!isUserVerified()) {
+      throw new Error('Email verification required to vote on posts');
+    }
+    
+    // Validate vote value
+    if (![1, -1, 0].includes(voteValue)) {
+      throw new Error('Invalid vote value. Must be 1 (upvote), -1 (downvote), or 0 (remove vote)');
+    }
+    
+    // Determine endpoint based on vote type
+    const endpoint = voteType === 'community' 
+      ? `/api/posts/${postId}/vote-community`
+      : `/api/posts/${postId}/vote-creator`;
+    
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ vote: voteValue })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Failed to ${voteValue > 0 ? 'upvote' : 'downvote'} post`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error voting on post:', error);
     throw error;
   }
 }

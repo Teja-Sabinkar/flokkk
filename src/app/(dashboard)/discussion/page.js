@@ -23,6 +23,8 @@ export default function DiscussionPage() {
   const [hasFetched, setHasFetched] = useState(false);
   // Add state for right sidebar width
   const [rightBarWidth, setRightBarWidth] = useState(330);
+  // Add auth status state for access control
+  const [authStatus, setAuthStatus] = useState('guest'); // 'guest', 'unverified', or 'verified'
 
   // Add state for right sidebar visibility toggle
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(false);
@@ -46,12 +48,48 @@ export default function DiscussionPage() {
     };
   }, []);
 
-
   // Get post ID from URL
   const searchParams = useSearchParams();
   const postId = searchParams.get('id');
   console.log('URL parameters:', Object.fromEntries(searchParams.entries()));
   console.log('Post ID from URL:', postId);
+
+  // Determine authentication status
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        // No token = guest
+        setAuthStatus('guest');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          // Invalid token = guest
+          localStorage.removeItem('token');
+          setAuthStatus('guest');
+          return;
+        }
+        
+        const userData = await response.json();
+        setCurrentUser(userData);
+        setAuthStatus(userData.isVerified ? 'verified' : 'unverified');
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        setAuthStatus('guest');
+      }
+    };
+    
+    checkAuthStatus();
+  }, []);
 
   // IMPORTANT: Add tracking functionality - this is new
   useEffect(() => {
@@ -96,13 +134,22 @@ export default function DiscussionPage() {
         setHasFetched(true); // Mark as fetched to prevent duplicate requests
         console.log('Attempting to fetch post with ID:', postId);
 
-        // Check if token exists
+        // Check if token exists - but for view-only access, we'll try without a token if needed
         const token = localStorage.getItem('token');
         console.log('Token available:', !!token);
 
+        // First attempt - try with auth token if available
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
-        const response = await fetch(`/api/posts/${postId}`, { headers });
+        
+        let response = await fetch(`/api/posts/${postId}`, { headers });
+        
+        // If we get a 401 and we're in guest mode, try again without authentication
+        // This assumes your API has been updated to allow public read access
+        if (!response.ok && response.status === 401 && (!token || authStatus === 'guest')) {
+          console.log('Retrying fetch without authentication for public access');
+          response = await fetch(`/api/posts/${postId}`);
+        }
+        
         console.log('Response status:', response.status);
 
         if (!response.ok) {
@@ -139,37 +186,12 @@ export default function DiscussionPage() {
     };
 
     fetchPostData();
-  }, [postId, hasFetched]);
+  }, [postId, hasFetched, authStatus]);
 
   // Reset hasFetched when postId changes
   useEffect(() => {
     setHasFetched(false);
   }, [postId]);
-
-  // Fetch current user data when component mounts
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const response = await fetch('/api/auth/me', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) return;
-
-        const userData = await response.json();
-        setCurrentUser(userData);
-      } catch (error) {
-        console.error('Error fetching current user:', error);
-      }
-    };
-
-    fetchCurrentUser();
-  }, []);
 
   // Toggle left sidebar
   const handleLeftSidebarToggle = () => {
@@ -249,6 +271,34 @@ export default function DiscussionPage() {
         isMobileMenuOpen={isMobileMenuOpen}
       />
 
+      {/* Authentication banner for guest users */}
+      {authStatus === 'guest' && (
+        <div className={styles.authBanner}>
+          <div className={styles.authBannerContent}>
+            <p>You're viewing this discussion as a guest. 
+              <a href="/login" className={styles.authLink}> Sign in</a> or 
+              <a href="/signup" className={styles.authLink}> create an account</a> to comment and vote.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Verification banner for unverified users */}
+      {authStatus === 'unverified' && (
+        <div className={styles.verificationBanner}>
+          <div className={styles.verificationBannerContent}>
+            <p>Please verify your email to comment and vote on discussions. 
+              <button 
+                className={styles.verifyButton}
+                onClick={() => router.push('/settings/account')}
+              >
+                Verify Now
+              </button>
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Main content area with sidebar and discussion */}
       <div className={styles.mainContent}>
         {/* Sidebar navigation */}
@@ -277,6 +327,7 @@ export default function DiscussionPage() {
                 loading={loading}
                 error={error}
                 currentUser={currentUser}
+                authStatus={authStatus} // Pass auth status to control interactions
               />
             </div>
           </div>
@@ -289,6 +340,7 @@ export default function DiscussionPage() {
                 loading={loading}
                 error={error}
                 currentUser={currentUser}
+                authStatus={authStatus} // Pass auth status to control interactions
               />
             </div>
           </div>
@@ -313,9 +365,14 @@ export default function DiscussionPage() {
           >
             <div className={styles.rightBarContent}>
               {post ? (
-                <DiscussionPageRightBar postData={post} />
+                <DiscussionPageRightBar 
+                  postData={post} 
+                  authStatus={authStatus} // Pass auth status to control interactions
+                />
               ) : (
-                <DiscussionPageRightBar />
+                <DiscussionPageRightBar 
+                  authStatus={authStatus} // Pass auth status to control interactions
+                />
               )}
             </div>
           </div>

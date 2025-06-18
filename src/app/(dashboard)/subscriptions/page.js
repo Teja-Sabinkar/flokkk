@@ -79,7 +79,7 @@ const SubscriptionRightSidebar = ({
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
     document.body.style.pointerEvents = 'none';
-    
+
     if (containerRef.current) {
       containerRef.current.style.pointerEvents = 'auto';
     }
@@ -206,34 +206,53 @@ const SubscriptionRightSidebar = ({
   // Function to get time-based greeting
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return "Good Morning";
-    else if (hour >= 12 && hour < 17) return "Good Afternoon";
-    else if (hour >= 17 && hour < 21) return "Good Evening";
-    else return "Good Night";
+
+    if (hour >= 5 && hour < 12) {
+      return "Good Morning";
+    } else if (hour >= 12 && hour < 17) {
+      return "Good Afternoon";
+    } else if (hour >= 17 && hour < 21) {
+      return "Good Evening";
+    } else if (hour >= 21 && hour < 24) {
+      return "Good Late Evening";
+    } else {
+      return "Good Early Morning";
+    }
   };
 
-  // Add welcome message when component mounts or user changes
+  // Format username for greeting with larger time-based greeting (EXACT MATCH to RecentlyViewed)
+  const getUserGreeting = () => {
+    const username = user?.username || 'there';
+    const timeGreeting = getTimeBasedGreeting();
+    return `Hi @${username}<br/><span style="font-size: 2em; font-weight: 500;">${timeGreeting}</span>`;
+  };
+
+  // Add welcome message when component mounts or user changes (FIXED to match RecentlyViewed)
   useEffect(() => {
+    console.log('Subscriptions inline component useEffect triggered - User object received:', user);
+
+    // Don't create welcome message for fallback/guest users - wait for real user data
     if (!user || user.name === 'Guest' || user.username === 'Guest') {
+      console.log('Skipping welcome message - waiting for real user data or user is Guest');
       return;
     }
 
-    let username = 'there';
-    if (user) {
-      username = user.username || user.name || (user.email ? user.email.split('@')[0] : 'there');
-    }
+    console.log('Creating welcome message with correct format for subscriptions page');
 
-    const cleanUsername = username.replace(/[@\s]/g, '');
-    const timeGreeting = getTimeBasedGreeting();
+    // Use the same greeting format as RecentlyViewed page
     const welcomeMessage = {
       id: 1,
       type: 'system',
-      content: `Hi ${cleanUsername}, ${timeGreeting}! How can I assist you today?`
+      content: getUserGreeting()
     };
+
+    console.log('Subscriptions page welcome message:', welcomeMessage);
 
     setMessages([welcomeMessage]);
   }, [user]);
 
+
+ 
   return (
     <div
       className={`${styles.rightSidebarContainer} ${isRightSidebarVisible ? styles.visible : styles.hidden} ${isResizing ? styles.resizing : ''}`}
@@ -302,85 +321,85 @@ const SubscriptionRightSidebar = ({
 
 // SubscriptionRightSidebarToggle Component (duplicated from RecentlyViewedRightSidebarToggle)
 const SubscriptionRightSidebarToggle = ({
-    isRightSidebarVisible,
-    handleRightSidebarToggle,
-    sidebarWidth = 330
+  isRightSidebarVisible,
+  handleRightSidebarToggle,
+  sidebarWidth = 330
 }) => {
-    const [screenSize, setScreenSize] = useState('desktop');
-    const [isReady, setIsReady] = useState(false);
+  const [screenSize, setScreenSize] = useState('desktop');
+  const [isReady, setIsReady] = useState(false);
 
-    // Check for screen size breakpoints
-    useEffect(() => {
-        const checkScreenSize = () => {
-            const width = window.innerWidth;
-            if (width < 480) {
-                setScreenSize('small-mobile');
-            } else if (width < 1300) {
-                setScreenSize('mobile');
-            } else {
-                setScreenSize('desktop');
-            }
-        };
-
-        checkScreenSize();
-        window.addEventListener('resize', checkScreenSize);
-        return () => window.removeEventListener('resize', checkScreenSize);
-    }, []);
-
-    // Set initial safe position and mark as ready
-    useEffect(() => {
-        document.documentElement.style.setProperty('--toggle-right-position', isRightSidebarVisible ? '320px' : '0px');
-        
-        const timer = setTimeout(() => {
-            setIsReady(true);
-        }, 50);
-
-        return () => clearTimeout(timer);
-    }, [isRightSidebarVisible]);
-
-    // Update positioning once ready and when dependencies change
-    useEffect(() => {
-        if (!isReady) return;
-
-        let rightPosition;
-
-        if (isRightSidebarVisible) {
-            if (screenSize === 'small-mobile' || screenSize === 'mobile') {
-                rightPosition = '320px';
-            } else {
-                rightPosition = `${sidebarWidth + 5}px`;
-            }
-        } else {
-            rightPosition = '0px';
-        }
-
-        document.documentElement.style.setProperty('--toggle-right-position', rightPosition);
-    }, [isRightSidebarVisible, sidebarWidth, screenSize, isReady]);
-
-    // Determine CSS classes based on state
-    const getToggleClasses = () => {
-        let classes = [styles.rightSidebarToggle];
-        
-        if (isRightSidebarVisible) {
-            classes.push(styles.active);
-        }
-        
-        if (!isReady) {
-            classes.push(styles.hidden);
-        }
-        
-        return classes.join(' ');
+  // Check for screen size breakpoints
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      if (width < 480) {
+        setScreenSize('small-mobile');
+      } else if (width < 1300) {
+        setScreenSize('mobile');
+      } else {
+        setScreenSize('desktop');
+      }
     };
 
-    return (
-        <button
-            className={getToggleClasses()}
-            onClick={handleRightSidebarToggle}
-            aria-label="Toggle subscriptions sidebar"
-        >
-            <span className={styles.aiText}>flokkk</span>
-        </button>
-    );
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  // Set initial safe position and mark as ready
+  useEffect(() => {
+    document.documentElement.style.setProperty('--toggle-right-position', isRightSidebarVisible ? '320px' : '0px');
+
+    const timer = setTimeout(() => {
+      setIsReady(true);
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [isRightSidebarVisible]);
+
+  // Update positioning once ready and when dependencies change
+  useEffect(() => {
+    if (!isReady) return;
+
+    let rightPosition;
+
+    if (isRightSidebarVisible) {
+      if (screenSize === 'small-mobile' || screenSize === 'mobile') {
+        rightPosition = '320px';
+      } else {
+        rightPosition = `${sidebarWidth + 5}px`;
+      }
+    } else {
+      rightPosition = '0px';
+    }
+
+    document.documentElement.style.setProperty('--toggle-right-position', rightPosition);
+  }, [isRightSidebarVisible, sidebarWidth, screenSize, isReady]);
+
+  // Determine CSS classes based on state
+  const getToggleClasses = () => {
+    let classes = [styles.rightSidebarToggle];
+
+    if (isRightSidebarVisible) {
+      classes.push(styles.active);
+    }
+
+    if (!isReady) {
+      classes.push(styles.hidden);
+    }
+
+    return classes.join(' ');
+  };
+
+  return (
+    <button
+      className={getToggleClasses()}
+      onClick={handleRightSidebarToggle}
+      aria-label="Toggle subscriptions sidebar"
+    >
+      <span className={styles.aiText}>flokkk</span>
+    </button>
+  );
 };
 
 // Main Subscriptions Page Component
@@ -588,11 +607,11 @@ export default function SubscriptionsPage() {
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
       filtered = filtered.filter(post => {
-        const contentMatch = 
+        const contentMatch =
           (post.title && post.title.toLowerCase().includes(lowerQuery)) ||
           (post.content && post.content.toLowerCase().includes(lowerQuery));
 
-        const usernameMatch = 
+        const usernameMatch =
           (post.username && post.username.toLowerCase().includes(lowerQuery));
 
         return contentMatch || usernameMatch;

@@ -14,14 +14,14 @@ const MAX_NESTING_LEVEL = 6;
 // Safely handle HTML in comments
 const sanitizeHtml = (html) => {
   if (!html) return '';
-  
+
   // If it's not actually HTML content (no tags), just clean up entities
   if (!/<\/?[a-z][\s\S]*>/i.test(html)) {
     return html
       .replace(/&nbsp;/g, ' ')  // Replace &nbsp; text with spaces
       .replace(/\u00A0/g, ' '); // Replace actual non-breaking spaces
   }
-  
+
   // Otherwise, it's real HTML that needs to be rendered with dangerouslySetInnerHTML
   return html;
 };
@@ -69,7 +69,7 @@ export default function DiscussionPageCenterBottom({
   const sortMenuRef = useRef(null);
   const commentThreadRef = useRef(null);
   const commentRefs = useRef({});
-  
+
 
   // New state for report modal
   const [showReportModal, setShowReportModal] = useState(false);
@@ -79,6 +79,9 @@ export default function DiscussionPageCenterBottom({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Add state for verification modal
+  const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
 
   // Debug comments received
   useEffect(() => {
@@ -107,9 +110,9 @@ export default function DiscussionPageCenterBottom({
         // Check if the click was inside a continuation dropdown
         const dropdownElement = document.querySelector(`.${styles.continuationDropdown}`);
         const triggerElement = document.querySelector(`.${styles.continuationTrigger}[data-comment-id="${activeContinuationDropdown}"]`);
-        
-        if ((dropdownElement && !dropdownElement.contains(e.target)) && 
-            (triggerElement && !triggerElement.contains(e.target))) {
+
+        if ((dropdownElement && !dropdownElement.contains(e.target)) &&
+          (triggerElement && !triggerElement.contains(e.target))) {
           setActiveContinuationDropdown(null);
         }
       }
@@ -171,6 +174,21 @@ export default function DiscussionPageCenterBottom({
       return () => clearTimeout(timer);
     }
   }, [voteAnimation]);
+
+  // Check if user is verified
+  const isUserVerified = () => {
+    return currentUser && currentUser.isEmailVerified === true;
+  };
+
+  // Handle verification prompt
+  const handleVerificationPrompt = () => {
+    setShowVerificationPrompt(true);
+
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      setShowVerificationPrompt(false);
+    }, 3000);
+  };
 
   // Function to handle opening the report modal for a comment
   const handleOpenReportModal = (comment) => {
@@ -381,6 +399,12 @@ export default function DiscussionPageCenterBottom({
         return;
       }
 
+      // Check if user is verified before allowing vote
+      if (!isUserVerified()) {
+        handleVerificationPrompt();
+        return;
+      }
+
       // Find the comment to get current vote state
       const commentToUpdate = findComment(commentId, comments);
       if (!commentToUpdate) {
@@ -517,6 +541,12 @@ export default function DiscussionPageCenterBottom({
 
   // Show/hide reply box for a comment
   const showReplyBox = (commentId) => {
+    // Check if user is verified before allowing to reply
+    if (!isUserVerified()) {
+      handleVerificationPrompt();
+      return;
+    }
+
     // Find the comment we're targeting
     const commentToUpdate = findComment(commentId, comments);
     if (!commentToUpdate) return;
@@ -569,6 +599,12 @@ export default function DiscussionPageCenterBottom({
   const submitReply = async (content, parentCommentId, nestingLevel = 0) => {
     if (!content.trim()) {
       console.error('Cannot submit reply - empty content');
+      return;
+    }
+
+    // Check if user is verified before allowing to post a reply
+    if (!isUserVerified()) {
+      handleVerificationPrompt();
       return;
     }
 
@@ -709,55 +745,56 @@ export default function DiscussionPageCenterBottom({
       return (
         <div key={comment.id} className={styles.comment} id={`comment-${comment.id}`}>
           {hasContinuationThreads ? (
-  <div className={styles.continuationThreadContainer}>
-    <a
-      className={`${styles.continueThread} ${styles.continuationTrigger}`}
-      data-comment-id={comment.id}
-      onClick={(e) => {
-        e.preventDefault();
-        // Toggle dropdown for continuation threads
-        setActiveContinuationDropdown(
-          activeContinuationDropdown === comment.id ? null : comment.id
-        );
-      }}
-    >
-      View continuation threads ({continuationThreads.length}) {activeContinuationDropdown === comment.id ? '▲' : '▼'}
-    </a>
-    
-    {/* Continuation Threads Dropdown */}
-    {activeContinuationDropdown === comment.id && (
-      <div className={styles.continuationDropdown}>
-        <ul className={styles.continuationThreadList}>
-          {continuationThreads.map((thread, index) => (
-            <li key={thread.id} className={styles.continuationThreadItem}>
-              <div className={styles.continuationThreadLink}>
-                <span className={styles.continuationThreadNumber}>{index + 1}.</span>
-                <span 
-                  className={`${styles.continuationThreadUsername} ${styles.clickableUsername}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateToComment(thread.id);
-                    setActiveContinuationDropdown(null); // Close dropdown after click
-                  }}
-                >
-                  {thread.user.username}
-                </span>
-                <span className={styles.continuationThreadTimestamp}>
-                  {formatTimestamp(thread.timestamp)}
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-    )}
-  </div>
-) : (
-  <a className={styles.continueThread} onClick={() => showReplyBox(comment.id)}>
-    Continue this thread →
-  </a>
-)}
-        </div>
+            <div className={styles.continuationThreadContainer}>
+              <a
+                className={`${styles.continueThread} ${styles.continuationTrigger}`}
+                data-comment-id={comment.id}
+                onClick={(e) => {
+                  e.preventDefault();
+                  // Toggle dropdown for continuation threads
+                  setActiveContinuationDropdown(
+                    activeContinuationDropdown === comment.id ? null : comment.id
+                  );
+                }}
+              >
+                View continuation threads ({continuationThreads.length}) {activeContinuationDropdown === comment.id ? '▲' : '▼'}
+              </a>
+
+              {/* Continuation Threads Dropdown */}
+              {activeContinuationDropdown === comment.id && (
+                <div className={styles.continuationDropdown}>
+                  <ul className={styles.continuationThreadList}>
+                    {continuationThreads.map((thread, index) => (
+                      <li key={thread.id} className={styles.continuationThreadItem}>
+                        <div className={styles.continuationThreadLink}>
+                          <span className={styles.continuationThreadNumber}>{index + 1}.</span>
+                          <span
+                            className={`${styles.continuationThreadUsername} ${styles.clickableUsername}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              navigateToComment(thread.id);
+                              setActiveContinuationDropdown(null); // Close dropdown after click
+                            }}
+                          >
+                            {thread.user.username}
+                          </span>
+                          <span className={styles.continuationThreadTimestamp}>
+                            {formatTimestamp(thread.timestamp)}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : (
+            <a className={styles.continueThread} onClick={() => showReplyBox(comment.id)}>
+              Continue this thread →
+            </a>
+          )
+          }
+        </div >
       );
     }
 
@@ -899,14 +936,14 @@ export default function DiscussionPageCenterBottom({
                   >
                     has {continuationThreads.length} continuation thread(s)
                   </a>
-                  
+
                   {/* Continuation Threads Dropdown when clicked on indicator */}
                   {activeContinuationDropdown === comment.id && (
                     <div className={styles.continuationDropdown}>
                       <ul className={styles.continuationThreadList}>
                         {continuationThreads.map((thread, index) => (
                           <div key={thread.id} className={styles.continuationThreadItem}>
-                            <a 
+                            <a
                               onClick={(e) => {
                                 e.preventDefault();
                                 navigateToComment(thread.id);
@@ -1049,6 +1086,18 @@ export default function DiscussionPageCenterBottom({
 
   return (
     <div className={styles.discussionContainer}>
+      {/* Verification Prompt */}
+      {showVerificationPrompt && (
+        <div className={styles.verificationPrompt}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.verificationPromptIcon}>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span>Please verify your email to comment and vote</span>
+        </div>
+      )}
+
       {/* Filtered view indicator */}
       {isFilteredView && (
         <div className={styles.filteredViewBanner}>

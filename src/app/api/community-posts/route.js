@@ -160,6 +160,15 @@ export async function POST(request) {
     }
     
     console.log('Found user:', user.username);
+    
+    // Check if user's email is verified
+    if (!user.isEmailVerified) {
+      console.error('User email not verified:', user.email);
+      return NextResponse.json({ 
+        message: 'Email verification required to create community posts', 
+        verificationRequired: true 
+      }, { status: 403 });
+    }
 
     let postData = {};
     let authorUsername = null;

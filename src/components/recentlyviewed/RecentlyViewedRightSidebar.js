@@ -151,8 +151,41 @@ export default function RecentlyViewedRightSidebar({
   }, [onWidthChange]);
 
   // Enhanced function to handle AI chat submission with show more functionality
-  const handleAiChatSubmit = async (message) => {
+  const handleAiChatSubmit = async (message, response = null, isWebSearch = false) => {
+    console.log('🎯 RecentlyViewedRightSidebar onSubmit called:', {
+      message,
+      hasResponse: !!response,
+      isWebSearch,
+      responseLength: response?.length || 0
+    });
+
     if (!message.trim() || isLoading) return;
+
+    // CRITICAL FIX: If this is a web search response, just display it!
+    if (isWebSearch && response) {
+      console.log('🌐 Displaying web search response directly');
+
+      const userMessage = {
+        id: Date.now(),
+        type: 'user',
+        content: message,
+      };
+
+      const webSearchMessage = {
+        id: Date.now() + 1,
+        type: 'ai',
+        content: response, // Use the web search response directly
+        isWebSearch: true
+      };
+
+      setMessages(prev => [...prev, userMessage, webSearchMessage]);
+
+      // Don't make any additional API calls!
+      return;
+    }
+
+    // Only make community search API call if it's NOT a web search
+    console.log('🏠 Making community search for:', message);
 
     // Add user message
     const userMessage = {
@@ -182,27 +215,28 @@ export default function RecentlyViewedRightSidebar({
       };
 
       // Make API request to your backend Claude endpoint
-      const response = await fetch('/api/ai/claude', requestOptions);
+      const apiResponse = await fetch('/api/ai/claude', requestOptions);
 
       // Handle response and add the message
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (!apiResponse.ok) {
+        const errorData = await apiResponse.json();
 
         // Check if it's a rate limit error
-        if (response.status === 429) {
+        if (apiResponse.status === 429) {
           throw new Error(`Rate limit exceeded: ${errorData.message}`);
         }
 
-        throw new Error(`Error: ${response.status}`);
+        throw new Error(`Error: ${apiResponse.status}`);
       }
 
-      const data = await response.json();
+      const data = await apiResponse.json();
 
       // Add AI response message
       const aiResponse = {
         id: Date.now() + 1,
         type: 'ai',
-        content: data.response || "I'm sorry, I couldn't process your request."
+        content: data.response || "I'm sorry, I couldn't process your request.",
+        isWebSearch: false
       };
 
       setMessages(prev => [...prev, aiResponse]);
@@ -337,9 +371,18 @@ export default function RecentlyViewedRightSidebar({
       return "Good Afternoon";
     } else if (hour >= 17 && hour < 21) {
       return "Good Evening";
+    } else if (hour >= 21 && hour < 24) {
+      return "Good Late Evening";
     } else {
-      return "Good Night";
+      return "Good Early Morning";
     }
+  };
+
+  // Format username for greeting with larger time-based greeting
+  const getUserGreeting = () => {
+    const username = user?.username || 'there';
+    const timeGreeting = getTimeBasedGreeting();
+    return `Hi @${username}<br/><span style="font-size: 2em; font-weight: 500;">${timeGreeting}</span>`;
   };
 
   // Add or update welcome message when component mounts or user changes
@@ -367,11 +410,11 @@ export default function RecentlyViewedRightSidebar({
 
     console.log('Creating/updating welcome message for:', cleanUsername);
 
-    const timeGreeting = getTimeBasedGreeting();
+    // Use the enhanced greeting format with larger time text
     const welcomeMessage = {
       id: 1,
       type: 'system',
-      content: `Hi ${cleanUsername}, ${timeGreeting}! How can I assist you today?`
+      content: getUserGreeting()
     };
 
     // Always set the welcome message when we have real user data

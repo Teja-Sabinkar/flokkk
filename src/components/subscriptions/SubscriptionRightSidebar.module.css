@@ -1,3 +1,4 @@
+/* src/components/subscriptions/SubscriptionRightSidebar.module.css */
 .rightSidebarContainer {
   width: var(--sidebar-width, 330px);
   flex-shrink: 0;
@@ -8,7 +9,6 @@
   transition: width 0.3s ease, transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease;
   z-index: 50;
   transform-origin: right center;
-  border-left: 1px solid var(--border-color);
 }
 
 /* Resizing state - disable transitions during resize for smooth experience */
@@ -107,9 +107,8 @@
   gap: 12px;
 }
 
-/* AI Chat component styling */
+/* AI Chat component styling - MATCHES RecentlyViewedRightSidebar exactly */
 .aiChatWrapper {
-  background-color: var(--bg-tertiary);
   flex-shrink: 0;
   transition: background-color 0.3s ease;
 }
@@ -136,6 +135,18 @@
   transition: color 0.3s ease;
 }
 
+/* Animation for message fade in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 1300px) {
   .rightSidebarContainer {
@@ -146,6 +157,7 @@
     width: 320px;
     height: auto;
     box-shadow: -4px 0 16px rgba(0, 0, 0, 0.2);
+    /* Override transitions for mobile */
     transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease;
   }
 
@@ -179,19 +191,19 @@
     padding-bottom: 16px;
   }
 
+  .statsContent {
+    gap: 8px;
+  }
+
+  .statItem {
+    padding: 10px 6px;
+  }
+
+  .statValue {
+    font-size: 16px;
+  }
+
   .aiChatWrapper {
     padding: 0 0 32px 0;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }

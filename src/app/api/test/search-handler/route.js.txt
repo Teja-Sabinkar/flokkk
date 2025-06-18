@@ -1,0 +1,49 @@
+// Create: src/app/api/test/search-handler/route.js
+
+import { NextResponse } from 'next/server';
+import { SearchHandler } from '@/lib/mcp/handlers/search-handler';
+
+export async function POST(request) {
+    try {
+        const { query, webSearchRequested = false } = await request.json();
+        
+        console.log('🧪 SearchHandler test API called:', {
+            query,
+            webSearchRequested
+        });
+
+        const result = await SearchHandler.handleUserQuery(
+            query,
+            'test-user-123',
+            'dark',
+            webSearchRequested
+        );
+
+        console.log('🧪 SearchHandler test result:', {
+            hasResponse: !!result.response,
+            responseLength: result.response?.length || 0,
+            webSearchUsed: result.webSearchUsed,
+            webSearchFailed: result.webSearchFailed,
+            quotaRemaining: result.quotaRemaining
+        });
+
+        return NextResponse.json({
+            success: true,
+            result: result,
+            debug: {
+                queryTested: query,
+                webSearchRequested,
+                responseContainsWebHeader: result.response?.includes('🌐 From the broader web:') || false,
+                responseContainsCommunityHeader: result.response?.includes('🏠 From flokkk Community:') || false
+            }
+        });
+
+    } catch (error) {
+        console.error('🧪 SearchHandler test error:', error);
+        return NextResponse.json({
+            success: false,
+            error: error.message,
+            stack: error.stack
+        }, { status: 500 });
+    }
+}

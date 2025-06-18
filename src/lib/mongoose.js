@@ -27,13 +27,32 @@ async function dbConnect() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      return mongoose;
-    });
+    console.log('Connecting to MongoDB with Mongoose...');
+
+    cached.promise = mongoose.connect(MONGODB_URI, opts)
+      .then((mongoose) => {
+        console.log('Successfully connected to MongoDB with Mongoose');
+        console.log('Connected to database:', mongoose.connection.db.databaseName);
+        return mongoose;
+      })
+      .catch(err => {
+        console.error('Mongoose connection error:', err);
+        cached.promise = null;
+        throw err;
+      });
   }
-  cached.conn = await cached.promise;
+  
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
+  
   return cached.conn;
 }
 

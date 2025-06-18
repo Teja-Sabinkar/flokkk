@@ -382,7 +382,6 @@
 
 /* AI Chat component styling */
 .aiChatWrapper {
-  background-color: var(--bg-tertiary);
   flex-shrink: 0;
   transition: background-color 0.3s ease;
 }

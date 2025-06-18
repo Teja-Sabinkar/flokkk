@@ -1,21 +1,25 @@
-// src/lib/rateLimiting.js
 import { connectToDatabase } from './mongodb';
+import WebSearchQuota from '@/models/WebSearchQuota';
 
 /**
- * Rate limiting service for Claude AI requests
- * Implements per-user quotas to control API costs
+ * Enhanced rate limiting service for Claude AI requests + Web Search quotas
  */
 export class RateLimiter {
     constructor() {
-        this.windowMs = 60 * 60 * 1000; // 1 hour window
-        this.maxRequests = 30; // 30 requests per hour per user (updated from 10)
+        this.windowMs = 60 * 60 * 1000; // 1 hour window for AI requests
+        this.maxRequests = 30; // 30 AI requests per hour per user
         this.collectionName = 'ratelimits';
+        
+        // Web search limits by tier
+        this.webSearchLimits = {
+            free: 30,
+            basic: 100,
+            pro: 300
+        };
     }
 
     /**
-     * Check if user can make a request
-     * @param {string} userId - User ID or IP address
-     * @param {string} type - Request type ('suggestion' or 'manual')
+     * Check if user can make an AI request (existing functionality)
      */
     async checkRateLimit(userId, type = 'manual') {
         try {
@@ -23,16 +27,14 @@ export class RateLimiter {
             const now = new Date();
             const windowStart = new Date(now.getTime() - this.windowMs);
 
-            // Different limits for different request types - UPDATED LIMITS
             const limits = {
-                suggestion: 60, // Higher limit for suggestions (updated from 20)
-                manual: 30      // Lower limit for manual queries (updated from 10)
+                suggestion: 60,
+                manual: 30
             };
 
             const maxRequests = limits[type] || this.maxRequests;
             const key = `${userId}_${type}`;
 
-            // Get current usage
             const currentUsage = await db.collection(this.collectionName).findOne({
                 key: key,
                 timestamp: { $gte: windowStart }
@@ -44,11 +46,10 @@ export class RateLimiter {
                     allowed: false,
                     remainingRequests: 0,
                     resetTime: resetTime,
-                    message: `Rate limit exceeded. You can make ${maxRequests} ${type} requests per hour. Try again at ${resetTime.toLocaleTimeString()}`
+                    message: `Rate limit exceeded. You can make ${maxRequests} ${type} requests per hour.`
                 };
             }
 
-            // Update usage count
             await db.collection(this.collectionName).findOneAndUpdate(
                 { key: key, timestamp: { $gte: windowStart } },
                 {
@@ -69,7 +70,6 @@ export class RateLimiter {
 
         } catch (error) {
             console.error('Rate limiting error:', error);
-            // Fail open - allow request if rate limiting fails
             return {
                 allowed: true,
                 remainingRequests: this.maxRequests,
@@ -80,27 +80,98 @@ export class RateLimiter {
     }
 
     /**
-     * Clean up old rate limit records
+     * NEW: Check web search quota for user
      */
-    async cleanup() {
+    async checkWebSearchQuota(userId) {
         try {
-            const { db } = await connectToDatabase();
-            const cutoff = new Date(Date.now() - this.windowMs * 2); // Keep records for 2 windows
+            await connectToDatabase();
+            
+            let quota = await WebSearchQuota.findOne({ userId });
+            
+            if (!quota) {
+                // Create new quota record for user
+                quota = new WebSearchQuota({
+                    userId,
+                    dailySearches: 0,
+                    lastResetDate: new Date(),
+                    subscriptionTier: 'free',
+                    dailyLimit: this.webSearchLimits.free
+                });
+                await quota.save();
+            }
 
-            await db.collection(this.collectionName).deleteMany({
-                timestamp: { $lt: cutoff }
-            });
+            // Check if we need to reset daily count (new day)
+            const now = new Date();
+            const lastReset = new Date(quota.lastResetDate);
+            const hoursSinceReset = (now - lastReset) / (1000 * 60 * 60);
 
-            console.log('Rate limit cleanup completed');
+            if (hoursSinceReset >= 24) {
+                quota.dailySearches = 0;
+                quota.lastResetDate = now;
+                await quota.save();
+            }
+
+            const remaining = Math.max(0, quota.dailyLimit - quota.dailySearches);
+            const allowed = remaining > 0;
+
+            return {
+                allowed,
+                remaining,
+                used: quota.dailySearches,
+                limit: quota.dailyLimit,
+                resetTime: new Date(lastReset.getTime() + 24 * 60 * 60 * 1000),
+                tier: quota.subscriptionTier
+            };
+
         } catch (error) {
-            console.error('Rate limit cleanup error:', error);
+            console.error('Web search quota check error:', error);
+            return {
+                allowed: false,
+                remaining: 0,
+                used: 0,
+                limit: 30,
+                resetTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                tier: 'free',
+                error: error.message
+            };
         }
     }
 
     /**
-     * Get user's current rate limit status
-     * @param {string} userId - User ID
-     * @param {string} type - Request type
+     * NEW: Consume one web search quota
+     */
+    async consumeWebSearchQuota(userId) {
+        try {
+            await connectToDatabase();
+            
+            const quota = await WebSearchQuota.findOne({ userId });
+            
+            if (!quota) {
+                throw new Error('Quota record not found');
+            }
+
+            if (quota.dailySearches >= quota.dailyLimit) {
+                throw new Error('Daily web search limit exceeded');
+            }
+
+            quota.dailySearches += 1;
+            quota.totalSearches += 1;
+            await quota.save();
+
+            return {
+                success: true,
+                remaining: quota.dailyLimit - quota.dailySearches,
+                used: quota.dailySearches
+            };
+
+        } catch (error) {
+            console.error('Error consuming web search quota:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get user's current rate limit status (enhanced)
      */
     async getStatus(userId, type = 'manual') {
         try {
@@ -109,10 +180,9 @@ export class RateLimiter {
             const windowStart = new Date(now.getTime() - this.windowMs);
             const key = `${userId}_${type}`;
 
-            // UPDATED LIMITS
             const limits = {
-                suggestion: 60, // Updated from 20
-                manual: 30      // Updated from 10
+                suggestion: 60,
+                manual: 30
             };
 
             const maxRequests = limits[type] || this.maxRequests;
@@ -128,28 +198,51 @@ export class RateLimiter {
                 new Date(currentUsage.timestamp.getTime() + this.windowMs) :
                 new Date(now.getTime() + this.windowMs);
 
+            // Also get web search quota
+            const webSearchQuota = await this.checkWebSearchQuota(userId);
+
             return {
-                maxRequests,
-                usedRequests,
-                remainingRequests,
-                resetTime,
-                type
+                ai: {
+                    maxRequests,
+                    usedRequests,
+                    remainingRequests,
+                    resetTime,
+                    type
+                },
+                webSearch: webSearchQuota
             };
         } catch (error) {
             console.error('Error getting rate limit status:', error);
             return null;
         }
     }
+
+    /**
+     * Cleanup old rate limit records (existing functionality)
+     */
+    async cleanup() {
+        try {
+            const { db } = await connectToDatabase();
+            const cutoff = new Date(Date.now() - this.windowMs * 2);
+
+            await db.collection(this.collectionName).deleteMany({
+                timestamp: { $lt: cutoff }
+            });
+
+            console.log('Rate limit cleanup completed');
+        } catch (error) {
+            console.error('Rate limit cleanup error:', error);
+        }
+    }
 }
 
-// Export a singleton instance
+// Export singleton instance
 export const rateLimiter = new RateLimiter();
 
-// Middleware function for Next.js API routes
+// Existing middleware (keep unchanged)
 export function withRateLimit(handler) {
     return async (req, res) => {
         try {
-            // Extract user ID from JWT token or use IP as fallback
             let userId = req.ip || 'anonymous';
 
             if (req.headers.authorization) {
@@ -163,10 +256,7 @@ export function withRateLimit(handler) {
                 }
             }
 
-            // Determine request type from body
             const requestType = req.body?.source === 'suggestion' ? 'suggestion' : 'manual';
-
-            // Check rate limit
             const rateLimit = await rateLimiter.checkRateLimit(userId, requestType);
 
             if (!rateLimit.allowed) {
@@ -178,16 +268,13 @@ export function withRateLimit(handler) {
                 });
             }
 
-            // Add rate limit headers - UPDATED VALUES
             res.setHeader('X-RateLimit-Limit', requestType === 'suggestion' ? '60' : '30');
             res.setHeader('X-RateLimit-Remaining', rateLimit.remainingRequests.toString());
             res.setHeader('X-RateLimit-Reset', rateLimit.resetTime.toISOString());
 
-            // Continue to the actual handler
             return handler(req, res);
         } catch (error) {
             console.error('Rate limiting middleware error:', error);
-            // Fail open - continue to handler
             return handler(req, res);
         }
     };

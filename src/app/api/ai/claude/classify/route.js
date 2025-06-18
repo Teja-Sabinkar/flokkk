@@ -1,5 +1,8 @@
 // src/app/api/ai/claude/classify/route.js
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
+import jwt from 'jsonwebtoken';
+import { rateLimiter } from '@/lib/rateLimiting';
 
 // Fixed, clearly defined categories with explicit examples
 const CATEGORY_DEFINITIONS = {
@@ -87,6 +90,37 @@ const CATEGORY_DEFINITIONS = {
 
 export async function POST(request) {
     try {
+        // Get user authentication for quota tracking
+        const headersList = headers();
+        const authHeader = headersList.get('Authorization');
+        let userId = null;
+        
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.split(' ')[1];
+            try {
+                const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET);
+                userId = decoded.id;
+            } catch (error) {
+                console.warn('Invalid token in classification endpoint:', error.message);
+            }
+        }
+
+        // Check rate limit for classification requests
+        if (userId) {
+            try {
+                const rateLimit = await rateLimiter.checkRateLimit(userId, 'suggestion');
+                if (!rateLimit.allowed) {
+                    return NextResponse.json({
+                        error: 'Rate limit exceeded for classification',
+                        message: rateLimit.message,
+                        resetTime: rateLimit.resetTime
+                    }, { status: 429 });
+                }
+            } catch (rateLimitError) {
+                console.warn('Rate limit check failed for classification:', rateLimitError);
+            }
+        }
+
         // Parse request data
         const { content, categories = Object.keys(CATEGORY_DEFINITIONS) } = await request.json();
 
@@ -159,11 +193,11 @@ Based on a thorough analysis of the title${description ? ' and description' : ''
                 }
             ],
             max_tokens: 10,
-            temperature: 0.0, // Use 0 temperature for maximum consistency
+            temperature: 0.0,
         };
 
         // Call Claude API
-        console.log(`Classifying: "${title}"`);
+        console.log(`Classifying: "${title}" ${userId ? `for user ${userId}` : 'anonymously'}`);
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
@@ -174,27 +208,21 @@ Based on a thorough analysis of the title${description ? ' and description' : ''
             body: JSON.stringify(claudeRequest)
         });
 
-        // Handle API response errors
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Claude API error: ${response.status} - ${errorText}`);
         }
 
-        // Parse response
         const data = await response.json();
         const rawResponse = data.content[0]?.text || "";
         
-        // Clean the response - get only the category name
         const cleanedResponse = rawResponse.trim().split(/[\s\n]+/)[0];
         
-        // Validate against available categories
         let category = null;
         
-        // First try exact match
         if (categories.includes(cleanedResponse)) {
             category = cleanedResponse;
         } else {
-            // Try case-insensitive match
             const lowerResponse = cleanedResponse.toLowerCase();
             for (const validCategory of categories) {
                 if (validCategory.toLowerCase() === lowerResponse) {
@@ -203,7 +231,6 @@ Based on a thorough analysis of the title${description ? ' and description' : ''
                 }
             }
             
-            // If still not found, try partial match
             if (!category) {
                 for (const validCategory of categories) {
                     if (lowerResponse.includes(validCategory.toLowerCase()) || 
@@ -215,14 +242,30 @@ Based on a thorough analysis of the title${description ? ' and description' : ''
             }
         }
 
-        // If still no valid category, default to Trending
         if (!category) {
             console.warn(`Invalid category response: "${rawResponse}", defaulting to Trending`);
             category = 'Trending';
         }
 
         console.log(`Classified "${title}" as: ${category}`);
-        return NextResponse.json({ category, originalResponse: rawResponse }, { status: 200 });
+        
+        // Include quota information in response if user is authenticated
+        let quotaInfo = null;
+        if (userId) {
+            try {
+                const status = await rateLimiter.getStatus(userId, 'suggestion');
+                quotaInfo = status?.ai || null;
+            } catch (quotaError) {
+                console.warn('Failed to get quota info for classification response:', quotaError);
+            }
+        }
+
+        return NextResponse.json({ 
+            category, 
+            originalResponse: rawResponse,
+            quotaInfo: quotaInfo,
+            timestamp: new Date().toISOString()
+        }, { status: 200 });
 
     } catch (error) {
         console.error('Content classification error:', error);

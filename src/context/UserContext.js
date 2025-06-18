@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { isAuthenticated, isVerified } from '@/lib/auth'; // Import the new utility functions
 
 // Create the context
 const UserContext = createContext(null);
@@ -10,12 +11,14 @@ const UserContext = createContext(null);
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authStatus, setAuthStatus] = useState('guest'); // 'guest', 'unverified', or 'verified'
   const router = useRouter();
 
   const fetchUser = async () => {
     const token = localStorage.getItem('token');
   
     if (!token) {
+      setAuthStatus('guest');
       setIsLoading(false);
       return null;
     }
@@ -36,11 +39,20 @@ export function UserProvider({ children }) {
       }
   
       const userData = await response.json();
+      
+      // Store verification status in localStorage for easy access
+      localStorage.setItem('isVerified', userData.isEmailVerified.toString());
+      
+      // Update auth status
+      setAuthStatus(userData.isEmailVerified ? 'verified' : 'unverified');
+      
       setUser(userData);
       return userData;
     } catch (error) {
       console.error('Authentication error:', error);
       localStorage.removeItem('token');
+      localStorage.removeItem('isVerified');
+      setAuthStatus('guest');
       return null;
     } finally {
       setIsLoading(false);
@@ -49,8 +61,41 @@ export function UserProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('isVerified');
     setUser(null);
+    setAuthStatus('guest');
     router.push('/login');
+  };
+  
+  // Check if the user can perform a specific action
+  const canPerformAction = (actionType) => {
+    if (authStatus === 'guest') {
+      // Guests can only view limited content
+      return actionType === 'view';
+    }
+    
+    if (authStatus === 'unverified') {
+      // Unverified users can view content but not interact
+      return actionType === 'view' || actionType === 'account';
+    }
+    
+    if (authStatus === 'verified') {
+      // Verified users can do everything
+      return true;
+    }
+    
+    return false;
+  };
+  
+  // Prompt user to verify email
+  const promptVerification = () => {
+    // This could show a modal, redirect to verification page, etc.
+    console.log('Please verify your email to access this feature');
+    // You could implement a modal or toast notification here
+    return {
+      message: 'Please verify your email to access all features',
+      user: user
+    };
   };
 
   useEffect(() => {
@@ -62,7 +107,13 @@ export function UserProvider({ children }) {
     setUser,
     isLoading,
     fetchUser,
-    logout
+    logout,
+    authStatus,
+    isVerified: authStatus === 'verified',
+    isUnverified: authStatus === 'unverified',
+    isGuest: authStatus === 'guest',
+    canPerformAction,
+    promptVerification
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

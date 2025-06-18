@@ -52,7 +52,7 @@ const AVAILABLE_CATEGORIES = [
   'Sports', 'Learning', 'Fashion', 'Podcasts', 'Lifestyle'
 ];
 
-export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
+export default function CreateDiscussionModal({ isOpen, onClose, onSubmit, currentUser }) {
   const { theme } = useTheme();
   
   // Form state
@@ -85,6 +85,9 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
   // Category suggestions state
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
   const [filteredCategories, setFilteredCategories] = useState([]);
+  
+  // Verification state
+  const [showVerificationRequired, setShowVerificationRequired] = useState(false);
 
   // Refs
   const fileInputRef = useRef(null);
@@ -92,6 +95,15 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
 
   // If modal is not open, don't render anything
   if (!isOpen) return null;
+  
+  // Check if user is verified - Updated to match other components
+  const isUserVerified = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+    
+    const isVerified = localStorage.getItem('isVerified') === 'true';
+    return isVerified;
+  };
 
   // Function to ensure URLs have http:// or https:// prefix
   const ensureUrlProtocol = (url) => {
@@ -436,11 +448,19 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
     setYoutubeChannelHashtag(null);
     // Reset category suggestions
     setShowCategorySuggestions(false);
+    // Reset verification message
+    setShowVerificationRequired(false);
   };
 
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Check if user is verified
+    if (!isUserVerified()) {
+      setShowVerificationRequired(true);
+      return;
+    }
 
     // Validate form
     if (!title.trim()) {
@@ -504,6 +524,18 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
         {error && (
           <div className={styles.errorMessage}>
             {error}
+          </div>
+        )}
+        
+        {/* Verification Required Message */}
+        {showVerificationRequired && (
+          <div className={styles.verificationMessage}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>Please verify your email address to create discussions</span>
           </div>
         )}
 
@@ -823,10 +855,10 @@ export default function CreateDiscussionModal({ isOpen, onClose, onSubmit }) {
 
           <button
             type="submit"
-            className={`${styles.submitButton} ${(!isFormValid || isProcessing) ? styles.submitButtonDisabled : ''}`}
-            disabled={isProcessing || !isFormValid}
+            className={`${styles.submitButton} ${(!isFormValid || isProcessing || !isUserVerified()) ? styles.submitButtonDisabled : ''}`}
+            disabled={isProcessing || !isFormValid || !isUserVerified()}
           >
-            {isProcessing ? 'Processing...' : 'Create Discussion'}
+            {isProcessing ? 'Processing...' : !isUserVerified() ? 'Verification Required' : 'Create Discussion'}
           </button>
         </form>
       </div>

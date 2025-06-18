@@ -57,6 +57,17 @@ export async function POST(request) {
       );
     }
     
+    // Check if user's email is verified
+    if (!user.isEmailVerified) {
+      return NextResponse.json(
+        { 
+          message: 'Email verification required to create posts', 
+          verificationRequired: true 
+        },
+        { status: 403 }
+      );
+    }
+    
     // Initialize creatorLinks with better validation
     let creatorLinks = [];
     if (rawData.creatorLinks && Array.isArray(rawData.creatorLinks)) {
@@ -196,3 +207,5 @@ export async function POST(request) {
     );
   }
 }
+
+

@@ -126,7 +126,7 @@ export async function GET(request) {
         const authHeader = headersList.get('Authorization');
         let userId = null;
         let isAuthenticated = false;
-        let userTheme = 'dark'; // Default theme
+        let userTheme = 'dark';
 
         console.log('Setting up database connections for status endpoint...');
 
@@ -141,7 +141,7 @@ export async function GET(request) {
                 { 
                     error: 'Database connection failed', 
                     details: dbError.message,
-                    theme: 'dark' // Safe fallback
+                    theme: 'dark'
                 },
                 { status: 500 }
             );
@@ -155,7 +155,6 @@ export async function GET(request) {
                 isAuthenticated = true;
                 console.log('User authenticated for status:', userId);
             } catch (error) {
-                // Invalid token, continue as anonymous
                 console.warn('Invalid token in status endpoint:', error.message);
             }
         }
@@ -166,8 +165,8 @@ export async function GET(request) {
 
         const response = {
             timestamp: new Date().toISOString(),
-            theme: userTheme, // Include theme in response
-            themeVariables: getThemeVariables(userTheme), // Include CSS variables
+            theme: userTheme,
+            themeVariables: getThemeVariables(userTheme),
             user: {
                 authenticated: isAuthenticated,
                 userId: userId ? userId.substring(0, 8) + '...' : null,
@@ -178,26 +177,46 @@ export async function GET(request) {
                     available: !!process.env.CLAUDE_API_KEY,
                     model: 'claude-3-haiku-20240307',
                     themeSupport: true
+                },
+                mcp: {
+                    available: true,
+                    version: process.env.MCP_SERVER_VERSION || '1.0.0',
+                    features: ['community_search', 'web_search', 'quota_management']
+                },
+                tavily: {
+                    available: !!process.env.TAVILY_API_KEY,
+                    dailyLimit: parseInt(process.env.WEB_SEARCH_DAILY_LIMIT) || 30
                 }
             }
         };
 
-        // Get rate limiting status if user is authenticated
+        // Get comprehensive rate limiting status if user is authenticated
         if (isAuthenticated && userId) {
             try {
-                const [manualStatus, suggestionStatus] = await Promise.all([
-                    rateLimiter.getStatus(userId, 'manual'),
-                    rateLimiter.getStatus(userId, 'suggestion')
-                ]);
-
+                const fullStatus = await rateLimiter.getStatus(userId, 'manual');
+                
                 response.rateLimits = {
-                    manual: manualStatus,
-                    suggestion: suggestionStatus
+                    ai: fullStatus?.ai || {
+                        maxRequests: 30,
+                        usedRequests: 0,
+                        remainingRequests: 30,
+                        resetTime: new Date(Date.now() + 60 * 60 * 1000),
+                        type: 'manual'
+                    },
+                    webSearch: fullStatus?.webSearch || {
+                        remaining: 30,
+                        used: 0,
+                        limit: 30,
+                        resetTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                        tier: 'free'
+                    }
                 };
             } catch (error) {
-                console.error('Error getting rate limit status:', error);
+                console.error('Error getting comprehensive rate limit status:', error);
                 response.rateLimits = {
-                    error: 'Unable to fetch rate limit status'
+                    error: 'Unable to fetch rate limit status',
+                    ai: { error: 'Unavailable' },
+                    webSearch: { error: 'Unavailable' }
                 };
             }
         } else {
@@ -206,7 +225,7 @@ export async function GET(request) {
             };
         }
 
-        // Get cache statistics (admin info - don't expose sensitive data)
+        // Get cache statistics (keep existing)
         try {
             const cacheStats = await responseCache.getStats();
             response.cache = {
@@ -225,18 +244,38 @@ export async function GET(request) {
             };
         }
 
-        // Add health check for database
+        // Add health check for database and MCP
         try {
             const { claudeDbService } = await import('@/lib/claudeDbService');
             const dbHealthy = await claudeDbService.init();
+            
+            // Test MCP functionality
+            let mcpHealthy = false;
+            try {
+                const { mcpServer } = await import('@/lib/mcp/server');
+                mcpHealthy = true;
+            } catch (mcpError) {
+                console.warn('MCP health check failed:', mcpError.message);
+            }
+            
             response.database = {
                 status: dbHealthy ? 'connected' : 'error',
+                lastChecked: new Date().toISOString()
+            };
+            
+            response.mcp = {
+                status: mcpHealthy ? 'available' : 'error',
                 lastChecked: new Date().toISOString()
             };
         } catch (error) {
             response.database = {
                 status: 'error',
                 error: error.message,
+                lastChecked: new Date().toISOString()
+            };
+            response.mcp = {
+                status: 'error',
+                error: 'MCP unavailable',
                 lastChecked: new Date().toISOString()
             };
         }
@@ -249,10 +288,11 @@ export async function GET(request) {
             error: 'Unable to fetch status',
             message: error.message,
             timestamp: new Date().toISOString(),
-            theme: 'dark' // Safe fallback theme
+            theme: 'dark'
         }, { status: 500 });
     }
 }
+
 
 // Admin endpoint for clearing cache (requires authentication) - Enhanced with theme support
 export async function DELETE(request) {

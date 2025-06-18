@@ -22,6 +22,8 @@ export async function login(email, password) {
     // Store token in localStorage for client-side access
     if (typeof window !== 'undefined' && data.token) {
       localStorage.setItem('token', data.token);
+      // Store verification status separately for easy access
+      localStorage.setItem('isVerified', data.user.isEmailVerified.toString());
     }
 
     return data;
@@ -45,6 +47,12 @@ export async function register(name, username, email, password) {
 
     if (!response.ok) {
       throw new Error(data.message || 'Registration failed');
+    }
+
+    // If signup returns a token (for immediate limited access), store it
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('isVerified', 'false'); // New users are unverified by default
     }
 
     return data;
@@ -100,6 +108,10 @@ export async function getCurrentUser() {
     }
 
     const userData = await response.json();
+    
+    // Update verification status in localStorage
+    localStorage.setItem('isVerified', userData.isEmailVerified.toString());
+    
     return userData;
   } catch (error) {
     throw new Error(error.message || 'An error occurred');
@@ -110,6 +122,7 @@ export async function getCurrentUser() {
 export function logout() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('token');
+    localStorage.removeItem('isVerified');
     // Clear cookie as well
     document.cookie = 'token=; path=/; max-age=0';
   }
@@ -120,5 +133,36 @@ export function isAuthenticated() {
   if (typeof window !== 'undefined') {
     return !!localStorage.getItem('token');
   }
+  return false;
+}
+
+// Check if user is verified
+export function isVerified() {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('isVerified') === 'true';
+  }
+  return false;
+}
+
+// Check if user can perform a restricted action
+export function canPerformAction(actionType) {
+  const authenticated = isAuthenticated();
+  const verified = isVerified();
+  
+  // For view-only actions, just need to be authenticated
+  if (actionType === 'view') {
+    return true; // Even guests can view limited content
+  }
+  
+  // For interactive actions like commenting, voting, posting
+  if (['comment', 'vote', 'post', 'create'].includes(actionType)) {
+    return authenticated && verified;
+  }
+  
+  // For account-management actions
+  if (actionType === 'account') {
+    return authenticated;
+  }
+  
   return false;
 }

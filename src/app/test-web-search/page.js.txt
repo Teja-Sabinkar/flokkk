@@ -1,0 +1,147 @@
+// Create this as a temporary test page: src/app/test-web-search/page.js
+
+'use client';
+
+import { useState } from 'react';
+
+export default function WebSearchTestPage() {
+    const [testResults, setTestResults] = useState({});
+    const [isLoading, setIsLoading] = useState(false);
+
+    const runTest = async (testType) => {
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
+        
+        try {
+            switch (testType) {
+                case 'tavily-direct':
+                    console.log('🧪 Testing Tavily API directly...');
+                    const tavilyResponse = await fetch('/api/debug/tavily', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: 'Next.js tutorial' })
+                    });
+                    const tavilyData = await tavilyResponse.json();
+                    setTestResults(prev => ({ ...prev, tavily: tavilyData }));
+                    break;
+
+                case 'web-search-api':
+                    console.log('🧪 Testing /api/web-search endpoint...');
+                    const webResponse = await fetch('/api/web-search', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            query: 'React hooks tutorial',
+                            theme: 'dark'
+                        })
+                    });
+                    const webData = await webResponse.json();
+                    setTestResults(prev => ({ ...prev, webSearchAPI: webData }));
+                    break;
+
+                case 'search-handler-community':
+                    console.log('🧪 Testing SearchHandler with community only...');
+                    const communityResponse = await fetch('/api/test/search-handler', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            query: 'JavaScript functions',
+                            webSearchRequested: false
+                        })
+                    });
+                    const communityData = await communityResponse.json();
+                    setTestResults(prev => ({ ...prev, communitySearch: communityData }));
+                    break;
+
+                case 'search-handler-web':
+                    console.log('🧪 Testing SearchHandler with web search...');
+                    const webHandlerResponse = await fetch('/api/test/search-handler', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            query: 'TypeScript best practices',
+                            webSearchRequested: true
+                        })
+                    });
+                    const webHandlerData = await webHandlerResponse.json();
+                    setTestResults(prev => ({ ...prev, webSearchHandler: webHandlerData }));
+                    break;
+            }
+        } catch (error) {
+            console.error(`Test ${testType} failed:`, error);
+            setTestResults(prev => ({ ...prev, [testType]: { error: error.message } }));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div style={{ padding: '20px', fontFamily: 'monospace' }}>
+            <h1>🔧 Web Search Debug Center</h1>
+            
+            <div style={{ marginBottom: '20px' }}>
+                <h2>Quick Tests</h2>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <button 
+                        onClick={() => runTest('tavily-direct')}
+                        disabled={isLoading}
+                        style={{ padding: '8px 16px', marginBottom: '8px' }}
+                    >
+                        Test Tavily Direct
+                    </button>
+                    <button 
+                        onClick={() => runTest('web-search-api')}
+                        disabled={isLoading}
+                        style={{ padding: '8px 16px', marginBottom: '8px' }}
+                    >
+                        Test Web Search API
+                    </button>
+                    <button 
+                        onClick={() => runTest('search-handler-community')}
+                        disabled={isLoading}
+                        style={{ padding: '8px 16px', marginBottom: '8px' }}
+                    >
+                        Test Community Search
+                    </button>
+                    <button 
+                        onClick={() => runTest('search-handler-web')}
+                        disabled={isLoading}
+                        style={{ padding: '8px 16px', marginBottom: '8px' }}
+                    >
+                        Test Web Search Handler
+                    </button>
+                </div>
+            </div>
+
+            {isLoading && <p>🔄 Running test...</p>}
+
+            <div>
+                <h2>Test Results</h2>
+                {Object.entries(testResults).map(([testName, result]) => (
+                    <div key={testName} style={{ 
+                        marginBottom: '20px', 
+                        padding: '15px', 
+                        border: '1px solid #ccc', 
+                        borderRadius: '8px',
+                        backgroundColor: '#f8f9fa'
+                    }}>
+                        <h3 style={{ margin: '0 0 10px 0' }}>{testName}</h3>
+                        <pre style={{ 
+                            overflow: 'auto', 
+                            maxHeight: '300px',
+                            backgroundColor: '#ffffff',
+                            padding: '10px',
+                            borderRadius: '4px',
+                            fontSize: '12px'
+                        }}>
+                            {JSON.stringify(result, null, 2)}
+                        </pre>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}

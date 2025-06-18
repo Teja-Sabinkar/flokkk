@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useUser } from '@/context/UserContext';
+import { useRouter } from 'next/navigation'; // Add router import
 import styles from './DiscussionPageRightBar.module.css';
 import aiChatStyles from '@/components/aichat/AiChat.module.css'; // Import AiChat styles
 import RecommendationItems from './RecommendationItems';
@@ -11,6 +12,10 @@ export default function DiscussionPageRightBar(props) {
   // Extract postData safely with better fallback handling
   const postData = props.postData || null;
   const { user } = useUser();
+  const router = useRouter(); // Add router for redirects
+  
+  // Add auth status tracking
+  const [authStatus, setAuthStatus] = useState('loading'); // 'loading', 'guest', 'unverified', 'verified'
 
   // Refs for elements
   const containerRef = useRef(null);
@@ -28,6 +33,24 @@ export default function DiscussionPageRightBar(props) {
 
   // NEW: Add suggestion tracking state
   const [currentSuggestionType, setCurrentSuggestionType] = useState(null);
+
+  // Check authentication status on component mount
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setAuthStatus('guest');
+        return;
+      }
+      
+      // Check if user is verified
+      const isVerified = localStorage.getItem('isVerified') === 'true';
+      setAuthStatus(isVerified ? 'verified' : 'unverified');
+    };
+    
+    checkAuthStatus();
+  }, []);
 
   // Function to get time-based greeting
   const getTimeBasedGreeting = () => {
@@ -60,6 +83,20 @@ export default function DiscussionPageRightBar(props) {
       content: getUserGreeting(),
     }
   ]);
+
+  // Add authentication message for guest users
+  useEffect(() => {
+    if (authStatus === 'guest') {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now(),
+          type: 'system',
+          content: 'Sign in to use flokkk A.I. assistant and get personalized help with this discussion.',
+        }
+      ]);
+    }
+  }, [authStatus]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -266,6 +303,13 @@ export default function DiscussionPageRightBar(props) {
       ) {
         e.preventDefault();
 
+        // Check if user is authenticated
+        if (authStatus === 'guest') {
+          // Redirect to login page if not authenticated
+          router.push('/login');
+          return;
+        }
+
         // Get data from the clicked element
         const originalQuery = decodeURIComponent(e.target.dataset.query || '');
         const showMoreType = e.target.dataset.type || '';
@@ -335,7 +379,7 @@ export default function DiscussionPageRightBar(props) {
         messagesContainer.removeEventListener('click', handleShowMoreClick);
       }
     };
-  }, [enhancedPostData]); // Add enhancedPostData as dependency
+  }, [enhancedPostData, authStatus, router]); // Add authStatus and router as dependencies
 
   // Process message text to identify database commands
   const extractDataCommands = (message) => {
@@ -366,6 +410,13 @@ export default function DiscussionPageRightBar(props) {
   // Handle form submit for AiChat
   const handleAiChatSubmit = async (message) => {
     if (!message.trim() || isLoading) return;
+
+    // Check if user is authenticated
+    if (authStatus === 'guest') {
+      // Redirect to login page if not authenticated
+      router.push('/login');
+      return;
+    }
 
     // Add user message
     const userMessage = {
@@ -520,6 +571,13 @@ export default function DiscussionPageRightBar(props) {
 
   // Use a suggested question
   const useSuggestion = (suggestion) => {
+    // Check if user is authenticated
+    if (authStatus === 'guest') {
+      // Redirect to login page if not authenticated
+      router.push('/login');
+      return;
+    }
+
     // Track suggestion type
     if (suggestion.includes('summarize')) {
       setCurrentSuggestionType('summarize');
@@ -615,10 +673,19 @@ export default function DiscussionPageRightBar(props) {
             {getSuggestedQuestions().map((question, index) => (
               <button
                 key={index}
-                className={styles.suggestionButton}
+                className={`${styles.suggestionButton} ${authStatus === 'guest' ? styles.disabledSuggestion : ''}`}
                 onClick={() => useSuggestion(question)}
+                disabled={authStatus === 'guest'}
               >
                 {question}
+                {authStatus === 'guest' && (
+                  <span className={styles.lockIconSmall}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                  </span>
+                )}
               </button>
             ))}
           </div>

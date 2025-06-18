@@ -9,6 +9,21 @@ import Post from '@/models/Post';
 import PostEngagement from '@/models/PostEngagement';
 import { put, del } from '@vercel/blob';
 
+// Helper function to extract and verify token
+const verifyToken = (authHeader) => {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+  
+  const token = authHeader.split(' ')[1];
+  
+  try {
+    return jwt.verify(token, process.env.NEXTAUTH_SECRET);
+  } catch (error) {
+    return null;
+  }
+};
+
 // Helper function to generate history data for any engagement type
 function generateEngagementHistory(engagements, engagementField) {
   const today = new Date();
@@ -55,41 +70,30 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Verify authentication
-    const headersList = await headers();
-    const authHeader = headersList.get('Authorization');
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.split(' ')[1];
-
-    // Verify JWT token
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET);
-    } catch (error) {
-      return NextResponse.json(
-        { message: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
-
     // Connect to database
     await dbConnect();
 
-    // Find user by id from token
-    const user = await User.findById(decoded.id);
-
-    if (!user) {
-      return NextResponse.json(
-        { message: 'User not found' },
-        { status: 404 }
-      );
+    // Get auth token from header, but don't require it for read access
+    const headersList = await headers();
+    const authHeader = headersList.get('Authorization');
+    
+    // Try to verify token if provided, but proceed even if no token or invalid token
+    let user = null;
+    let userId = null;
+    let isVerified = false;
+    let authStatus = 'guest';
+    
+    // Check if token is provided and valid
+    const decoded = verifyToken(authHeader);
+    if (decoded) {
+      // Find user by id from token
+      user = await User.findById(decoded.id);
+      
+      if (user) {
+        userId = user._id;
+        isVerified = decoded.isVerified || user.isEmailVerified || false;
+        authStatus = isVerified ? 'verified' : 'unverified';
+      }
     }
 
     // Find post by ID
@@ -103,7 +107,8 @@ export async function GET(request, { params }) {
     }
 
     // Check if user has permission to view this post
-    if (post.userId.toString() !== user._id.toString() && post.status !== 'published') {
+    // If post is not published, only the owner can view it
+    if (post.status !== 'published' && (!userId || post.userId.toString() !== userId.toString())) {
       return NextResponse.json(
         { message: 'You do not have permission to view this post' },
         { status: 403 }
@@ -150,7 +155,39 @@ export async function GET(request, { params }) {
       shared: shareCount
     });
 
-    // NEW: Generate all three history types from real engagement data
+    // Track post view for authenticated users
+    if (userId) {
+      try {
+        // Check if already in recently viewed (for authenticated users only)
+        const { db } = await connectToDatabase();
+        const recentlyViewedCollection = db.collection('recentlyvieweds');
+        
+        const existing = await recentlyViewedCollection.findOne({
+          user: userId,
+          post: new ObjectId(id)
+        });
+        
+        if (existing) {
+          // Update timestamp
+          await recentlyViewedCollection.updateOne(
+            { _id: existing._id },
+            { $set: { viewedAt: new Date() } }
+          );
+        } else {
+          // Add to recently viewed
+          await recentlyViewedCollection.insertOne({
+            user: userId,
+            post: new ObjectId(id),
+            viewedAt: new Date()
+          });
+        }
+      } catch (error) {
+        // Log error but don't fail the request
+        console.error('Error updating recently viewed:', error);
+      }
+    }
+
+    // Generate history data
     let appearedHistory = [];
     let viewedHistory = [];
     let penetrationHistory = [];
@@ -227,7 +264,12 @@ export async function GET(request, { params }) {
       viewedHistory: viewedHistory,
       penetrationHistory: penetrationHistory,
       // DEPRECATED: Keep for backward compatibility
-      viewsHistory: appearedHistory
+      viewsHistory: appearedHistory,
+      // Add authentication and verification status for UI decisions
+      _authStatus: authStatus,
+      _isAuthenticated: !!userId,
+      _isVerified: isVerified,
+      _isViewed: true  // Mark as viewed for UI purposes
     };
 
     console.log(`📈 Post ${id} formatted with all histories:`, {
@@ -286,6 +328,14 @@ export async function PATCH(request, { params }) {
       return NextResponse.json(
         { message: 'Invalid or expired token' },
         { status: 401 }
+      );
+    }
+    
+    // Check if user is verified
+    if (!decoded.isVerified) {
+      return NextResponse.json(
+        { message: 'Email verification required to update posts' },
+        { status: 403 }
       );
     }
 
@@ -558,7 +608,11 @@ export async function PATCH(request, { params }) {
       viewedHistory: viewedHistory,
       penetrationHistory: penetrationHistory,
       // DEPRECATED: Keep for backward compatibility
-      viewsHistory: appearedHistory
+      viewsHistory: appearedHistory,
+      // Add authentication status
+      _isAuthenticated: true,
+      _isVerified: true,
+      _authStatus: 'verified'
     };
 
     console.log(`📈 Updated post ${id} formatted with all histories:`, {
@@ -617,6 +671,14 @@ export async function DELETE(request, { params }) {
       return NextResponse.json(
         { message: 'Invalid or expired token' },
         { status: 401 }
+      );
+    }
+    
+    // Check if user is verified
+    if (!decoded.isVerified) {
+      return NextResponse.json(
+        { message: 'Email verification required to delete posts' },
+        { status: 403 }
       );
     }
 

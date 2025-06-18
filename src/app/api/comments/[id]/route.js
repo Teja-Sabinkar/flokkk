@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
 import dbConnect from '@/lib/mongoose';
 import Comment from '@/models/Comment';
+import User from '@/models/User';
 
 // DELETE endpoint to soft delete a comment
 export async function DELETE(request, { params }) {
@@ -46,6 +47,27 @@ export async function DELETE(request, { params }) {
     
     // Connect to database
     await dbConnect();
+    
+    // Find user to check verification status
+    const user = await User.findById(decoded.id);
+    
+    if (!user) {
+      return NextResponse.json(
+        { message: 'User not found' },
+        { status: 404 }
+      );
+    }
+    
+    // Check if user's email is verified
+    if (!user.isEmailVerified) {
+      return NextResponse.json(
+        { 
+          message: 'Email verification required to manage comments', 
+          verificationRequired: true 
+        },
+        { status: 403 }
+      );
+    }
     
     // Find comment by ID
     const comment = await Comment.findById(id);

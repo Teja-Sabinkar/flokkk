@@ -3,6 +3,8 @@ import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
+import dbConnect from '@/lib/mongoose';
+import User from '@/models/User';
 
 export async function POST(request, { params }) {
   try {
@@ -60,6 +62,30 @@ export async function POST(request, { params }) {
     }
     
     // Connect to database
+    await dbConnect();
+    
+    // Find user to check verification status
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return NextResponse.json(
+        { message: 'User not found' },
+        { status: 404 }
+      );
+    }
+    
+    // Check if user's email is verified
+    if (!user.isEmailVerified) {
+      return NextResponse.json(
+        { 
+          message: 'Email verification required to vote', 
+          verificationRequired: true 
+        },
+        { status: 403 }
+      );
+    }
+    
+    // Connect to MongoDB for post operations
     const { db } = await connectToDatabase();
     
     // Create ObjectId for post

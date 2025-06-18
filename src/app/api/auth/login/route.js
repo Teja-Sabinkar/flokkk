@@ -30,17 +30,6 @@ export async function POST(request) {
       );
     }
 
-    // Check if email is verified
-    if (!user.isEmailVerified) {
-      return NextResponse.json(
-        { 
-          message: 'Please verify your email address before logging in',
-          isVerificationError: true
-        },
-        { status: 403 }
-      );
-    }
-
     // Check if password matches
     const isMatch = await bcrypt.compare(password, user.password);
     
@@ -51,23 +40,35 @@ export async function POST(request) {
       );
     }
 
-    // Create JWT token
+    // Include verification status in token payload
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { 
+        id: user._id, 
+        email: user.email,
+        isVerified: user.isEmailVerified // Include verification status in token
+      },
       process.env.NEXTAUTH_SECRET,
       { expiresIn: '7d' }
     );
+    
+    // Create appropriate message based on verification status
+    const message = user.isEmailVerified 
+      ? 'Login successful' 
+      : 'Login successful with limited access. Please verify your email for full access.';
     
     // Create response with cookie
     const response = NextResponse.json(
       { 
         success: true, 
-        message: 'Login successful',
+        message,
         token,
+        accessLevel: user.isEmailVerified ? 'full' : 'limited',
         user: {
           id: user._id,
           name: user.name,
-          email: user.email
+          email: user.email,
+          isEmailVerified: user.isEmailVerified,
+          needsVerification: !user.isEmailVerified
         }
       }, 
       { status: 200 }

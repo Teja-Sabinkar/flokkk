@@ -1,0 +1,122 @@
+// Create this API route: src/app/api/debug/reset-quota/route.js
+// This will help reset quota for testing
+
+import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
+import jwt from 'jsonwebtoken';
+import { connectToDatabase } from '@/lib/mongodb';
+import WebSearchQuota from '@/models/WebSearchQuota';
+
+export async function POST(request) {
+    try {
+        // Get user authentication
+        const headersList = headers();
+        const authHeader = headersList.get('Authorization');
+        
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+        }
+
+        const token = authHeader.split(' ')[1];
+        let userId;
+        
+        try {
+            const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET);
+            userId = decoded.id;
+        } catch (error) {
+            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+        }
+
+        await connectToDatabase();
+
+        // Reset user's quota
+        const result = await WebSearchQuota.findOneAndUpdate(
+            { userId: userId },
+            {
+                $set: {
+                    dailySearches: 0,
+                    lastResetDate: new Date(),
+                    dailyLimit: 30
+                }
+            },
+            { 
+                upsert: true, 
+                new: true 
+            }
+        );
+
+        console.log('✅ Quota reset for user:', userId);
+
+        return NextResponse.json({
+            success: true,
+            message: 'Quota reset successfully',
+            quota: {
+                userId: userId,
+                dailySearches: result.dailySearches,
+                dailyLimit: result.dailyLimit,
+                remaining: result.dailyLimit - result.dailySearches,
+                lastResetDate: result.lastResetDate
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Quota reset error:', error);
+        return NextResponse.json({
+            success: false,
+            error: error.message
+        }, { status: 500 });
+    }
+}
+
+export async function GET(request) {
+    try {
+        // Get user authentication
+        const headersList = headers();
+        const authHeader = headersList.get('Authorization');
+        
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+        }
+
+        const token = authHeader.split(' ')[1];
+        let userId;
+        
+        try {
+            const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET);
+            userId = decoded.id;
+        } catch (error) {
+            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+        }
+
+        await connectToDatabase();
+
+        // Get current quota
+        const quota = await WebSearchQuota.findOne({ userId: userId });
+
+        return NextResponse.json({
+            success: true,
+            quota: quota ? {
+                userId: userId,
+                dailySearches: quota.dailySearches,
+                dailyLimit: quota.dailyLimit,
+                remaining: quota.dailyLimit - quota.dailySearches,
+                lastResetDate: quota.lastResetDate,
+                subscriptionTier: quota.subscriptionTier
+            } : {
+                userId: userId,
+                dailySearches: 0,
+                dailyLimit: 30,
+                remaining: 30,
+                lastResetDate: null,
+                subscriptionTier: 'free'
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Quota check error:', error);
+        return NextResponse.json({
+            success: false,
+            error: error.message
+        }, { status: 500 });
+    }
+}

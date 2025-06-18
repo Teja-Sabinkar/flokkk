@@ -3,6 +3,7 @@ import dbConnect from '@/lib/mongoose';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import { sendEmail, generateVerificationEmail } from '@/lib/email';
 
 export async function POST(request) {
@@ -97,20 +98,47 @@ export async function POST(request) {
     user.verificationToken = undefined;
     user.verificationTokenExpires = undefined;
 
-    return NextResponse.json(
+    // Create JWT token for immediate limited access
+    // Include isVerified field in token payload
+    const token = jwt.sign(
+      { 
+        id: user._id, 
+        email: user.email,
+        isVerified: false // Explicitly mark as unverified in token
+      },
+      process.env.NEXTAUTH_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Create response with cookie and token
+    const response = NextResponse.json(
       { 
         success: true, 
         message: 'Registration successful! Please check your email to verify your account.',
+        token, // Include token for immediate limited access
         user: {
           id: user._id,
           name: user.name,
           username: user.username,
           email: user.email,
-          isEmailVerified: user.isEmailVerified,
+          isEmailVerified: false,
+          accessLevel: 'limited' // Indicate limited access
         }
       }, 
       { status: 201 }
     );
+    
+    // Set HTTP-only cookie
+    response.cookies.set({
+      name: 'token',
+      value: token,
+      httpOnly: true,
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: 'strict'
+    });
+    
+    return response;
     
   } catch (error) {
     console.error('Signup error:', error);

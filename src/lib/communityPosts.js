@@ -2,13 +2,23 @@
  * Community Posts utility functions for frontend
  */
 
-// Create a new community post
+// Helper function to check if user is verified
+const isUserVerified = () => {
+  const isVerified = localStorage.getItem('isVerified');
+  return isVerified === 'true';
+};
+
 // Create a new community post
 export async function createCommunityPost(postData, token = null) {
   try {
     // Use provided token or get from localStorage
     const authToken = token || localStorage.getItem('token');
     if (!authToken) throw new Error('Authentication required');
+    
+    // Check if user is verified
+    if (!isUserVerified()) {
+      throw new Error('Email verification required to create community posts');
+    }
     
     // Get username from token (to ensure correct association)
     let currentUsername = null;
@@ -178,6 +188,11 @@ export async function voteCommunityPost(postId, voteValue, token = null) {
     // Use provided token or get from localStorage
     const authToken = token || localStorage.getItem('token');
     if (!authToken) throw new Error('Authentication required');
+    
+    // Check if user is verified
+    if (!isUserVerified()) {
+      throw new Error('Email verification required to vote on community posts');
+    }
     
     // Validate vote value
     if (![1, -1, 0].includes(voteValue)) {

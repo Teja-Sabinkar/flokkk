@@ -36,13 +36,16 @@ export async function GET(request) {
         );
       }
       
-      // Return complete user profile data
+      // Return complete user profile data with verification status prominently featured
       return NextResponse.json({
         id: user._id,
         username: user.username || user.name.toLowerCase().replace(/\s+/g, '_'),
         name: user.name,
         email: user.email,
         usertag: user.usertag,
+        isEmailVerified: user.isEmailVerified, // Moved to top level for emphasis
+        accountStatus: user.isEmailVerified ? 'verified' : 'unverified', // Added explicit status field
+        accessLevel: user.isEmailVerified ? 'full' : 'limited', // Added access level indicator
         bio: user.bio || '',
         location: user.location || '',
         website: user.website || '',
@@ -54,7 +57,7 @@ export async function GET(request) {
         discussions: user.discussions || 0,
         joinDate: user.joinDate,
         createdAt: user.createdAt,
-        isEmailVerified: user.isEmailVerified
+        needsVerification: !user.isEmailVerified, // Added for UI convenience
       }, { status: 200 });
       
     } catch (error) {

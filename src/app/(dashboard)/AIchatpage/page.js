@@ -69,8 +69,41 @@ export default function AIchatPage() {
     }, []);
 
     // Modified handleSubmit to work with AiChat component and connect to Claude AI
-    const handleSubmit = async (inputValue) => {
+    const handleSubmit = async (inputValue, response = null, isWebSearch = false) => {
+        console.log('🎯 AI Chat Page onSubmit called:', {
+            inputValue,
+            hasResponse: !!response,
+            isWebSearch,
+            responseLength: response?.length || 0
+        });
+
         if (!inputValue.trim() || isLoading) return;
+
+        // CRITICAL FIX: If this is a web search response, just display it!
+        if (isWebSearch && response) {
+            console.log('🌐 Displaying web search response directly');
+
+            const userMessage = {
+                id: Date.now(),
+                type: 'user',
+                content: inputValue
+            };
+
+            const webSearchMessage = {
+                id: Date.now() + 1,
+                type: 'ai',
+                content: response, // Use the web search response directly
+                isWebSearch: true
+            };
+
+            setMessages(prev => [...prev, userMessage, webSearchMessage]);
+
+            // Don't make any additional API calls!
+            return;
+        }
+
+        // Only make community search API call if it's NOT a web search
+        console.log('🏠 Making community search for:', inputValue);
 
         // Add user message
         const userMessage = {
@@ -100,27 +133,28 @@ export default function AIchatPage() {
             };
 
             // Make API request to Claude endpoint
-            const response = await fetch('/api/ai/claude', requestOptions);
+            const apiResponse = await fetch('/api/ai/claude', requestOptions);
 
             // Handle response
-            if (!response.ok) {
-                const errorData = await response.json();
+            if (!apiResponse.ok) {
+                const errorData = await apiResponse.json();
 
                 // Check if it's a rate limit error
-                if (response.status === 429) {
+                if (apiResponse.status === 429) {
                     throw new Error(`Rate limit exceeded: ${errorData.message}`);
                 }
 
-                throw new Error(`Error: ${response.status}`);
+                throw new Error(`Error: ${apiResponse.status}`);
             }
 
-            const data = await response.json();
+            const data = await apiResponse.json();
 
             // Add AI response message
             const aiResponse = {
                 id: Date.now() + 1,
                 type: 'ai',
-                content: data.response || "I'm sorry, I couldn't process your request."
+                content: data.response || "I'm sorry, I couldn't process your request.",
+                isWebSearch: false
             };
 
             setMessages(prev => [...prev, aiResponse]);
